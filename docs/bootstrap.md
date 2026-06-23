@@ -51,3 +51,23 @@ curl -L https://example.invalid/nix-termux/install.sh | sh
 
 Direct `NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` values are
 still supported and override manifest archive fields when set.
+
+## Building Artifacts
+
+Build the bootstrap artifact for the current system with:
+
+```sh
+nix build .#bootstrap
+```
+
+The output directory contains:
+
+```text
+nix-termux-bootstrap-<arch>.tar.gz
+nix-termux-bootstrap-<arch>.json
+nix-termux-bootstrap-<arch>.registration
+```
+
+The tarball contains the closure needed by the default profile. The
+registration file is emitted beside it so future installer work can register
+the seed closure with Nix's local database during bootstrap activation.

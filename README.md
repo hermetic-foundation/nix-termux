@@ -35,6 +35,20 @@ shfmt -w bin/nix-termux installer/*.sh runtime/*.sh
 `nix flake check` runs shell formatting, ShellCheck, and a host smoke test that
 installs a fake bootstrap archive into a temporary Termux-like prefix.
 
+Build local release artifacts with:
+
+```sh
+nix build .#bootstrap
+```
+
+The result contains:
+
+```text
+nix-termux-bootstrap-<arch>.tar.gz
+nix-termux-bootstrap-<arch>.json
+nix-termux-bootstrap-<arch>.registration
+```
+
 ## Termux Install Shape
 
 The intended install flow is:

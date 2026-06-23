@@ -48,6 +48,10 @@
               platforms = supportedSystems;
             };
           };
+
+          bootstrap = pkgs.callPackage ./bootstrap/make-bootstrap.nix {
+            inherit system;
+          };
         });
 
       apps = forAllSystems (system: {
@@ -66,6 +70,7 @@
             "installer/install.sh"
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
+            "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/install.sh"
           ];
         in
@@ -102,6 +107,24 @@
             chmod -R u+w source
             cd source
             sh tests/smoke/install.sh
+            touch "$out"
+          '';
+
+          bootstrap-artifact = pkgs.runCommand "nix-termux-bootstrap-artifact-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.findutils
+              pkgs.gnugrep
+              pkgs.gnutar
+              pkgs.gzip
+            ];
+            src = self;
+            artifact = self.packages.${system}.bootstrap;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/bootstrap-artifact.sh "$artifact"
             touch "$out"
           '';
         });
