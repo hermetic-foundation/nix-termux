@@ -112,6 +112,8 @@ check "proot has resolver config" nix-termux exec sh -c 'test -s /etc/resolv.con
 check "proot provides writable /tmp" nix-termux exec sh -c 'test -d /tmp && test -w /tmp && test "$TMPDIR" = /tmp'
 # shellcheck disable=SC2016
 check "proot provides XDG dirs" nix-termux exec sh -c 'test "$XDG_CONFIG_HOME" = /home/termux/.config && test -d "$XDG_CONFIG_HOME" && test -w "$XDG_CONFIG_HOME" && test "$XDG_CACHE_HOME" = /home/termux/.cache && test -d "$XDG_CACHE_HOME" && test -w "$XDG_CACHE_HOME" && test "$XDG_DATA_HOME" = /home/termux/.local/share && test -d "$XDG_DATA_HOME" && test -w "$XDG_DATA_HOME" && test "$XDG_STATE_HOME" = /home/termux/.local/state && test -d "$XDG_STATE_HOME" && test -w "$XDG_STATE_HOME"'
+# shellcheck disable=SC2016
+check "proot uses local Nix store" sh -c 'NIX_REMOTE=daemon nix-termux exec sh -c '\''test "$NIX_REMOTE" = local'\'''
 
 if [ "${NIX_TERMUX_DEVICE_SMOKE_NETWORK:-0}" = "1" ]; then
 	check "nix run can fetch and execute hello" nix-termux run nixpkgs#hello

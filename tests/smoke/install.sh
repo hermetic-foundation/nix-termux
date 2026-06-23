@@ -280,6 +280,33 @@ xdg_output=$(
 	exit 1
 }
 
+# shellcheck disable=SC2016
+remote_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		NIX_REMOTE=daemon \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_REMOTE"'
+)
+[ "$remote_output" = "local" ] || {
+	printf 'unexpected NIX_REMOTE output: %s\n' "$remote_output" >&2
+	exit 1
+}
+
+env_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" env
+)
+printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"
+printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
+printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
+printf '%s\n' "$env_output" | grep -q "^XDG_STATE_HOME=$tmp/home/.local/state$"
+printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
+
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
