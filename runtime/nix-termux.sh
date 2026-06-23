@@ -15,6 +15,7 @@ info() {
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 store_dir=${NIX_TERMUX_STORE_DIR:-"$state_dir/nix"}
 root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
+tmp_dir=${NIX_TERMUX_TMP_DIR:-"$state_dir/tmp"}
 profile_dir=${NIX_TERMUX_PROFILE_DIR:-"$store_dir/var/nix/profiles/default"}
 cert_file=${NIX_TERMUX_SSL_CERT_FILE:-"$profile_dir/etc/ssl/certs/ca-bundle.crt"}
 nix_conf_file=${NIX_TERMUX_NIX_CONF:-"$root_dir/etc/nix/nix.conf"}
@@ -209,6 +210,7 @@ print_env() {
 NIX_TERMUX_STATE_DIR=$state_dir
 NIX_TERMUX_STORE_DIR=$store_dir
 NIX_TERMUX_ROOT_DIR=$root_dir
+NIX_TERMUX_TMP_DIR=$tmp_dir
 NIX_TERMUX_PROFILE_DIR=$profile_dir
 NIX_TERMUX_SSL_CERT_FILE=$cert_file
 NIX_TERMUX_NIX_CONF=$nix_conf_file
@@ -231,6 +233,7 @@ config_value() {
 enter() {
 	[ -d "$store_dir" ] || die "state not initialized at $state_dir; run installer first"
 	have "$proot" || die "proot is required; install it with: pkg install proot"
+	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/tmp"
 
 	shell=${NIX_TERMUX_SHELL:-"$profile_dir/bin/bash"}
 	[ -x "$shell" ] || shell=/bin/sh
@@ -248,6 +251,7 @@ enter() {
 		-0 \
 		-r "$root_dir" \
 		-b "$store_dir:/nix" \
+		-b "$tmp_dir:/tmp" \
 		-b "$termux_home:/home/termux" \
 		-b "$termux_prefix:/termux" \
 		-b /dev \
@@ -257,6 +261,7 @@ enter() {
 		/usr/bin/env \
 		HOME=/home/termux \
 		TERM="${TERM:-xterm-256color}" \
+		TMPDIR=/tmp \
 		USER=termux \
 		LOGNAME=termux \
 		PATH="/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" \

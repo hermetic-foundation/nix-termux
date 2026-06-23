@@ -26,6 +26,7 @@ runtime_sha=$(sha256sum "$tmp/runtime.tar.gz" | awk '{print $1}')
 
 cat >"$tmp/fake-bin/proot" <<EOF
 #!$host_sh
+printf '%s\n' "\$@" >"\$NIX_TERMUX_STATE_DIR/proot.args"
 while [ "\$#" -gt 0 ]; do
 	case "\$1" in
 		--link2symlink | -0)
@@ -159,12 +160,18 @@ grep -q '^termux_arch=x86_64$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
+test -d "$tmp/home/.nix-termux/root/home"
+test -d "$tmp/home/.nix-termux/root/tmp"
+test -d "$tmp/home/.nix-termux/tmp"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" doctor
+
+grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
+grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
 
 doctor_json=$(
 	PATH="$tmp/fake-bin:$PATH" \

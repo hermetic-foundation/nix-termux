@@ -23,10 +23,13 @@ The physical Nix store lives under:
 $HOME/.nix-termux/nix/store
 ```
 
-The runtime enters a `proot` view that binds this directory as:
+The runtime enters a `proot` view with these key bindings:
 
 ```text
-/nix
+$HOME/.nix-termux/nix -> /nix
+$HOME/.nix-termux/tmp -> /tmp
+$HOME              -> /home/termux
+$PREFIX           -> /termux
 ```
 
 ## Wrapper Model

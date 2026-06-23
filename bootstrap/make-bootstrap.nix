@@ -67,6 +67,8 @@ stdenvNoCC.mkDerivation {
       bootstrap/nix/var/nix/temproots \
       bootstrap/nix-termux \
       bootstrap/root/etc/nix \
+      bootstrap/root/home \
+      bootstrap/root/tmp \
       bootstrap/root/usr/bin \
       bootstrap/root/bin
 

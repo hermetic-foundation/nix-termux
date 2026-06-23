@@ -238,7 +238,7 @@ install_file() {
 	fi
 }
 
-mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/nix"
+mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/root/home" "$state_dir/root/tmp" "$state_dir/tmp" "$state_dir/nix"
 mkdir -p \
 	"$state_dir/nix/store" \
 	"$state_dir/nix/var/log/nix/drvs" \
