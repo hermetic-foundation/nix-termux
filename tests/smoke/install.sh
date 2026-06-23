@@ -258,6 +258,10 @@ grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
+if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
+	printf '%s\n' "temporary install files left after install" >&2
+	exit 1
+fi
 cat >"$tmp/home/.nix-termux/share/tests/device-smoke.sh" <<'EOF'
 #!/usr/bin/env sh
 printf 'stub device smoke'
@@ -392,6 +396,10 @@ upgraded_version_output=$(
 grep -q '^runtime_version=0.1.1$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_v2_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/channel-v2.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
+	printf '%s\n' "temporary install files left after upgrade" >&2
+	exit 1
+fi
 
 output=$(
 	PATH="$tmp/fake-bin:$PATH" \

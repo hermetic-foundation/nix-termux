@@ -28,7 +28,7 @@ wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel 
 [ -n "$prefix" ] || die "PREFIX is not set; run this from stock Termux"
 [ -d "$prefix/bin" ] || die "Termux prefix bin directory not found: $prefix/bin"
 
-for command in mkdir chmod cp rm; do
+for command in mkdir chmod cp mv rm; do
 	have "$command" || die "required command missing: $command"
 done
 for command in dirname grep head sed uname; do
@@ -284,10 +284,14 @@ runtime_version=${runtime_version:-${NIX_TERMUX_VERSION:-0.1.0}}
 install_file() {
 	source=$1
 	target=$2
+	target_dir=$(dirname -- "$target")
+	target_tmp=$target_dir/.install.$(basename -- "$target").$$
 
 	[ -r "$source" ] || die "source file not found: $source"
 	if [ "$source" != "$target" ]; then
-		cp "$source" "$target"
+		rm -f "$target_tmp"
+		cp "$source" "$target_tmp"
+		mv -f "$target_tmp" "$target"
 	fi
 }
 
