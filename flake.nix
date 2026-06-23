@@ -101,6 +101,7 @@
               pkgs.coreutils
               pkgs.curl
               pkgs.gnutar
+              pkgs.jq
             ];
             src = self;
           } ''

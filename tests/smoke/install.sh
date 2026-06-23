@@ -125,6 +125,25 @@ PATH="$tmp/fake-bin:$PATH" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" doctor
 
+doctor_json=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" doctor --json
+)
+
+printf '%s\n' "$doctor_json" | jq -e \
+	--arg sha "$sha" \
+	'.ok == true
+	and .termux.ok == true
+	and .proot.ok == true
+	and .store.ok == true
+	and .nix.ok == true
+	and .certs.ok == true
+	and .activation.ok == true
+	and .activation.bootstrapSha256 == $sha' >/dev/null
+
 grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 
 PATH="$tmp/fake-bin:$PATH" \

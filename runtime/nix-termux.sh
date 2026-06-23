@@ -29,7 +29,7 @@ usage() {
 Usage: nix-termux <command> [args]
 
 Commands:
-  doctor              Check Termux/proot/bootstrap readiness.
+  doctor [--json]     Check Termux/proot/bootstrap readiness.
   env                 Print runtime paths and environment.
   enter [-- cmd...]   Enter the proot-backed Nix environment.
   run <args...>       Run `nix run <args...>` inside the environment.
@@ -49,58 +49,143 @@ is_termux() {
 	[ -n "${PREFIX:-}" ] && [ -d "$termux_prefix" ] && [ -d "$termux_home" ]
 }
 
-doctor() {
-	status=0
+json_escape() {
+	printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+doctor_status() {
+	doctor_termux=false
+	doctor_proot=false
+	doctor_store=false
+	doctor_nix=false
+	doctor_certs=false
+	doctor_activation=false
+	doctor_activation_sha=
+	doctor_status=0
 
 	if is_termux; then
-		info "termux: ok ($termux_prefix)"
+		doctor_termux=true
 	else
-		info "termux: not detected"
-		status=1
+		doctor_status=1
 	fi
-
 	if have "$proot"; then
-		info "proot: ok ($(command -v "$proot"))"
+		doctor_proot=true
 	else
-		info "proot: missing"
-		status=1
+		doctor_status=1
 	fi
-
 	if [ -d "$store_dir/store" ]; then
-		info "store: ok ($store_dir/store)"
+		doctor_store=true
 	else
-		info "store: missing ($store_dir/store)"
-		status=1
+		doctor_status=1
 	fi
-
 	if [ -x "$profile_dir/bin/nix" ]; then
-		info "nix: ok ($profile_dir/bin/nix)"
+		doctor_nix=true
 	else
-		info "nix: missing ($profile_dir/bin/nix)"
-		status=1
+		doctor_status=1
 	fi
-
 	if [ -r "$cert_file" ]; then
-		info "certs: ok ($cert_file)"
+		doctor_certs=true
 	else
-		info "certs: missing ($cert_file)"
-		status=1
+		doctor_status=1
 	fi
-
 	if [ -r "$activation_file" ]; then
 		activation_sha=$(config_value bootstrap_sha256 "$activation_file")
 		if [ -n "$activation_sha" ]; then
-			info "activation: ok ($activation_sha)"
+			doctor_activation=true
+			doctor_activation_sha=$activation_sha
 		else
-			info "activation: malformed ($activation_file)"
-			status=1
+			doctor_status=1
 		fi
 	else
-		info "activation: missing ($activation_file)"
-		status=1
+		doctor_status=1
 	fi
+}
 
-	return "$status"
+doctor_text() {
+	if [ "$doctor_termux" = true ]; then
+		info "termux: ok ($termux_prefix)"
+	else
+		info "termux: not detected"
+	fi
+	if [ "$doctor_proot" = true ]; then
+		info "proot: ok ($(command -v "$proot"))"
+	else
+		info "proot: missing"
+	fi
+	if [ "$doctor_store" = true ]; then
+		info "store: ok ($store_dir/store)"
+	else
+		info "store: missing ($store_dir/store)"
+	fi
+	if [ "$doctor_nix" = true ]; then
+		info "nix: ok ($profile_dir/bin/nix)"
+	else
+		info "nix: missing ($profile_dir/bin/nix)"
+	fi
+	if [ "$doctor_certs" = true ]; then
+		info "certs: ok ($cert_file)"
+	else
+		info "certs: missing ($cert_file)"
+	fi
+	if [ "$doctor_activation" = true ]; then
+		info "activation: ok ($doctor_activation_sha)"
+	elif [ -r "$activation_file" ]; then
+		info "activation: malformed ($activation_file)"
+	else
+		info "activation: missing ($activation_file)"
+	fi
+}
+
+doctor_json() {
+	cat <<EOF
+{
+  "ok": $([ "$doctor_status" -eq 0 ] && printf true || printf false),
+  "termux": {
+    "ok": $doctor_termux,
+    "prefix": "$(json_escape "$termux_prefix")",
+    "home": "$(json_escape "$termux_home")"
+  },
+  "proot": {
+    "ok": $doctor_proot,
+    "command": "$(json_escape "$proot")"
+  },
+  "store": {
+    "ok": $doctor_store,
+    "path": "$(json_escape "$store_dir/store")"
+  },
+  "nix": {
+    "ok": $doctor_nix,
+    "path": "$(json_escape "$profile_dir/bin/nix")"
+  },
+  "certs": {
+    "ok": $doctor_certs,
+    "path": "$(json_escape "$cert_file")"
+  },
+  "activation": {
+    "ok": $doctor_activation,
+    "path": "$(json_escape "$activation_file")",
+    "bootstrapSha256": "$(json_escape "$doctor_activation_sha")"
+  }
+}
+EOF
+}
+
+doctor() {
+	format=text
+	if [ "$#" -gt 0 ] && [ "$1" = "--json" ]; then
+		format=json
+		shift
+	fi
+	[ "$#" -eq 0 ] || die "doctor accepts only --json"
+
+	doctor_status
+
+	case $format in
+	json) doctor_json ;;
+	text) doctor_text ;;
+	esac
+
+	return "$doctor_status"
 }
 
 print_env() {
