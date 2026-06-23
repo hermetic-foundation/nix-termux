@@ -155,6 +155,15 @@ cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-registration"
 rm -f "$tmp/bootstrap-missing-registration/nix-termux/bootstrap.registration"
 (cd "$tmp/bootstrap-missing-registration" && tar -czf "$tmp/bootstrap-missing-registration.tar.gz" .)
 missing_registration_sha=$(sha256sum "$tmp/bootstrap-missing-registration.tar.gz" | awk '{print $1}')
+cp -R "$tmp/bootstrap" "$tmp/bootstrap-load-db-fail"
+cat >"$tmp/bootstrap-load-db-fail/nix/var/nix/profiles/default/bin/nix-store" <<EOF
+#!$host_sh
+printf '%s\n' "load db failed" >&2
+exit 9
+EOF
+chmod 755 "$tmp/bootstrap-load-db-fail/nix/var/nix/profiles/default/bin/nix-store"
+(cd "$tmp/bootstrap-load-db-fail" && tar -czf "$tmp/bootstrap-load-db-fail.tar.gz" .)
+load_db_fail_sha=$(sha256sum "$tmp/bootstrap-load-db-fail.tar.gz" | awk '{print $1}')
 cat >"$tmp/bootstrap-manifest.json" <<EOF
 {
   "schemaVersion": 1,
@@ -205,6 +214,25 @@ cat >"$tmp/bootstrap-missing-registration-manifest.json" <<EOF
   "archive": {
     "url": "bootstrap-missing-registration.tar.gz",
     "sha256": "$missing_registration_sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-load-db-fail-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-load-db-fail.tar.gz",
+    "sha256": "$load_db_fail_sha"
   },
   "layout": {
     "storeDir": "nix",
@@ -351,6 +379,23 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'bootstrap archive missing nix-termux/bootstrap.registration' "$tmp/bootstrap-missing-registration.err"
 test ! -e "$tmp/bootstrap-missing-registration-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-load-db-fail-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-load-db-fail-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-load-db-fail-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-load-db-fail.err"; then
+	printf '%s\n' "bootstrap load-db failure unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'load db failed' "$tmp/bootstrap-load-db-fail.err"
+test ! -e "$tmp/bootstrap-load-db-fail-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/bootstrap-load-db-fail-home/.nix-termux/etc/nix-termux.conf"
 test ! -e "$tmp/prefix/bin/nix"
 
 PATH="$tmp/fake-bin:$PATH" \

@@ -431,6 +431,23 @@ install_file "$source_uninstall" "$state_dir/share/installer/uninstall.sh"
 install_file "$source_device_smoke" "$state_dir/share/tests/device-smoke.sh"
 chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh" "$state_dir/share/tests/device-smoke.sh"
 
+if [ -n "$bootstrap_url" ]; then
+	registration_loaded=no
+	[ "$bootstrap_archive_ready" = yes ] || die "bootstrap archive was not prepared"
+	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
+
+	registration=$state_dir/nix-termux/bootstrap.registration
+	sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
+	registration_loaded=yes
+
+	{
+		printf 'bootstrap_url=%s\n' "$bootstrap_url"
+		printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
+		printf 'registration=%s\n' "$registration"
+		printf 'registration_loaded=%s\n' "$registration_loaded"
+	} | write_file "$state_dir/etc/bootstrap-activation.conf"
+fi
+
 for name in $wrapper_names; do
 	backup_prefix_command "$name"
 done
@@ -452,23 +469,6 @@ exec '$prefix/bin/nix-termux' exec $name "\$@"
 EOF
 	chmod 755 "$prefix/bin/$name"
 done
-
-if [ -n "$bootstrap_url" ]; then
-	registration_loaded=no
-	[ "$bootstrap_archive_ready" = yes ] || die "bootstrap archive was not prepared"
-	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
-
-	registration=$state_dir/nix-termux/bootstrap.registration
-	"$prefix/bin/nix-termux" exec nix-store --load-db <"$registration"
-	registration_loaded=yes
-
-	{
-		printf 'bootstrap_url=%s\n' "$bootstrap_url"
-		printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
-		printf 'registration=%s\n' "$registration"
-		printf 'registration_loaded=%s\n' "$registration_loaded"
-	} | write_file "$state_dir/etc/bootstrap-activation.conf"
-fi
 
 {
 	printf 'runtime_version=%s\n' "$runtime_version"
