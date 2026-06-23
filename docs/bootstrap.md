@@ -58,6 +58,10 @@ export NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=https://example.invalid/nix-termux/boot
 curl -L https://example.invalid/nix-termux/install.sh | sh
 ```
 
+The manifest `platform.termuxArch` must match the detected or overridden Termux
+architecture. The installer rejects mismatches before fetching or unpacking the
+bootstrap archive.
+
 Direct `NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` values are
 still supported and override manifest archive fields when set.
 

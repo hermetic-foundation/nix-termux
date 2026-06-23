@@ -32,5 +32,9 @@ and fetches `nix-termux-channel-$arch.json` from that base URL. Set
 `NIX_TERMUX_ARCH` to override detection, or set `NIX_TERMUX_CHANNEL_URL` to use
 an exact channel manifest URL.
 
+The channel `platform.termuxArch` must match the detected or overridden Termux
+architecture. The installer rejects mismatches before fetching runtime or
+bootstrap archives.
+
 The installer resolves relative `runtime.url` and `bootstrapManifest.url`
 against the channel URL, so mirrors can host all release files in one directory.

@@ -129,6 +129,10 @@ detect_arch() {
 load_manifest() {
 	manifest=$1
 
+	if [ -z "$termux_arch" ]; then
+		termux_arch=$(detect_arch)
+	fi
+
 	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
 		die "unsupported bootstrap manifest schemaVersion"
 	grep -Eq '"storeDir"[[:space:]]*:[[:space:]]*"nix"' "$manifest" ||
@@ -144,8 +148,12 @@ load_manifest() {
 
 	manifest_archive_url=$(json_string_value url "$manifest")
 	manifest_sha256=$(json_string_value sha256 "$manifest")
+	manifest_termux_arch=$(json_string_value termuxArch "$manifest")
 	[ -n "$manifest_archive_url" ] || die "bootstrap manifest missing archive.url"
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
+	[ -n "$manifest_termux_arch" ] || die "bootstrap manifest missing platform.termuxArch"
+	[ "$manifest_termux_arch" = "$termux_arch" ] ||
+		die "bootstrap manifest architecture mismatch: expected $termux_arch got $manifest_termux_arch"
 
 	bootstrap_url=${bootstrap_url:-"$(resolve_manifest_url "$bootstrap_manifest_url" "$manifest_archive_url")"}
 	bootstrap_sha256=${bootstrap_sha256:-"$manifest_sha256"}
@@ -153,6 +161,10 @@ load_manifest() {
 
 load_channel() {
 	channel=$1
+
+	if [ -z "$termux_arch" ]; then
+		termux_arch=$(detect_arch)
+	fi
 
 	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$channel" ||
 		die "unsupported channel manifest schemaVersion"
@@ -164,10 +176,14 @@ load_channel() {
 	channel_runtime_url=$(json_string_value_n url 1 "$channel")
 	channel_bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
 	channel_runtime_sha256=$(json_string_value sha256 "$channel")
+	channel_termux_arch=$(json_string_value termuxArch "$channel")
 
 	[ -n "$channel_runtime_url" ] || die "channel manifest missing runtime.url"
 	[ -n "$channel_runtime_sha256" ] || die "channel manifest missing runtime.sha256"
 	[ -n "$channel_bootstrap_manifest_url" ] || die "channel manifest missing bootstrapManifest.url"
+	[ -n "$channel_termux_arch" ] || die "channel manifest missing platform.termuxArch"
+	[ "$channel_termux_arch" = "$termux_arch" ] ||
+		die "channel manifest architecture mismatch: expected $termux_arch got $channel_termux_arch"
 
 	runtime_archive_url=${runtime_archive_url:-"$(resolve_manifest_url "$channel_url" "$channel_runtime_url")"}
 	runtime_archive_sha256=${runtime_archive_sha256:-"$channel_runtime_sha256"}
