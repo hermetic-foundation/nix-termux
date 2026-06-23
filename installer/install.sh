@@ -23,6 +23,7 @@ runtime_archive_sha256=${NIX_TERMUX_RUNTIME_ARCHIVE_SHA256:-}
 bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
 bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
+bootstrap_archive_ready=no
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 runtime_archive=$state_dir/tmp/runtime.tar.gz
 runtime_source=$state_dir/tmp/runtime-source
@@ -65,6 +66,30 @@ fetch_url() {
 		curl -L "$url" -o "$output"
 		;;
 	esac
+}
+
+validate_tar_paths() {
+	archive=$1
+	label=$2
+	listing=$state_dir/tmp/tar-list.$$
+	unsafe_member=
+
+	rm -f "$listing"
+	tar -tzf "$archive" >"$listing" ||
+		die "$label archive could not be listed"
+
+	while IFS= read -r member; do
+		case $member in
+		"" | /* | .. | ../* | */.. | */../*)
+			unsafe_member=$member
+			break
+			;;
+		esac
+	done <"$listing"
+	rm -f "$listing"
+
+	[ -z "$unsafe_member" ] ||
+		die "$label archive contains unsafe path: $unsafe_member"
 }
 
 json_string_value() {
@@ -272,6 +297,7 @@ else
 			[ "$actual" = "$runtime_archive_sha256" ] || die "runtime archive sha256 mismatch: expected $runtime_archive_sha256 got $actual"
 		fi
 
+		validate_tar_paths "$runtime_archive" runtime
 		tar -xzf "$runtime_archive" -C "$runtime_source"
 		rm -f "$runtime_archive"
 
@@ -356,6 +382,22 @@ if [ -n "$bootstrap_manifest_url" ]; then
 	load_manifest "$manifest"
 fi
 
+if [ -n "$bootstrap_url" ]; then
+	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
+
+	fetch_url "$bootstrap_url" "$bootstrap_archive"
+
+	if [ -n "$bootstrap_sha256" ]; then
+		have sha256sum || die "sha256sum is required when NIX_TERMUX_BOOTSTRAP_SHA256 is set"
+		actual=$(sha256sum "$bootstrap_archive")
+		actual=${actual%% *}
+		[ "$actual" = "$bootstrap_sha256" ] || die "bootstrap sha256 mismatch: expected $bootstrap_sha256 got $actual"
+	fi
+
+	validate_tar_paths "$bootstrap_archive" bootstrap
+	bootstrap_archive_ready=yes
+fi
+
 install_file "$source_bin" "$state_dir/bin/nix-termux"
 install_file "$source_install" "$state_dir/share/installer/install.sh"
 install_file "$source_runtime" "$state_dir/runtime/nix-termux.sh"
@@ -386,18 +428,8 @@ EOF
 done
 
 if [ -n "$bootstrap_url" ]; then
-	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
-
 	registration_loaded=no
-	fetch_url "$bootstrap_url" "$bootstrap_archive"
-
-	if [ -n "$bootstrap_sha256" ]; then
-		have sha256sum || die "sha256sum is required when NIX_TERMUX_BOOTSTRAP_SHA256 is set"
-		actual=$(sha256sum "$bootstrap_archive")
-		actual=${actual%% *}
-		[ "$actual" = "$bootstrap_sha256" ] || die "bootstrap sha256 mismatch: expected $bootstrap_sha256 got $actual"
-	fi
-
+	[ "$bootstrap_archive_ready" = yes ] || die "bootstrap archive was not prepared"
 	rm -rf "$bootstrap_stage"
 	mkdir -p "$bootstrap_stage"
 	tar -xzf "$bootstrap_archive" -C "$bootstrap_stage"

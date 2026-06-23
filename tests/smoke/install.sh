@@ -51,6 +51,9 @@ cp "$repo_root/installer/uninstall.sh" "$tmp/runtime-missing/installer/uninstall
 cp "$repo_root/tests/termux/device-smoke.sh" "$tmp/runtime-missing/tests/termux/device-smoke.sh"
 (cd "$tmp/runtime-missing" && tar -czf "$tmp/runtime-missing.tar.gz" .)
 runtime_missing_sha=$(sha256sum "$tmp/runtime-missing.tar.gz" | awk '{print $1}')
+cp -R "$tmp/runtime-source" "$tmp/runtime-unsafe"
+(cd "$tmp/runtime-unsafe" && tar --transform='s|^\./bin/nix-termux$|../nix-termux|' -czf "$tmp/runtime-unsafe.tar.gz" .)
+runtime_unsafe_sha=$(sha256sum "$tmp/runtime-unsafe.tar.gz" | awk '{print $1}')
 cp -R "$tmp/runtime-source" "$tmp/runtime-source-v2"
 # shellcheck disable=SC2016
 sed 's/version=${NIX_TERMUX_VERSION:-0.1.0}/version=${NIX_TERMUX_VERSION:-0.1.1}/' \
@@ -146,6 +149,8 @@ printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registra
 
 (cd "$tmp/bootstrap" && tar -czf "$tmp/bootstrap.tar.gz" .)
 sha=$(sha256sum "$tmp/bootstrap.tar.gz" | awk '{print $1}')
+(cd "$tmp/bootstrap" && tar --transform='s|^\./root/etc/nix/nix.conf$|../nix.conf|' -czf "$tmp/bootstrap-unsafe.tar.gz" .)
+unsafe_bootstrap_sha=$(sha256sum "$tmp/bootstrap-unsafe.tar.gz" | awk '{print $1}')
 cat >"$tmp/bootstrap-manifest.json" <<EOF
 {
   "schemaVersion": 1,
@@ -158,6 +163,25 @@ cat >"$tmp/bootstrap-manifest.json" <<EOF
   "archive": {
     "url": "bootstrap.tar.gz",
     "sha256": "$sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-unsafe-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-unsafe.tar.gz",
+    "sha256": "$unsafe_bootstrap_sha"
   },
   "layout": {
     "storeDir": "nix",
@@ -249,6 +273,19 @@ fi
 grep -q 'runtime archive missing runtime/nix-termux.sh' "$tmp/runtime-missing.err"
 
 if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/runtime-unsafe-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/runtime-unsafe-home/.nix-termux" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime-unsafe.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_unsafe_sha" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/runtime-unsafe.err"; then
+	printf '%s\n' "unsafe runtime archive unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'runtime archive contains unsafe path: ../nix-termux' "$tmp/runtime-unsafe.err"
+test ! -e "$tmp/runtime-unsafe-home/nix-termux"
+
+if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/mismatch-home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/mismatch-home/.nix-termux" \
@@ -261,6 +298,21 @@ if PATH="$tmp/fake-bin:$PATH" \
 	exit 1
 fi
 grep -q 'bootstrap manifest architecture mismatch: expected aarch64 got x86_64' "$tmp/bootstrap-mismatch.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-unsafe-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-unsafe-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-unsafe-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-unsafe.err"; then
+	printf '%s\n' "unsafe bootstrap archive unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap archive contains unsafe path: ../nix.conf' "$tmp/bootstrap-unsafe.err"
+test ! -e "$tmp/bootstrap-unsafe-home/nix.conf"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
