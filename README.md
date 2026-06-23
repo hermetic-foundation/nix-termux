@@ -41,6 +41,7 @@ The intended install flow is:
 
 ```sh
 pkg install proot curl tar xz coreutils
+export NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=https://example.invalid/nix-termux/bootstrap-aarch64.json
 curl -L https://example.invalid/nix-termux/install.sh | sh
 nix-termux doctor
 ```
@@ -63,6 +64,9 @@ Those wrappers are what Termux add-ons should call. For example,
 ```sh
 nix-termux run nixpkgs#hello
 ```
+
+For local development or mirrored artifacts, the installer also accepts
+`NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` directly.
 
 ## License
 

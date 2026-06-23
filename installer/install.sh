@@ -14,6 +14,7 @@ have() {
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
+bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
 bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
 
@@ -28,9 +29,58 @@ if ! have proot; then
 	die "proot is required; install it with: pkg install proot"
 fi
 
+fetch_url() {
+	url=$1
+	output=$2
+
+	case $url in
+	file://*)
+		cp "${url#file://}" "$output"
+		;;
+	*)
+		have curl || die "curl is required to fetch $url"
+		curl -L "$url" -o "$output"
+		;;
+	esac
+}
+
+json_string_value() {
+	key=$1
+	file=$2
+
+	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n 1
+}
+
+load_manifest() {
+	manifest=$1
+
+	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
+		die "unsupported bootstrap manifest schemaVersion"
+	grep -Eq '"storeDir"[[:space:]]*:[[:space:]]*"nix"' "$manifest" ||
+		die "unsupported bootstrap manifest storeDir"
+	grep -Eq '"rootDir"[[:space:]]*:[[:space:]]*"root"' "$manifest" ||
+		die "unsupported bootstrap manifest rootDir"
+	grep -Eq '"nixBin"[[:space:]]*:[[:space:]]*"nix/var/nix/profiles/default/bin/nix"' "$manifest" ||
+		die "unsupported bootstrap manifest nixBin"
+
+	manifest_url=$(json_string_value url "$manifest")
+	manifest_sha256=$(json_string_value sha256 "$manifest")
+	[ -n "$manifest_url" ] || die "bootstrap manifest missing archive.url"
+	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
+
+	bootstrap_url=${bootstrap_url:-"$manifest_url"}
+	bootstrap_sha256=${bootstrap_sha256:-"$manifest_sha256"}
+}
+
 repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 
 mkdir -p "$state_dir/bin" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/root/usr/bin" "$state_dir/nix"
+
+if [ -n "$bootstrap_manifest_url" ]; then
+	manifest=$state_dir/bootstrap-manifest.json
+	fetch_url "$bootstrap_manifest_url" "$manifest"
+	load_manifest "$manifest"
+fi
 
 cp "$repo_root/bin/nix-termux" "$state_dir/bin/nix-termux"
 cp "$repo_root/runtime/nix-termux.sh" "$state_dir/runtime/nix-termux.sh"
@@ -53,11 +103,10 @@ EOF
 done
 
 if [ -n "$bootstrap_url" ]; then
-	have curl || die "curl is required to fetch NIX_TERMUX_BOOTSTRAP_URL"
 	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
 
 	archive=$state_dir/bootstrap.tar
-	curl -L "$bootstrap_url" -o "$archive"
+	fetch_url "$bootstrap_url" "$archive"
 
 	if [ -n "$bootstrap_sha256" ]; then
 		have sha256sum || die "sha256sum is required when NIX_TERMUX_BOOTSTRAP_SHA256 is set"

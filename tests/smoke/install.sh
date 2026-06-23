@@ -69,13 +69,30 @@ cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
 
 (cd "$tmp/bootstrap" && tar -cf "$tmp/bootstrap.tar" .)
 sha=$(sha256sum "$tmp/bootstrap.tar" | awk '{print $1}')
+cat >"$tmp/bootstrap-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "file://$tmp/bootstrap.tar",
+    "sha256": "$sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix"
+  }
+}
+EOF
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
-	NIX_TERMUX_BOOTSTRAP_URL="file://$tmp/bootstrap.tar" \
-	NIX_TERMUX_BOOTSTRAP_SHA256="$sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-manifest.json" \
 	sh "$repo_root/installer/install.sh"
 
 PATH="$tmp/fake-bin:$PATH" \

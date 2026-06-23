@@ -42,6 +42,12 @@ Bootstrap manifests use schema version 1 and are validated by
 }
 ```
 
-The installer currently accepts direct `NIX_TERMUX_BOOTSTRAP_URL` and
-`NIX_TERMUX_BOOTSTRAP_SHA256` values. Manifest-driven install is the next step
-once real artifacts are published.
+Set `NIX_TERMUX_BOOTSTRAP_MANIFEST_URL` before running the installer:
+
+```sh
+export NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=https://example.invalid/nix-termux/bootstrap-aarch64.json
+curl -L https://example.invalid/nix-termux/install.sh | sh
+```
+
+Direct `NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` values are
+still supported and override manifest archive fields when set.

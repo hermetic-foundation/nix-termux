@@ -45,9 +45,9 @@ need to know about `proot` or the private state directory.
 
 ## Bootstrap Model
 
-Bootstrap artifacts are fetched only when `NIX_TERMUX_BOOTSTRAP_URL` is set.
-The initial contract is a tar archive that unpacks into `$HOME/.nix-termux` and
-provides at least:
+Bootstrap artifacts are fetched when `NIX_TERMUX_BOOTSTRAP_MANIFEST_URL` or
+`NIX_TERMUX_BOOTSTRAP_URL` is set. The archive unpacks into
+`$HOME/.nix-termux` and provides at least:
 
 ```text
 nix/store
@@ -55,4 +55,4 @@ nix/var/nix/profiles/default/bin/nix
 root/usr/bin/env
 ```
 
-That contract will tighten once CI builds and tests real artifacts.
+The manifest schema lives at `bootstrap/manifest.schema.json`.
