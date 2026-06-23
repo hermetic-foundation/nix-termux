@@ -74,6 +74,7 @@ doctor_status() {
 	doctor_activation=false
 	doctor_dns=false
 	doctor_wrappers=false
+	doctor_installed_runtime_version=
 	doctor_missing_wrappers=
 	doctor_activation_sha=
 	doctor_status=0
@@ -140,9 +141,15 @@ doctor_status() {
 	else
 		doctor_status=1
 	fi
+	doctor_installed_runtime_version=$(config_value runtime_version "$config_file")
 }
 
 doctor_text() {
+	if [ -n "$doctor_installed_runtime_version" ]; then
+		info "runtime: ok ($version, installed $doctor_installed_runtime_version)"
+	else
+		info "runtime: ok ($version)"
+	fi
 	if [ "$doctor_termux" = true ]; then
 		info "termux: ok ($termux_prefix)"
 	else
@@ -202,6 +209,7 @@ doctor_json() {
 {
   "schemaVersion": 1,
   "runtimeVersion": "$(json_escape "$version")",
+  "installedRuntimeVersion": "$(json_escape "$doctor_installed_runtime_version")",
   "ok": $([ "$doctor_status" -eq 0 ] && printf true || printf false),
   "termux": {
     "ok": $doctor_termux,

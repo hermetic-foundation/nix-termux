@@ -220,6 +220,7 @@ grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
 grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q '^termux_arch=x86_64$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
@@ -286,10 +287,13 @@ doctor_json=$(
 		"$tmp/prefix/bin/nix-termux" doctor --json
 )
 
+printf '%s\n' "$doctor_json" | grep -Eq '"runtimeVersion"[[:space:]]*:[[:space:]]*"0.1.0"'
+printf '%s\n' "$doctor_json" | grep -Eq '"installedRuntimeVersion"[[:space:]]*:[[:space:]]*"0.1.0"'
 printf '%s\n' "$doctor_json" | jq -e \
 	--arg sha "$sha" \
 	'.schemaVersion == 1
 	and .runtimeVersion == "0.1.0"
+	and .installedRuntimeVersion == "0.1.0"
 	and .ok == true
 	and .termux.ok == true
 	and .proot.ok == true

@@ -85,8 +85,9 @@ check_json_string() {
 		jq -e "$key == \"$value\"" "$file" >/dev/null
 	else
 		case $key in
-		.runtimeVersion)
-			grep -Eq '"runtimeVersion"[[:space:]]*:[[:space:]]*"'"$value"'"' "$file"
+		.runtimeVersion | .installedRuntimeVersion)
+			json_key=${key#.}
+			grep -Eq "\"$json_key\"[[:space:]]*:[[:space:]]*\"$value\"" "$file"
 			;;
 		*)
 			return 1
@@ -135,6 +136,7 @@ fi
 
 check "doctor reports schema version" check_json_number ".schemaVersion" 1 "$doctor_json"
 check "doctor reports runtime version" check_json_string ".runtimeVersion" "0.1.0" "$doctor_json"
+check "doctor reports installed runtime version" check_json_string ".installedRuntimeVersion" "0.1.0" "$doctor_json"
 check "doctor reports ok" check_json_bool ".ok" "$doctor_json"
 check "doctor reports Termux" check_json_bool ".termux.ok" "$doctor_json"
 check "doctor reports proot" check_json_bool ".proot.ok" "$doctor_json"

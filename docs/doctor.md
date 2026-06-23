@@ -20,6 +20,7 @@ The JSON shape is stable for schema version 1 of the runtime:
 {
   "schemaVersion": 1,
   "runtimeVersion": "0.1.0",
+  "installedRuntimeVersion": "0.1.0",
   "ok": true,
   "termux": {
     "ok": true,

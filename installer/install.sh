@@ -13,6 +13,7 @@ have() {
 }
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
+runtime_version=${NIX_TERMUX_VERSION:-0.1.0}
 prefix=${PREFIX:-}
 termux_arch=${NIX_TERMUX_ARCH:-}
 channel_url=${NIX_TERMUX_CHANNEL_URL:-}
@@ -355,6 +356,7 @@ if [ -n "$bootstrap_url" ]; then
 fi
 
 {
+	printf 'runtime_version=%s\n' "$runtime_version"
 	printf 'termux_arch=%s\n' "$termux_arch"
 	printf 'channel_url=%s\n' "$channel_url"
 	printf 'channel_base_url=%s\n' "$channel_base_url"
