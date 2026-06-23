@@ -49,6 +49,9 @@ nix-termux-bootstrap-<arch>.json
 nix-termux-bootstrap-<arch>.registration
 ```
 
+Tagged GitHub releases build and attach those artifacts through
+`.github/workflows/ci.yml`.
+
 ## Termux Install Shape
 
 The intended install flow is:

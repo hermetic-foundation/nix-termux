@@ -1,0 +1,49 @@
+# Release Process
+
+`nix-termux` releases are ordinary GitHub releases. There is no required
+project-specific deployment service.
+
+## Build Locally
+
+```sh
+nix flake check
+nix build .#bootstrap
+```
+
+The bootstrap result contains:
+
+```text
+nix-termux-bootstrap-<arch>.tar.gz
+nix-termux-bootstrap-<arch>.json
+nix-termux-bootstrap-<arch>.registration
+```
+
+## Publish
+
+Push a version tag:
+
+```sh
+jj bookmark move main --to @
+jj git push --bookmark main
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The `ci` workflow builds `.#bootstrap`, writes `SHA256SUMS`, and attaches the
+result files to the GitHub release for the tag.
+
+## Artifact URL Shape
+
+Release manifests can refer to archives beside the manifest:
+
+```json
+{
+  "archive": {
+    "url": "nix-termux-bootstrap-aarch64.tar.gz"
+  }
+}
+```
+
+The installer resolves relative archive URLs against
+`NIX_TERMUX_BOOTSTRAP_MANIFEST_URL`, so users and mirrors can host the manifest
+and archive together without modifying the archive hash.

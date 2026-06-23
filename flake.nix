@@ -34,6 +34,7 @@
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
               install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
               install -Dm644 docs/bootstrap.md "$out/share/doc/nix-termux/bootstrap.md"
+              install -Dm644 docs/release.md "$out/share/doc/nix-termux/release.md"
               install -Dm644 bootstrap/manifest.schema.json "$out/share/nix-termux/bootstrap/manifest.schema.json"
               install -Dm644 bootstrap/example-manifest.json "$out/share/nix-termux/bootstrap/example-manifest.json"
               cp -R runtime "$out/share/nix-termux/runtime"
@@ -110,6 +111,17 @@
             touch "$out"
           '';
 
+          github-actions = pkgs.runCommand "nix-termux-github-actions" {
+            nativeBuildInputs = [ pkgs.actionlint ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            actionlint .github/workflows/ci.yml
+            touch "$out"
+          '';
+
           bootstrap-artifact = pkgs.runCommand "nix-termux-bootstrap-artifact-smoke" {
             nativeBuildInputs = [
               pkgs.coreutils
@@ -139,6 +151,7 @@
               bash
               coreutils
               git
+              actionlint
               jq
               shellcheck
               shfmt
