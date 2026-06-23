@@ -38,6 +38,12 @@ if grep -Eq '(^|[^[:alnum:]_])awk([^[:alnum:]_]|$)' "$tmp/runtime-source/tests/t
 fi
 (cd "$tmp/runtime-source" && tar -czf "$tmp/runtime.tar.gz" .)
 runtime_sha=$(sha256sum "$tmp/runtime.tar.gz" | awk '{print $1}')
+cp -R "$tmp/runtime-source" "$tmp/runtime-source-v2"
+# shellcheck disable=SC2016
+sed 's/version=${NIX_TERMUX_VERSION:-0.1.0}/version=${NIX_TERMUX_VERSION:-0.1.1}/' \
+	"$tmp/runtime-source/runtime/nix-termux.sh" >"$tmp/runtime-source-v2/runtime/nix-termux.sh"
+(cd "$tmp/runtime-source-v2" && tar -czf "$tmp/runtime-v2.tar.gz" .)
+runtime_v2_sha=$(sha256sum "$tmp/runtime-v2.tar.gz" | awk '{print $1}')
 
 cat >"$tmp/fake-bin/proot" <<EOF
 #!$host_sh
@@ -163,6 +169,22 @@ cat >"$tmp/channel.json" <<EOF
 }
 EOF
 cp "$tmp/channel.json" "$tmp/nix-termux-channel-x86_64.json"
+cat >"$tmp/channel-v2.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "runtime": {
+    "url": "runtime-v2.tar.gz",
+    "sha256": "$runtime_v2_sha"
+  },
+  "bootstrapManifest": {
+    "url": "bootstrap-manifest.json"
+  }
+}
+EOF
 cat >"$tmp/fake-bin/pkg" <<'EOF'
 #!/usr/bin/env sh
 if [ "$1" = "--print-architecture" ]; then
@@ -337,6 +359,27 @@ PATH="$tmp/fake-bin:$PATH" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap
 
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade "file://$tmp/channel-v2.json"
+
+upgraded_version_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" version
+)
+[ "$upgraded_version_output" = "0.1.1" ] || {
+	printf 'unexpected upgraded version output: %s\n' "$upgraded_version_output" >&2
+	exit 1
+}
+grep -q '^runtime_version=0.1.1$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q "^runtime_archive_sha256=$runtime_v2_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^channel_url=file://.*/channel-v2.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+
 output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
@@ -452,7 +495,7 @@ env_output=$(
 		NIX_PATH='' \
 		"$tmp/prefix/bin/nix-termux" env
 )
-printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.0$'
+printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.1$'
 printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"
 printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"

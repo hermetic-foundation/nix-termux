@@ -44,6 +44,8 @@ Commands:
   run <args...>       Run `nix run <args...>` inside the environment.
   exec <cmd> [args...] Run an arbitrary command inside the environment.
   smoke-test [args...] Run the installed Termux device smoke test.
+  upgrade [channel-url]
+                      Reinstall runtime/bootstrap from a channel manifest.
   upgrade-bootstrap [manifest-url]
                       Reinstall runtime/bootstrap from a manifest.
   uninstall           Remove wrappers and nix-termux state.
@@ -425,6 +427,25 @@ smoke_test() {
 	exec sh "$smoke_script" "$@"
 }
 
+upgrade() {
+	channel=${1:-}
+	install_script=${NIX_TERMUX_INSTALL:-"$state_dir/share/installer/install.sh"}
+
+	[ "$#" -le 1 ] || die "upgrade accepts at most one channel URL"
+	[ -x "$install_script" ] || die "install script not found at $install_script"
+
+	if [ -z "$channel" ]; then
+		channel=$(config_value channel_url "$config_file")
+	fi
+	[ -n "$channel" ] || die "no channel URL supplied and none saved in $config_file"
+
+	NIX_TERMUX_CHANNEL_URL=$channel \
+		NIX_TERMUX_STATE_DIR=$state_dir \
+		PREFIX=$termux_prefix \
+		HOME=$termux_home \
+		exec sh "$install_script"
+}
+
 uninstall() {
 	uninstall_script=${NIX_TERMUX_UNINSTALL:-"$state_dir/share/installer/uninstall.sh"}
 	[ -x "$uninstall_script" ] || die "uninstall script not found at $uninstall_script"
@@ -461,6 +482,7 @@ enter) enter "$@" ;;
 run) run_nix "$@" ;;
 exec) exec_command "$@" ;;
 smoke-test) smoke_test "$@" ;;
+upgrade) upgrade "$@" ;;
 upgrade-bootstrap) upgrade_bootstrap "$@" ;;
 uninstall) uninstall "$@" ;;
 version | -V | --version) version "$@" ;;

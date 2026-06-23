@@ -13,7 +13,7 @@ have() {
 }
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
-runtime_version=${NIX_TERMUX_VERSION:-0.1.0}
+runtime_version=${NIX_TERMUX_VERSION:-}
 prefix=${PREFIX:-}
 termux_arch=${NIX_TERMUX_ARCH:-}
 channel_url=${NIX_TERMUX_CHANNEL_URL:-}
@@ -220,7 +220,7 @@ else
 	source_uninstall=$state_dir/share/installer/uninstall.sh
 	source_device_smoke=$state_dir/share/tests/device-smoke.sh
 
-	if [ ! -r "$source_bin" ] && [ -n "$runtime_archive_url" ]; then
+	if [ -n "$runtime_archive_url" ]; then
 		have tar || die "tar is required to unpack NIX_TERMUX_RUNTIME_ARCHIVE_URL"
 		runtime_archive=$state_dir/tmp/runtime.tar.gz
 		runtime_source=$state_dir/tmp/runtime-source
@@ -249,6 +249,9 @@ fi
 
 [ -r "$source_bin" ] ||
 	die "runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL"
+# shellcheck disable=SC2016
+runtime_version=$(sed -n 's/^version=${NIX_TERMUX_VERSION:-\([^}]*\)}$/\1/p' "$source_runtime" | head -n 1)
+runtime_version=${runtime_version:-${NIX_TERMUX_VERSION:-0.1.0}}
 
 install_file() {
 	source=$1

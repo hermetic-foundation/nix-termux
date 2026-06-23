@@ -16,7 +16,7 @@ This repository provides:
 - A Nix flake and `direnv` entry with `use flake`.
 - A stock-Termux installer/runtime that keeps the normal Termux app in place.
 - `nix-termux` runtime commands for `doctor`, `enter`, `run`, `env`,
-  `smoke-test`, `upgrade-bootstrap`, `version`, and `uninstall`.
+  `smoke-test`, `upgrade`, `upgrade-bootstrap`, `version`, and `uninstall`.
 - A versioned bootstrap manifest contract and host smoke test for the
   installer/wrapper path.
 - A Nix-built bootstrap artifact package and GitHub release workflow for
@@ -126,7 +126,20 @@ When running a standalone `install.sh` with `curl | sh`, provide either
 `NIX_TERMUX_CHANNEL_BASE_URL`, `NIX_TERMUX_CHANNEL_URL`, or
 `NIX_TERMUX_RUNTIME_ARCHIVE_URL` so the installer can fetch the runtime files.
 
-After installation, the saved manifest can be reused with:
+After installation, the saved channel can be reused to upgrade the runtime and
+bootstrap:
+
+```sh
+nix-termux upgrade
+```
+
+or replaced explicitly:
+
+```sh
+nix-termux upgrade https://example.invalid/nix-termux/nix-termux-channel-aarch64.json
+```
+
+To refresh only the bootstrap, the saved bootstrap manifest can be reused with:
 
 ```sh
 nix-termux upgrade-bootstrap

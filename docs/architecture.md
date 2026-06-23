@@ -96,6 +96,9 @@ can read those files directly.
 The preferred remote install path is `NIX_TERMUX_CHANNEL_URL`. A channel
 manifest points to both the runtime archive and the architecture-specific
 bootstrap manifest, reducing install setup to one URL.
+The installed `nix-termux upgrade` command reruns the installer against the
+saved or supplied channel and replaces the runtime files from the channel's
+runtime archive before refreshing the bootstrap.
 
 ## Bootstrap Model
 
