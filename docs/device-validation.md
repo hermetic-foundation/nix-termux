@@ -19,8 +19,8 @@ sh "$HOME/.nix-termux/share/tests/device-smoke.sh"
 ```
 
 The smoke test checks Termux detection, wrapper installation, `proot`, the Nix
-store/profile layout, certificate bundle wiring, bootstrap activation, and basic
-`nix`/`nix-store` execution through the wrappers.
+store/profile layout, certificate bundle wiring, bootstrap activation, and
+basic execution through every installed Nix wrapper.
 
 Networked Nix evaluation is intentionally opt-in because it can be slow and
 depends on the device connection:

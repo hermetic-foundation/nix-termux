@@ -69,7 +69,7 @@ while [ "\$#" -gt 0 ]; do
 			;;
 	esac
 done
-if [ "\$1" = "nix" ] || [ "\$1" = "nix-store" ]; then
+if [ -x "\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default/bin/\$1" ]; then
 	command=\$1
 	shift
 	exec "\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default/bin/\$command" "\$@"
@@ -108,6 +108,17 @@ done
 printf '\n'
 EOF
 chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix-store"
+for name in nix-shell nix-env nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
+	cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/$name" <<EOF
+#!$host_sh
+printf 'fake $name'
+for arg in "\$@"; do
+	printf ' %s' "\$arg"
+done
+printf '\n'
+EOF
+	chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/$name"
+done
 cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
 printf '%s\n' "experimental-features = nix-command flakes" >"$tmp/bootstrap/root/etc/nix/nix.conf"
 printf '%s\n' "fake cert bundle" >"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
@@ -212,6 +223,20 @@ for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-ga
 	grep -q "exec '$tmp/prefix/bin/nix-termux' exec $name" "$tmp/prefix/bin/$name"
 done
 grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/home/.nix-termux/share/prefix-backup/nix-hash"
+
+for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
+	output=$(
+		PATH="$tmp/fake-bin:$PATH" \
+			HOME="$tmp/home" \
+			PREFIX="$tmp/prefix" \
+			NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+			"$tmp/prefix/bin/$name" --version
+	)
+	[ "$output" = "fake $name --version" ] || {
+		printf 'unexpected %s wrapper output: %s\n' "$name" "$output" >&2
+		exit 1
+	}
+done
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \

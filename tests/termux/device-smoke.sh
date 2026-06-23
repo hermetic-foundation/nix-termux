@@ -101,6 +101,9 @@ check "doctor reports activation" check_json_bool ".activation.ok" "$doctor_json
 
 check "nix wrapper runs" nix --version
 check "nix-store wrapper runs" nix-store --version
+for name in nix-shell nix-env nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
+	check "$name wrapper runs" "$name" --version
+done
 check "nix-termux exec runs nix" nix-termux exec nix --version
 check "proot resolves termux user" nix-termux exec sh -c 'grep -q "^termux:" /etc/passwd && grep -q "^termux:" /etc/group'
 check "proot has resolver config" nix-termux exec sh -c 'test -s /etc/resolv.conf && grep -q "^nameserver " /etc/resolv.conf'
