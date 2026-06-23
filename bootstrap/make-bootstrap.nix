@@ -56,7 +56,18 @@ stdenvNoCC.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    mkdir -p bootstrap/nix/store bootstrap/nix/var/nix/profiles/default/bin bootstrap/nix/var/nix/profiles/default/etc/ssl/certs bootstrap/nix-termux bootstrap/root/usr/bin bootstrap/root/bin
+    mkdir -p \
+      bootstrap/nix/store \
+      bootstrap/nix/var/log/nix/drvs \
+      bootstrap/nix/var/nix/db \
+      bootstrap/nix/var/nix/gcroots/auto \
+      bootstrap/nix/var/nix/profiles/default/bin \
+      bootstrap/nix/var/nix/profiles/default/etc/ssl/certs \
+      bootstrap/nix/var/nix/profiles/per-user/termux \
+      bootstrap/nix/var/nix/temproots \
+      bootstrap/nix-termux \
+      bootstrap/root/usr/bin \
+      bootstrap/root/bin
 
     while IFS= read -r path; do
       cp -a "$path" bootstrap/nix/store/

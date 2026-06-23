@@ -11,8 +11,13 @@ The archive must unpack directly into `$NIX_TERMUX_STATE_DIR`, normally
 
 ```text
 nix/store/
+nix/var/log/nix/drvs/
+nix/var/nix/db/
+nix/var/nix/gcroots/auto/
 nix/var/nix/profiles/default/bin/nix
 nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
+nix/var/nix/profiles/per-user/termux/
+nix/var/nix/temproots/
 root/usr/bin/env
 nix-termux/bootstrap.registration
 ```
