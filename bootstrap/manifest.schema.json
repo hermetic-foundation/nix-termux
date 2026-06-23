@@ -70,7 +70,8 @@
       "required": [
         "storeDir",
         "rootDir",
-        "nixBin"
+        "nixBin",
+        "registration"
       ],
       "properties": {
         "storeDir": {
