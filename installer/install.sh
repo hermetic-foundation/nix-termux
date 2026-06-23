@@ -22,6 +22,7 @@ runtime_archive_sha256=${NIX_TERMUX_RUNTIME_ARCHIVE_SHA256:-}
 bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
 bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
+wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
 [ -n "$prefix" ] || die "PREFIX is not set; run this from stock Termux"
 [ -d "$prefix/bin" ] || die "Termux prefix bin directory not found: $prefix/bin"
@@ -238,7 +239,26 @@ install_file() {
 	fi
 }
 
-mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/root/home" "$state_dir/root/tmp" "$state_dir/tmp" "$state_dir/nix"
+is_managed_wrapper() {
+	target=$1
+
+	[ -f "$target" ] || return 1
+	grep -q 'nix-termux' "$target"
+}
+
+backup_prefix_command() {
+	name=$1
+	target=$prefix/bin/$name
+	backup=$state_dir/share/prefix-backup/$name
+
+	[ -e "$target" ] || return 0
+	is_managed_wrapper "$target" && return 0
+	[ -e "$backup" ] && return 0
+
+	cp -p "$target" "$backup"
+}
+
+mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/share/prefix-backup" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/root/home" "$state_dir/root/tmp" "$state_dir/tmp" "$state_dir/nix"
 mkdir -p \
 	"$state_dir/nix/store" \
 	"$state_dir/nix/var/log/nix/drvs" \
@@ -260,16 +280,23 @@ install_file "$source_uninstall" "$state_dir/share/installer/uninstall.sh"
 install_file "$source_device_smoke" "$state_dir/share/tests/device-smoke.sh"
 chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh" "$state_dir/share/tests/device-smoke.sh"
 
+for name in $wrapper_names; do
+	backup_prefix_command "$name"
+done
+
 cat >"$prefix/bin/nix-termux" <<EOF
 #!$prefix/bin/sh
+# nix-termux managed wrapper
 export NIX_TERMUX_LIBEXEC='$state_dir/runtime'
 exec sh '$state_dir/bin/nix-termux' "\$@"
 EOF
 chmod 755 "$prefix/bin/nix-termux"
 
-for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
+for name in $wrapper_names; do
+	[ "$name" = nix-termux ] && continue
 	cat >"$prefix/bin/$name" <<EOF
 #!$prefix/bin/sh
+# nix-termux managed wrapper
 exec '$prefix/bin/nix-termux' exec $name "\$@"
 EOF
 	chmod 755 "$prefix/bin/$name"

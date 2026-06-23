@@ -58,6 +58,10 @@ nix-prefetch-url
 Termux add-ons should use these normal Termux-visible commands. They do not
 need to know about `proot` or the private state directory.
 
+If one of those commands already exists in `$PREFIX/bin`, the installer stores a
+copy under `$HOME/.nix-termux/share/prefix-backup/` before writing the wrapper.
+`nix-termux uninstall` restores those backups and removes only managed wrappers.
+
 ## Runtime Archive
 
 The standalone installer can fetch `nix-termux-runtime.tar.gz` through

@@ -5,13 +5,30 @@ set -eu
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
+wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
+
+is_managed_wrapper() {
+	target=$1
+
+	[ -f "$target" ] || return 1
+	grep -q 'nix-termux' "$target"
+}
+
+restore_prefix_command() {
+	name=$1
+	target=$prefix/bin/$name
+	backup=$state_dir/share/prefix-backup/$name
+
+	if [ -e "$backup" ]; then
+		mv "$backup" "$target"
+	elif is_managed_wrapper "$target"; then
+		rm -f "$target"
+	fi
+}
 
 if [ -n "$prefix" ] && [ -d "$prefix/bin" ]; then
-	rm -f "$prefix/bin/nix-termux"
-	for name in nix nix-shell nix-env nix-store nix-build; do
-		if [ -f "$prefix/bin/$name" ]; then
-			rm -f "$prefix/bin/$name"
-		fi
+	for name in $wrapper_names; do
+		restore_prefix_command "$name"
 	done
 fi
 

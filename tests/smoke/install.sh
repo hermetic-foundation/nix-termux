@@ -14,6 +14,11 @@ trap cleanup EXIT INT TERM
 mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
 host_sh=$(command -v sh)
 cp "$host_sh" "$tmp/prefix/bin/sh"
+cat >"$tmp/prefix/bin/nix-hash" <<EOF
+#!$host_sh
+printf '%s\n' original nix-hash
+EOF
+chmod 755 "$tmp/prefix/bin/nix-hash"
 printf '%s\n' "nameserver 192.0.2.53" >"$tmp/prefix/etc/resolv.conf"
 cp "$repo_root/installer/install.sh" "$tmp/standalone/install.sh"
 mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime" "$tmp/runtime-source/tests/termux"
@@ -166,8 +171,10 @@ test -d "$tmp/home/.nix-termux/root/tmp"
 test -d "$tmp/home/.nix-termux/tmp"
 for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	test -x "$tmp/prefix/bin/$name"
+	grep -q 'nix-termux managed wrapper' "$tmp/prefix/bin/$name"
 	grep -q "exec '$tmp/prefix/bin/nix-termux' exec $name" "$tmp/prefix/bin/$name"
 done
+grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/home/.nix-termux/share/prefix-backup/nix-hash"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
@@ -228,4 +235,6 @@ PATH="$tmp/fake-bin:$PATH" \
 	"$tmp/prefix/bin/nix-termux" uninstall
 
 [ ! -e "$tmp/prefix/bin/nix-termux" ]
+[ -x "$tmp/prefix/bin/nix-hash" ]
+grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/prefix/bin/nix-hash"
 [ ! -d "$tmp/home/.nix-termux" ]
