@@ -27,6 +27,7 @@ wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel 
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
 termux_home=${HOME:-/data/data/com.termux/files/home}
+nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
 
 usage() {
 	cat <<'EOF'
@@ -265,6 +266,7 @@ XDG_CONFIG_HOME=$termux_home/.config
 XDG_DATA_HOME=$termux_home/.local/share
 XDG_STATE_HOME=$termux_home/.local/state
 NIX_REMOTE=local
+NIX_PATH=$nix_path
 EOF
 }
 
@@ -356,6 +358,7 @@ enter() {
 		PATH="/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" \
 		NIX_CONF_DIR=/etc/nix \
 		NIX_REMOTE=local \
+		NIX_PATH="$nix_path" \
 		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		"$@"
 }

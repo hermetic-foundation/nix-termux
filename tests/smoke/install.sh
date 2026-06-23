@@ -298,6 +298,33 @@ remote_output=$(
 	exit 1
 }
 
+# shellcheck disable=SC2016
+nix_path_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_PATH"'
+)
+[ "$nix_path_output" = "nixpkgs=flake:nixpkgs" ] || {
+	printf 'unexpected NIX_PATH output: %s\n' "$nix_path_output" >&2
+	exit 1
+}
+
+# shellcheck disable=SC2016
+nix_path_override_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		NIX_TERMUX_NIX_PATH="nixpkgs=$tmp/nixpkgs" \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_PATH"'
+)
+[ "$nix_path_override_output" = "nixpkgs=$tmp/nixpkgs" ] || {
+	printf 'unexpected NIX_PATH override output: %s\n' "$nix_path_override_output" >&2
+	exit 1
+}
+
 env_output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
@@ -310,6 +337,7 @@ printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
 printf '%s\n' "$env_output" | grep -q "^XDG_STATE_HOME=$tmp/home/.local/state$"
 printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
+printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \

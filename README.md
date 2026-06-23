@@ -108,6 +108,11 @@ Those wrappers are what Termux add-ons should call. For example,
 nix-termux run nixpkgs#hello
 ```
 
+Legacy scripts that use commands like `nix-shell '<nixpkgs>'` also go through
+the wrappers. By default the runtime sets `NIX_PATH=nixpkgs=flake:nixpkgs`;
+set `NIX_TERMUX_NIX_PATH` before calling a wrapper to use a local checkout or
+another nixpkgs source.
+
 For local development or mirrored artifacts, the installer also accepts
 `NIX_TERMUX_CHANNEL_URL`, `NIX_TERMUX_ARCH`, `NIX_TERMUX_BOOTSTRAP_URL`, and
 `NIX_TERMUX_BOOTSTRAP_SHA256` directly.
