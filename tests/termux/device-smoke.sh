@@ -112,6 +112,8 @@ check "proot provides XDG dirs" nix-termux exec sh -c 'test "$XDG_CONFIG_HOME" =
 check "proot uses local Nix store" sh -c 'NIX_REMOTE=daemon nix-termux exec sh -c '\''test "$NIX_REMOTE" = local'\'''
 # shellcheck disable=SC2016
 check "proot provides legacy NIX_PATH" nix-termux exec sh -c 'test "$NIX_PATH" = nixpkgs=flake:nixpkgs'
+# shellcheck disable=SC2016
+check "proot provides certificate bundle env" nix-termux exec sh -c 'test "$NIX_SSL_CERT_FILE" = /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt && test "$SSL_CERT_FILE" = "$NIX_SSL_CERT_FILE" && test -r "$SSL_CERT_FILE"'
 
 if [ "${NIX_TERMUX_DEVICE_SMOKE_NETWORK:-0}" = "1" ]; then
 	check "nix run can fetch and execute hello" nix-termux run nixpkgs#hello

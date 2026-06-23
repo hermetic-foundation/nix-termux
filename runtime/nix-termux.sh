@@ -267,6 +267,7 @@ XDG_DATA_HOME=$termux_home/.local/share
 XDG_STATE_HOME=$termux_home/.local/state
 NIX_REMOTE=local
 NIX_PATH=$nix_path
+SSL_CERT_FILE=$cert_file
 EOF
 }
 
@@ -360,6 +361,7 @@ enter() {
 		NIX_REMOTE=local \
 		NIX_PATH="$nix_path" \
 		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
+		SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		"$@"
 }
 

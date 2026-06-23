@@ -34,8 +34,8 @@ $PREFIX           -> /termux
 
 Inside proot, the runtime exports stable XDG directories under
 `/home/termux`: `.config`, `.cache`, `.local/share`, and `.local/state`.
-It also exports `NIX_REMOTE=local` and a default
-`NIX_PATH=nixpkgs=flake:nixpkgs` so legacy commands such as `nix-shell
+It also exports `NIX_REMOTE=local`, `NIX_SSL_CERT_FILE`/`SSL_CERT_FILE`, and a
+default `NIX_PATH=nixpkgs=flake:nixpkgs` so legacy commands such as `nix-shell
 '<nixpkgs>'` work through the same flake-backed nixpkgs reference as modern
 `nix run nixpkgs#...` commands. Set `NIX_TERMUX_NIX_PATH` before invoking a
 wrapper to use a custom path.
