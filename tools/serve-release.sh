@@ -25,6 +25,14 @@ die() {
 	exit 1
 }
 
+json_string_value_n() {
+	key=$1
+	index=$2
+	file=$3
+
+	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
+}
+
 [ "${1:-}" != "-h" ] || {
 	usage
 	exit 0
@@ -57,6 +65,7 @@ port=${3:-8000}
 validate_release_dir() {
 	[ -d "$release_dir" ] || die "release directory not found: $release_dir"
 	command -v sha256sum >/dev/null 2>&1 || die "sha256sum is required to verify release files"
+	command -v sed >/dev/null 2>&1 || die "sed is required to verify release manifests"
 
 	for file in \
 		install.sh \
@@ -69,6 +78,19 @@ validate_release_dir() {
 
 	set -- "$release_dir"/nix-termux-channel-*.json
 	[ -r "$1" ] || die "release directory missing nix-termux-channel-*.json"
+	for channel in "$@"; do
+		runtime_url=$(json_string_value_n url 1 "$channel")
+		runtime_sha=$(json_string_value_n sha256 1 "$channel")
+		bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
+		[ "$runtime_url" = "nix-termux-runtime.tar.gz" ] ||
+			die "$(basename -- "$channel") references unsupported runtime URL: $runtime_url"
+		actual_runtime_sha=$(sha256sum "$release_dir/nix-termux-runtime.tar.gz")
+		actual_runtime_sha=${actual_runtime_sha%% *}
+		[ "$runtime_sha" = "$actual_runtime_sha" ] ||
+			die "$(basename -- "$channel") runtime sha256 mismatch"
+		[ -r "$release_dir/$bootstrap_manifest_url" ] ||
+			die "$(basename -- "$channel") references missing bootstrap manifest: $bootstrap_manifest_url"
+	done
 
 	set -- "$release_dir"/nix-termux-bootstrap-*.json
 	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"

@@ -20,20 +20,36 @@ printf '%s\n' "\$*" >"$tmp/python3.args"
 EOF
 chmod 755 "$tmp/bin/python3"
 
-for file in \
-	install.sh \
-	install.sh.sha256 \
-	nix-termux-runtime.tar.gz \
-	nix-termux-runtime.tar.gz.sha256 \
-	nix-termux-channel-x86_64.json \
-	nix-termux-bootstrap-x86_64.json \
-	nix-termux-bootstrap-x86_64.tar.gz \
-	nix-termux-bootstrap-x86_64.registration \
-	nix-termux-channel-aarch64.json \
-	nix-termux-bootstrap-aarch64.json \
-	nix-termux-bootstrap-aarch64.tar.gz \
-	nix-termux-bootstrap-aarch64.registration; do
+for file in install.sh install.sh.sha256 nix-termux-runtime.tar.gz nix-termux-runtime.tar.gz.sha256; do
 	printf '%s\n' "$file" >"$tmp/release/$file"
+done
+runtime_sha=$(sha256sum "$tmp/release/nix-termux-runtime.tar.gz")
+runtime_sha=${runtime_sha%% *}
+
+for arch in x86_64 aarch64; do
+	cat >"$tmp/release/nix-termux-channel-$arch.json" <<EOF
+{
+  "schemaVersion": 1,
+  "runtime": {
+    "url": "nix-termux-runtime.tar.gz",
+    "sha256": "$runtime_sha"
+  },
+  "bootstrapManifest": {
+    "url": "nix-termux-bootstrap-$arch.json"
+  }
+}
+EOF
+	cat >"$tmp/release/nix-termux-bootstrap-$arch.json" <<EOF
+{
+  "schemaVersion": 1,
+  "archive": {
+    "url": "nix-termux-bootstrap-$arch.tar.gz",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}
+EOF
+	printf '%s\n' "nix-termux-bootstrap-$arch.tar.gz" >"$tmp/release/nix-termux-bootstrap-$arch.tar.gz"
+	printf '%s\n' "nix-termux-bootstrap-$arch.registration" >"$tmp/release/nix-termux-bootstrap-$arch.registration"
 done
 
 (cd "$tmp/release" && sha256sum \
@@ -61,6 +77,16 @@ if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"
 fi
 grep -q 'release directory missing nix-termux-bootstrap-x86_64.tar.gz' "$tmp/err"
 printf '%s\n' nix-termux-bootstrap-x86_64.tar.gz >"$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"
+
+cp "$tmp/release/nix-termux-channel-x86_64.json" "$tmp/channel-x86_64.good"
+sed 's/nix-termux-bootstrap-x86_64.json/missing-bootstrap-x86_64.json/' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted a missing channel bootstrap reference" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json references missing bootstrap manifest: missing-bootstrap-x86_64.json' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 # shellcheck disable=SC2016
