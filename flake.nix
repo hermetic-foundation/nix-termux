@@ -90,6 +90,7 @@
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/install.sh"
             "tests/smoke/runtime-archive.sh"
+            "tests/smoke/version-consistency.sh"
             "tests/termux/device-smoke.sh"
           ];
         in
@@ -138,6 +139,20 @@
             chmod -R u+w source
             cd source
             actionlint .github/workflows/ci.yml
+            touch "$out"
+          '';
+
+          version-consistency = pkgs.runCommand "nix-termux-version-consistency" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnused
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/version-consistency.sh
             touch "$out"
           '';
 
