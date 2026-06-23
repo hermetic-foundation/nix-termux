@@ -36,5 +36,6 @@ grep -qx './docs/doctor.md' "$listing"
 grep -qx './docs/release.md' "$listing"
 grep -qx './bootstrap/example-manifest.json' "$listing"
 grep -qx './bootstrap/manifest.schema.json' "$listing"
+grep -qx './channel/schema.json' "$listing"
 
 (cd "$artifact" && sha256sum -c nix-termux-runtime.tar.gz.sha256)
