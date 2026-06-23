@@ -32,9 +32,12 @@ done
 	nix-termux-bootstrap-x86_64.json \
 	>SHA256SUMS)
 
+sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/check.out"
+grep -qx "release directory ok: $tmp/release" "$tmp/check.out"
+
 printf '%s\n' tampered >>"$tmp/release/install.sh"
 
-if sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8000 >"$tmp/out" 2>"$tmp/err"; then
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
 	printf '%s\n' "serve-release unexpectedly accepted bad checksums" >&2
 	exit 1
 fi

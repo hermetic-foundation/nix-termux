@@ -44,6 +44,7 @@ For a local release bundle, build and serve it from the host machine:
 
 ```sh
 nix build .#release
+tools/serve-release.sh --check result
 tools/serve-release.sh result 192.0.2.10 8000
 ```
 

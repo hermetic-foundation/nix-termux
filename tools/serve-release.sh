@@ -5,7 +5,7 @@ set -eu
 
 usage() {
 	cat <<'EOF'
-Usage: serve-release.sh <release-dir> <host> [port]
+Usage: serve-release.sh [--check] <release-dir> [host] [port]
 
 Serve a nix-termux release directory for local device validation and print the
 Termux commands needed to install and smoke-test it.
@@ -14,6 +14,9 @@ Arguments:
   release-dir  Directory produced by `nix build .#release`.
   host         Hostname or LAN IP address reachable from the Android device.
   port         HTTP port to serve. Defaults to 8000.
+
+Options:
+  --check      Validate release directory contents and checksums, then exit.
 EOF
 }
 
@@ -31,14 +34,62 @@ die() {
 	exit 0
 }
 
-[ "$#" -ge 2 ] && [ "$#" -le 3 ] || {
+check_only=no
+if [ "${1:-}" = "--check" ]; then
+	check_only=yes
+	shift
+fi
+
+[ "$#" -ge 1 ] && [ "$#" -le 3 ] || {
 	usage >&2
 	exit 2
 }
 
+if [ "$check_only" = yes ] && [ "$#" -ne 1 ]; then
+	usage >&2
+	exit 2
+fi
+
 release_dir=$1
-host=$2
+host=${2:-}
 port=${3:-8000}
+
+validate_release_dir() {
+	[ -d "$release_dir" ] || die "release directory not found: $release_dir"
+	command -v sha256sum >/dev/null 2>&1 || die "sha256sum is required to verify release files"
+
+	for file in \
+		install.sh \
+		install.sh.sha256 \
+		nix-termux-runtime.tar.gz \
+		nix-termux-runtime.tar.gz.sha256 \
+		SHA256SUMS; do
+		[ -r "$release_dir/$file" ] || die "release directory missing $file"
+	done
+
+	set -- "$release_dir"/nix-termux-channel-*.json
+	[ -r "$1" ] || die "release directory missing nix-termux-channel-*.json"
+	[ "$#" -eq 1 ] || die "release directory must contain exactly one channel manifest"
+
+	set -- "$release_dir"/nix-termux-bootstrap-*.json
+	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
+	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap manifest"
+
+	(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
+		die "release checksum verification failed"
+}
+
+validate_release_dir
+
+if [ "$check_only" = yes ]; then
+	printf 'release directory ok: %s\n' "$release_dir"
+	exit 0
+fi
+
+[ -n "$host" ] || {
+	usage >&2
+	exit 2
+}
 
 case $port in
 '' | *[!0-9]*)
@@ -46,29 +97,7 @@ case $port in
 	;;
 esac
 
-[ -d "$release_dir" ] || die "release directory not found: $release_dir"
 command -v python3 >/dev/null 2>&1 || die "python3 is required to serve release files"
-command -v sha256sum >/dev/null 2>&1 || die "sha256sum is required to verify release files"
-
-for file in \
-	install.sh \
-	install.sh.sha256 \
-	nix-termux-runtime.tar.gz \
-	nix-termux-runtime.tar.gz.sha256 \
-	SHA256SUMS; do
-	[ -r "$release_dir/$file" ] || die "release directory missing $file"
-done
-
-set -- "$release_dir"/nix-termux-channel-*.json
-[ -r "$1" ] || die "release directory missing nix-termux-channel-*.json"
-[ "$#" -eq 1 ] || die "release directory must contain exactly one channel manifest"
-
-set -- "$release_dir"/nix-termux-bootstrap-*.json
-[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
-[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap manifest"
-
-(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
-	die "release checksum verification failed"
 
 base_url=http://$host:$port
 
