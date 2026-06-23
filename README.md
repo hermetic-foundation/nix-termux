@@ -16,7 +16,7 @@ This repository provides:
 - A Nix flake and `direnv` entry with `use flake`.
 - A stock-Termux installer/runtime that keeps the normal Termux app in place.
 - `nix-termux` runtime commands for `doctor`, `enter`, `run`, `env`,
-  `upgrade-bootstrap`, and `uninstall`.
+  `upgrade-bootstrap`, `version`, and `uninstall`.
 - A versioned bootstrap manifest contract and host smoke test for the
   installer/wrapper path.
 - A Nix-built bootstrap artifact package and GitHub release workflow for

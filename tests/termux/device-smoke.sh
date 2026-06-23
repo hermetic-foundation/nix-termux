@@ -100,6 +100,13 @@ for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-ga
 	check "$name wrapper exists" test -x "$prefix/bin/$name"
 done
 
+version_file=$tmp/version
+if nix-termux version >"$version_file" && grep -qx '0.1.0' "$version_file"; then
+	ok "nix-termux version runs"
+else
+	fail "nix-termux version runs"
+fi
+
 doctor_json=$tmp/doctor.json
 if nix-termux doctor --json >"$doctor_json"; then
 	ok "doctor --json exits successfully"

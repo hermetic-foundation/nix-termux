@@ -3,6 +3,8 @@
 
 set -eu
 
+version=${NIX_TERMUX_VERSION:-0.1.0}
+
 die() {
 	printf 'nix-termux: %s\n' "$*" >&2
 	exit 1
@@ -44,6 +46,7 @@ Commands:
   upgrade-bootstrap [manifest-url]
                       Reinstall runtime/bootstrap from a manifest.
   uninstall           Remove wrappers and nix-termux state.
+  version             Print the nix-termux runtime version.
   help                Show this help.
 EOF
 }
@@ -267,6 +270,7 @@ doctor() {
 print_env() {
 	cat <<EOF
 NIX_TERMUX_STATE_DIR=$state_dir
+NIX_TERMUX_VERSION=$version
 NIX_TERMUX_STORE_DIR=$store_dir
 NIX_TERMUX_ROOT_DIR=$root_dir
 NIX_TERMUX_TMP_DIR=$tmp_dir
@@ -395,6 +399,11 @@ run_nix() {
 	enter -- nix run "$@"
 }
 
+version() {
+	[ "$#" -eq 0 ] || die "version accepts no arguments"
+	printf '%s\n' "$version"
+}
+
 exec_command() {
 	[ "$#" -gt 0 ] || die "exec requires a command"
 	enter -- "$@"
@@ -437,6 +446,7 @@ run) run_nix "$@" ;;
 exec) exec_command "$@" ;;
 upgrade-bootstrap) upgrade_bootstrap "$@" ;;
 uninstall) uninstall "$@" ;;
+version | -V | --version) version "$@" ;;
 help | -h | --help) usage ;;
 *) die "unknown command: $cmd" ;;
 esac

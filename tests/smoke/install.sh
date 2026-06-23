@@ -256,6 +256,18 @@ PATH="$tmp/fake-bin:$PATH" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" doctor
 
+version_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" version
+)
+[ "$version_output" = "0.1.0" ] || {
+	printf 'unexpected version output: %s\n' "$version_output" >&2
+	exit 1
+}
+
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
 grep -qx 'nameserver 192.0.2.53' "$tmp/home/.nix-termux/root/etc/resolv.conf"
@@ -414,6 +426,7 @@ env_output=$(
 		NIX_PATH='' \
 		"$tmp/prefix/bin/nix-termux" env
 )
+printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.0$'
 printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"
 printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
