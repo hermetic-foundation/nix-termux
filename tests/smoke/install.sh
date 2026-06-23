@@ -151,6 +151,10 @@ printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registra
 sha=$(sha256sum "$tmp/bootstrap.tar.gz" | awk '{print $1}')
 (cd "$tmp/bootstrap" && tar --transform='s|^\./root/etc/nix/nix.conf$|../nix.conf|' -czf "$tmp/bootstrap-unsafe.tar.gz" .)
 unsafe_bootstrap_sha=$(sha256sum "$tmp/bootstrap-unsafe.tar.gz" | awk '{print $1}')
+cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-registration"
+rm -f "$tmp/bootstrap-missing-registration/nix-termux/bootstrap.registration"
+(cd "$tmp/bootstrap-missing-registration" && tar -czf "$tmp/bootstrap-missing-registration.tar.gz" .)
+missing_registration_sha=$(sha256sum "$tmp/bootstrap-missing-registration.tar.gz" | awk '{print $1}')
 cat >"$tmp/bootstrap-manifest.json" <<EOF
 {
   "schemaVersion": 1,
@@ -182,6 +186,25 @@ cat >"$tmp/bootstrap-unsafe-manifest.json" <<EOF
   "archive": {
     "url": "bootstrap-unsafe.tar.gz",
     "sha256": "$unsafe_bootstrap_sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-missing-registration-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-missing-registration.tar.gz",
+    "sha256": "$missing_registration_sha"
   },
   "layout": {
     "storeDir": "nix",
@@ -313,6 +336,22 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'bootstrap archive contains unsafe path: ../nix.conf' "$tmp/bootstrap-unsafe.err"
 test ! -e "$tmp/bootstrap-unsafe-home/nix.conf"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-missing-registration-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-missing-registration-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-missing-registration-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-missing-registration.err"; then
+	printf '%s\n' "bootstrap missing registration unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap archive missing nix-termux/bootstrap.registration' "$tmp/bootstrap-missing-registration.err"
+test ! -e "$tmp/bootstrap-missing-registration-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/prefix/bin/nix"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \

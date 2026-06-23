@@ -92,6 +92,28 @@ validate_tar_paths() {
 		die "$label archive contains unsafe path: $unsafe_member"
 }
 
+validate_bootstrap_stage() {
+	stage=$1
+
+	path_exists() {
+		[ -e "$1" ] || [ -L "$1" ]
+	}
+
+	[ -d "$stage/nix/store" ] || die "bootstrap archive missing nix/store"
+	path_exists "$stage/nix/var/nix/profiles/default/bin/nix" ||
+		die "bootstrap archive missing nix/var/nix/profiles/default/bin/nix"
+	path_exists "$stage/nix/var/nix/profiles/default/bin/nix-store" ||
+		die "bootstrap archive missing nix/var/nix/profiles/default/bin/nix-store"
+	path_exists "$stage/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt" ||
+		die "bootstrap archive missing nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
+	[ -r "$stage/root/etc/nix/nix.conf" ] ||
+		die "bootstrap archive missing root/etc/nix/nix.conf"
+	path_exists "$stage/root/usr/bin/env" ||
+		die "bootstrap archive missing root/usr/bin/env"
+	[ -r "$stage/nix-termux/bootstrap.registration" ] ||
+		die "bootstrap archive missing nix-termux/bootstrap.registration"
+}
+
 json_string_value() {
 	key=$1
 	file=$2
@@ -395,6 +417,10 @@ if [ -n "$bootstrap_url" ]; then
 	fi
 
 	validate_tar_paths "$bootstrap_archive" bootstrap
+	rm -rf "$bootstrap_stage"
+	mkdir -p "$bootstrap_stage"
+	tar -xzf "$bootstrap_archive" -C "$bootstrap_stage"
+	validate_bootstrap_stage "$bootstrap_stage"
 	bootstrap_archive_ready=yes
 fi
 
@@ -430,16 +456,11 @@ done
 if [ -n "$bootstrap_url" ]; then
 	registration_loaded=no
 	[ "$bootstrap_archive_ready" = yes ] || die "bootstrap archive was not prepared"
-	rm -rf "$bootstrap_stage"
-	mkdir -p "$bootstrap_stage"
-	tar -xzf "$bootstrap_archive" -C "$bootstrap_stage"
 	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
 
 	registration=$state_dir/nix-termux/bootstrap.registration
-	if [ -r "$registration" ]; then
-		"$prefix/bin/nix-termux" exec nix-store --load-db <"$registration"
-		registration_loaded=yes
-	fi
+	"$prefix/bin/nix-termux" exec nix-store --load-db <"$registration"
+	registration_loaded=yes
 
 	{
 		printf 'bootstrap_url=%s\n' "$bootstrap_url"
