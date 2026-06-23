@@ -6,6 +6,7 @@ set -eu
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
+managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 
 is_managed_wrapper() {
 	target=$1
@@ -30,6 +31,10 @@ if [ -n "$prefix" ] && [ -d "$prefix/bin" ]; then
 	for name in $wrapper_names; do
 		restore_prefix_command "$name"
 	done
+fi
+
+if [ -L "$HOME/.nix-profile" ] && [ "$(readlink "$HOME/.nix-profile")" = "$managed_profile_target" ]; then
+	rm -f "$HOME/.nix-profile"
 fi
 
 if [ -d "$state_dir" ]; then

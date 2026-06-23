@@ -71,6 +71,8 @@ need to know about `proot` or the private state directory.
 If one of those commands already exists in `$PREFIX/bin`, the installer stores a
 copy under `$HOME/.nix-termux/share/prefix-backup/` before writing the wrapper.
 `nix-termux uninstall` restores those backups and removes only managed wrappers.
+It also removes the managed `~/.nix-profile` symlink when it still points at the
+nix-termux Termux user profile.
 
 ## Runtime Archive
 

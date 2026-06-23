@@ -403,4 +403,5 @@ PATH="$tmp/fake-bin:$PATH" \
 [ ! -e "$tmp/prefix/bin/nix-termux" ]
 [ -x "$tmp/prefix/bin/nix-hash" ]
 grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/prefix/bin/nix-hash"
+[ ! -e "$tmp/home/.nix-profile" ]
 [ ! -d "$tmp/home/.nix-termux" ]
