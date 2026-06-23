@@ -72,6 +72,34 @@ json_string_value_n() {
 	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
 }
 
+json_path_string() {
+	path=$1
+	file=$2
+
+	if have jq; then
+		jq -er "$path // empty" "$file" 2>/dev/null || true
+		return
+	fi
+
+	case $path in
+	.archive.url | .runtime.url)
+		json_string_value_n url 1 "$file"
+		;;
+	.bootstrapManifest.url)
+		json_string_value_n url 2 "$file"
+		;;
+	.archive.sha256 | .runtime.sha256)
+		json_string_value sha256 "$file"
+		;;
+	.platform.termuxArch)
+		json_string_value termuxArch "$file"
+		;;
+	*)
+		return 1
+		;;
+	esac
+}
+
 resolve_manifest_url() {
 	base=$1
 	value=$2
@@ -147,9 +175,9 @@ load_manifest() {
 			die "unsupported bootstrap manifest registration"
 	fi
 
-	manifest_archive_url=$(json_string_value url "$manifest")
-	manifest_sha256=$(json_string_value sha256 "$manifest")
-	manifest_termux_arch=$(json_string_value termuxArch "$manifest")
+	manifest_archive_url=$(json_path_string .archive.url "$manifest")
+	manifest_sha256=$(json_path_string .archive.sha256 "$manifest")
+	manifest_termux_arch=$(json_path_string .platform.termuxArch "$manifest")
 	[ -n "$manifest_archive_url" ] || die "bootstrap manifest missing archive.url"
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
 	[ -n "$manifest_termux_arch" ] || die "bootstrap manifest missing platform.termuxArch"
@@ -174,10 +202,10 @@ load_channel() {
 	grep -Eq '"bootstrapManifest"[[:space:]]*:' "$channel" ||
 		die "channel manifest missing bootstrapManifest"
 
-	channel_runtime_url=$(json_string_value_n url 1 "$channel")
-	channel_bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
-	channel_runtime_sha256=$(json_string_value sha256 "$channel")
-	channel_termux_arch=$(json_string_value termuxArch "$channel")
+	channel_runtime_url=$(json_path_string .runtime.url "$channel")
+	channel_bootstrap_manifest_url=$(json_path_string .bootstrapManifest.url "$channel")
+	channel_runtime_sha256=$(json_path_string .runtime.sha256 "$channel")
+	channel_termux_arch=$(json_path_string .platform.termuxArch "$channel")
 
 	[ -n "$channel_runtime_url" ] || die "channel manifest missing runtime.url"
 	[ -n "$channel_runtime_sha256" ] || die "channel manifest missing runtime.sha256"

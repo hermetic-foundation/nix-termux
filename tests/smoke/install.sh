@@ -142,6 +142,8 @@ sha=$(sha256sum "$tmp/bootstrap.tar.gz" | awk '{print $1}')
 cat >"$tmp/bootstrap-manifest.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-bootstrap.tar.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "platform": {
     "termuxArch": "x86_64",
     "nixSystem": "x86_64-linux"
@@ -161,6 +163,8 @@ EOF
 cat >"$tmp/channel.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-runtime.tar.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "platform": {
     "termuxArch": "x86_64",
     "nixSystem": "x86_64-linux"
@@ -178,6 +182,8 @@ cp "$tmp/channel.json" "$tmp/nix-termux-channel-x86_64.json"
 cat >"$tmp/channel-v2.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-runtime-v2.tar.gz",
+  "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
   "platform": {
     "termuxArch": "x86_64",
     "nixSystem": "x86_64-linux"
