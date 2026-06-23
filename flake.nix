@@ -200,6 +200,27 @@
             touch "$out"
           '';
 
+          manifest-schemas = pkgs.runCommand "nix-termux-manifest-schemas" {
+            nativeBuildInputs = [
+              (pkgs.python3.withPackages (pythonPackages: [
+                pythonPackages.jsonschema
+              ]))
+            ];
+            src = self;
+            bootstrapArtifact = self.packages.${system}.bootstrap;
+            channelArtifact = self.packages.${system}.channel;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            python tests/smoke/manifest-schemas.py \
+              bootstrap/manifest.schema.json \
+              channel/schema.json \
+              "$bootstrapArtifact" \
+              "$channelArtifact"
+            touch "$out"
+          '';
+
           adb-validate = pkgs.runCommand "nix-termux-adb-validate-smoke" {
             nativeBuildInputs = [
               pkgs.coreutils
