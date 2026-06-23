@@ -97,6 +97,10 @@ and exposes thin wrappers in:
 $PREFIX/bin
 ```
 
+The wrapper set includes `nix`, `nix-shell`, `nix-env`, `nix-store`,
+`nix-build`, `nix-channel`, `nix-collect-garbage`, `nix-copy-closure`,
+`nix-hash`, `nix-instantiate`, and `nix-prefetch-url`.
+
 Those wrappers are what Termux add-ons should call. For example,
 `Termux:Widget` can run a script that executes:
 

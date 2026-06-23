@@ -267,7 +267,7 @@ exec sh '$state_dir/bin/nix-termux' "\$@"
 EOF
 chmod 755 "$prefix/bin/nix-termux"
 
-for name in nix nix-shell nix-env nix-store nix-build; do
+for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	cat >"$prefix/bin/$name" <<EOF
 #!$prefix/bin/sh
 exec '$prefix/bin/nix-termux' exec $name "\$@"

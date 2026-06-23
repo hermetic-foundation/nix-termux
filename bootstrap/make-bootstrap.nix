@@ -80,6 +80,13 @@ stdenvNoCC.mkDerivation {
     ln -s ${nix}/bin/nix-env bootstrap/nix/var/nix/profiles/default/bin/nix-env
     ln -s ${nix}/bin/nix-store bootstrap/nix/var/nix/profiles/default/bin/nix-store
     ln -s ${nix}/bin/nix-build bootstrap/nix/var/nix/profiles/default/bin/nix-build
+    ln -s ${nix}/bin/nix-shell bootstrap/nix/var/nix/profiles/default/bin/nix-shell
+    ln -s ${nix}/bin/nix-channel bootstrap/nix/var/nix/profiles/default/bin/nix-channel
+    ln -s ${nix}/bin/nix-collect-garbage bootstrap/nix/var/nix/profiles/default/bin/nix-collect-garbage
+    ln -s ${nix}/bin/nix-copy-closure bootstrap/nix/var/nix/profiles/default/bin/nix-copy-closure
+    ln -s ${nix}/bin/nix-hash bootstrap/nix/var/nix/profiles/default/bin/nix-hash
+    ln -s ${nix}/bin/nix-instantiate bootstrap/nix/var/nix/profiles/default/bin/nix-instantiate
+    ln -s ${nix}/bin/nix-prefetch-url bootstrap/nix/var/nix/profiles/default/bin/nix-prefetch-url
     ln -s ${bashInteractive}/bin/bash bootstrap/nix/var/nix/profiles/default/bin/bash
     ln -s ${cacert}/etc/ssl/certs/ca-bundle.crt bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 

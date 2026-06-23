@@ -81,7 +81,7 @@ check "PREFIX/bin exists" test -d "$prefix/bin"
 check "nix-termux is on PATH" have nix-termux
 check "proot is on PATH" have proot
 
-for name in nix nix-shell nix-env nix-store nix-build; do
+for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	check "$name wrapper exists" test -x "$prefix/bin/$name"
 done
 

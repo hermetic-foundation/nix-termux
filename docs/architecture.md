@@ -47,6 +47,12 @@ nix-shell
 nix-env
 nix-store
 nix-build
+nix-channel
+nix-collect-garbage
+nix-copy-closure
+nix-hash
+nix-instantiate
+nix-prefetch-url
 ```
 
 Termux add-ons should use these normal Termux-visible commands. They do not

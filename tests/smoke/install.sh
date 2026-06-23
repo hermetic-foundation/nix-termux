@@ -164,6 +164,10 @@ test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
 test -d "$tmp/home/.nix-termux/root/home"
 test -d "$tmp/home/.nix-termux/root/tmp"
 test -d "$tmp/home/.nix-termux/tmp"
+for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
+	test -x "$tmp/prefix/bin/$name"
+	grep -q "exec '$tmp/prefix/bin/nix-termux' exec $name" "$tmp/prefix/bin/$name"
+done
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
