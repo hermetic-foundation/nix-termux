@@ -119,6 +119,8 @@ check "proot provides legacy NIX_PATH" nix-termux exec sh -c 'test "$NIX_PATH" =
 check "proot provides certificate bundle env" nix-termux exec sh -c 'test "$NIX_SSL_CERT_FILE" = /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt && test "$SSL_CERT_FILE" = "$NIX_SSL_CERT_FILE" && test -r "$SSL_CERT_FILE"'
 # shellcheck disable=SC2016
 check "proot provides Nix profile env" nix-termux exec sh -c 'test "$NIX_PROFILES" = "/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" && test -L "$HOME/.nix-profile"'
+# shellcheck disable=SC2016
+check "proot puts user profile on PATH" nix-termux exec sh -c 'case $PATH in /home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:*) exit 0 ;; *) exit 1 ;; esac'
 
 if [ "${NIX_TERMUX_DEVICE_SMOKE_NETWORK:-0}" = "1" ]; then
 	check "nix run can fetch and execute hello" nix-termux run nixpkgs#hello

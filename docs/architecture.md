@@ -41,6 +41,8 @@ nixpkgs reference as modern `nix run nixpkgs#...` commands. Set
 `NIX_TERMUX_NIX_PATH` before invoking a wrapper to use a custom path.
 When entering proot, the runtime creates `~/.nix-profile` as a symlink to the
 Termux user profile if that path is not already present.
+The proot PATH starts with `~/.nix-profile/bin`, then the default Nix profile,
+then Termux and bootstrap system paths.
 
 Before entering proot, the runtime writes `root/etc/resolv.conf` from
 `$PREFIX/etc/resolv.conf`, host `/etc/resolv.conf`, or Android `getprop` DNS

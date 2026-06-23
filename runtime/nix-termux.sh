@@ -29,6 +29,7 @@ wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
 termux_home=${HOME:-/data/data/com.termux/files/home}
 nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
+proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin
 
 usage() {
 	cat <<'EOF'
@@ -267,6 +268,7 @@ XDG_CACHE_HOME=$termux_home/.cache
 XDG_CONFIG_HOME=$termux_home/.config
 XDG_DATA_HOME=$termux_home/.local/share
 XDG_STATE_HOME=$termux_home/.local/state
+PATH=$proot_path
 NIX_REMOTE=local
 NIX_PATH=$nix_path
 NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile
@@ -362,7 +364,7 @@ enter() {
 		XDG_CONFIG_HOME=/home/termux/.config \
 		XDG_DATA_HOME=/home/termux/.local/share \
 		XDG_STATE_HOME=/home/termux/.local/state \
-		PATH="/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" \
+		PATH="$proot_path" \
 		NIX_CONF_DIR=/etc/nix \
 		NIX_REMOTE=local \
 		NIX_PATH="$nix_path" \
