@@ -260,6 +260,10 @@ NIX_TERMUX_PROOT=$proot
 NIX_TERMUX_RESOLV_CONF=$resolv_conf_file
 PREFIX=$termux_prefix
 HOME=$termux_home
+XDG_CACHE_HOME=$termux_home/.cache
+XDG_CONFIG_HOME=$termux_home/.config
+XDG_DATA_HOME=$termux_home/.local/share
+XDG_STATE_HOME=$termux_home/.local/state
 EOF
 }
 
@@ -312,6 +316,7 @@ enter() {
 	[ -d "$store_dir" ] || die "state not initialized at $state_dir; run installer first"
 	have "$proot" || die "proot is required; install it with: pkg install proot"
 	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/root" "$root_dir/tmp" "$store_dir/var/nix/profiles/per-user/root" "$store_dir/var/nix/profiles/per-user/termux"
+	mkdir -p "$termux_home/.cache" "$termux_home/.config" "$termux_home/.local/share" "$termux_home/.local/state"
 	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"
 
 	shell=${NIX_TERMUX_SHELL:-"$profile_dir/bin/bash"}
@@ -343,6 +348,10 @@ enter() {
 		TMPDIR=/tmp \
 		USER=termux \
 		LOGNAME=termux \
+		XDG_CACHE_HOME=/home/termux/.cache \
+		XDG_CONFIG_HOME=/home/termux/.config \
+		XDG_DATA_HOME=/home/termux/.local/share \
+		XDG_STATE_HOME=/home/termux/.local/state \
 		PATH="/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" \
 		NIX_CONF_DIR=/etc/nix \
 		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \

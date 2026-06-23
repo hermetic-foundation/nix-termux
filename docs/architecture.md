@@ -32,6 +32,9 @@ $HOME              -> /home/termux
 $PREFIX           -> /termux
 ```
 
+Inside proot, the runtime exports stable XDG directories under
+`/home/termux`: `.config`, `.cache`, `.local/share`, and `.local/state`.
+
 Before entering proot, the runtime writes `root/etc/resolv.conf` from
 `$PREFIX/etc/resolv.conf`, host `/etc/resolv.conf`, or Android `getprop` DNS
 values so Nix can resolve substituter and flake hosts.

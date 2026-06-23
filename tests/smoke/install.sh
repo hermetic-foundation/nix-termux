@@ -13,6 +13,7 @@ trap cleanup EXIT INT TERM
 
 mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
 host_sh=$(command -v sh)
+host_cat=$(command -v cat)
 cp "$host_sh" "$tmp/prefix/bin/sh"
 cat >"$tmp/prefix/bin/nix-hash" <<EOF
 #!$host_sh
@@ -56,6 +57,7 @@ fi
 while [ "\$#" -gt 0 ]; do
 	case "\$1" in
 		*=*)
+			export "\$1"
 			shift
 			;;
 		*)
@@ -91,7 +93,7 @@ chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix"
 cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix-store" <<EOF
 #!$host_sh
 if [ "\$1" = "--load-db" ]; then
-	cat >"\$NIX_TERMUX_STATE_DIR/load-db.input"
+	"$host_cat" >"\$NIX_TERMUX_STATE_DIR/load-db.input"
 	printf '%s\n' "loaded db"
 	exit 0
 fi
@@ -216,6 +218,10 @@ PATH="$tmp/fake-bin:$PATH" \
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
 grep -qx 'nameserver 192.0.2.53' "$tmp/home/.nix-termux/root/etc/resolv.conf"
+test -d "$tmp/home/.cache"
+test -d "$tmp/home/.config"
+test -d "$tmp/home/.local/share"
+test -d "$tmp/home/.local/state"
 
 doctor_json=$(
 	PATH="$tmp/fake-bin:$PATH" \
@@ -258,6 +264,19 @@ output=$(
 
 [ "$output" = "fake nix run nixpkgs#hello" ] || {
 	printf 'unexpected output: %s\n' "$output" >&2
+	exit 1
+}
+
+# shellcheck disable=SC2016
+xdg_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s|%s|%s|%s\n" "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME"'
+)
+[ "$xdg_output" = "/home/termux/.config|/home/termux/.cache|/home/termux/.local/share|/home/termux/.local/state" ] || {
+	printf 'unexpected XDG output: %s\n' "$xdg_output" >&2
 	exit 1
 }
 
