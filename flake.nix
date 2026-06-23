@@ -111,6 +111,7 @@
             "installer/install.sh"
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
+            "tools/serve-release.sh"
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/device-smoke-options.sh"
@@ -299,6 +300,7 @@
               shellcheck
               shfmt
               jj
+              python3
             ];
           };
         });

@@ -40,6 +40,17 @@ curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" | sh
 nix-termux smoke-test
 ```
 
+For a local release bundle, build and serve it from the host machine:
+
+```sh
+nix build .#release
+tools/serve-release.sh result 192.0.2.10 8000
+```
+
+Use a host address that the Android device can reach over the local network.
+The helper validates the release directory, prints the Termux install commands,
+and serves the files until interrupted.
+
 The command runs the installed script at
 `$HOME/.nix-termux/share/tests/device-smoke.sh`. The first supported target is
 `aarch64` Termux. Other architectures can use the same smoke test once matching
