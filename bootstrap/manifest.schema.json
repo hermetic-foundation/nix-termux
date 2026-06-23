@@ -81,6 +81,10 @@
         "nixBin": {
           "type": "string",
           "const": "nix/var/nix/profiles/default/bin/nix"
+        },
+        "registration": {
+          "type": "string",
+          "const": "nix-termux/bootstrap.registration"
         }
       }
     }

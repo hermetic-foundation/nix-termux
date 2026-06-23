@@ -13,6 +13,7 @@ The archive must unpack directly into `$NIX_TERMUX_STATE_DIR`, normally
 nix/store/
 nix/var/nix/profiles/default/bin/nix
 root/usr/bin/env
+nix-termux/bootstrap.registration
 ```
 
 `root/` is the `proot` root filesystem. The runtime bind-mounts `nix/` to
@@ -37,7 +38,8 @@ Bootstrap manifests use schema version 1 and are validated by
   "layout": {
     "storeDir": "nix",
     "rootDir": "root",
-    "nixBin": "nix/var/nix/profiles/default/bin/nix"
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
   }
 }
 ```
@@ -69,5 +71,6 @@ nix-termux-bootstrap-<arch>.registration
 ```
 
 The tarball contains the closure needed by the default profile. The
-registration file is emitted beside it so future installer work can register
-the seed closure with Nix's local database during bootstrap activation.
+registration file is included in the archive and emitted beside it so the
+installer can register the seed closure with Nix's local database during
+bootstrap activation.

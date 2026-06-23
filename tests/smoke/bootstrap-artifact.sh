@@ -28,8 +28,10 @@ grep -q '"schemaVersion": 1' "$manifest"
 grep -q '"storeDir": "nix"' "$manifest"
 grep -q '"rootDir": "root"' "$manifest"
 grep -q '"nixBin": "nix/var/nix/profiles/default/bin/nix"' "$manifest"
+grep -q '"registration": "nix-termux/bootstrap.registration"' "$manifest"
 
 tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/bin/nix'
 tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/bin/bash'
 tar -tzf "$archive" | grep -qx './root/usr/bin/env'
 tar -tzf "$archive" | grep -qx './root/bin/sh'
+tar -tzf "$archive" | grep -qx './nix-termux/bootstrap.registration'

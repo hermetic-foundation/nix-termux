@@ -43,9 +43,10 @@ while [ "\$#" -gt 0 ]; do
 			;;
 	esac
 done
-if [ "\$1" = "nix" ]; then
+if [ "\$1" = "nix" ] || [ "\$1" = "nix-store" ]; then
+	command=\$1
 	shift
-	exec "\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default/bin/nix" "\$@"
+	exec "\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default/bin/\$command" "\$@"
 fi
 exec "\$@"
 EOF
@@ -65,7 +66,23 @@ done
 printf '\n'
 EOF
 chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix"
+cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix-store" <<EOF
+#!$host_sh
+if [ "\$1" = "--load-db" ]; then
+	cat >"\$NIX_TERMUX_STATE_DIR/load-db.input"
+	printf '%s\n' "loaded db"
+	exit 0
+fi
+printf 'fake nix-store'
+for arg in "\$@"; do
+	printf ' %s' "\$arg"
+done
+printf '\n'
+EOF
+chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix-store"
 cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
+mkdir -p "$tmp/bootstrap/nix-termux"
+printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registration"
 
 (cd "$tmp/bootstrap" && tar -cf "$tmp/bootstrap.tar" .)
 sha=$(sha256sum "$tmp/bootstrap.tar" | awk '{print $1}')
@@ -83,7 +100,8 @@ cat >"$tmp/bootstrap-manifest.json" <<EOF
   "layout": {
     "storeDir": "nix",
     "rootDir": "root",
-    "nixBin": "nix/var/nix/profiles/default/bin/nix"
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
   }
 }
 EOF
@@ -94,6 +112,8 @@ PATH="$tmp/fake-bin:$PATH" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-manifest.json" \
 	sh "$repo_root/installer/install.sh"
+
+grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \

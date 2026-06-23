@@ -56,7 +56,7 @@ stdenvNoCC.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    mkdir -p bootstrap/nix/store bootstrap/nix/var/nix/profiles/default/bin bootstrap/root/usr/bin bootstrap/root/bin bootstrap/termux/etc/tls
+    mkdir -p bootstrap/nix/store bootstrap/nix/var/nix/profiles/default/bin bootstrap/nix-termux bootstrap/root/usr/bin bootstrap/root/bin bootstrap/termux/etc/tls
 
     while IFS= read -r path; do
       cp -a "$path" bootstrap/nix/store/
@@ -71,6 +71,7 @@ stdenvNoCC.mkDerivation {
     ln -s ${coreutils}/bin/env bootstrap/root/usr/bin/env
     ln -s ${bashInteractive}/bin/bash bootstrap/root/bin/sh
     ln -s ${cacert}/etc/ssl/certs/ca-bundle.crt bootstrap/termux/etc/tls/cert.pem
+    cp ${closure}/registration bootstrap/nix-termux/bootstrap.registration
 
     tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf bootstrap.tar -C bootstrap .
     gzip -n bootstrap.tar
@@ -95,7 +96,8 @@ stdenvNoCC.mkDerivation {
         layout: {
           storeDir: "nix",
           rootDir: "root",
-          nixBin: "nix/var/nix/profiles/default/bin/nix"
+          nixBin: "nix/var/nix/profiles/default/bin/nix",
+          registration: "nix-termux/bootstrap.registration"
         }
       }' > bootstrap.json
 

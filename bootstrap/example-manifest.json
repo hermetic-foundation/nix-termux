@@ -12,6 +12,7 @@
   "layout": {
     "storeDir": "nix",
     "rootDir": "root",
-    "nixBin": "nix/var/nix/profiles/default/bin/nix"
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
   }
 }

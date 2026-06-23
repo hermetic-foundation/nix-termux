@@ -62,6 +62,10 @@ load_manifest() {
 		die "unsupported bootstrap manifest rootDir"
 	grep -Eq '"nixBin"[[:space:]]*:[[:space:]]*"nix/var/nix/profiles/default/bin/nix"' "$manifest" ||
 		die "unsupported bootstrap manifest nixBin"
+	if grep -Eq '"registration"' "$manifest"; then
+		grep -Eq '"registration"[[:space:]]*:[[:space:]]*"nix-termux/bootstrap.registration"' "$manifest" ||
+			die "unsupported bootstrap manifest registration"
+	fi
 
 	manifest_url=$(json_string_value url "$manifest")
 	manifest_sha256=$(json_string_value sha256 "$manifest")
@@ -140,6 +144,11 @@ if [ -n "$bootstrap_url" ]; then
 
 	tar -xf "$archive" -C "$state_dir"
 	rm -f "$archive"
+
+	registration=$state_dir/nix-termux/bootstrap.registration
+	if [ -r "$registration" ]; then
+		"$prefix/bin/nix-termux" exec nix-store --load-db <"$registration"
+	fi
 fi
 
 {
