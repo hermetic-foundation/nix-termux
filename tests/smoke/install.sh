@@ -133,18 +133,29 @@ cat >"$tmp/channel.json" <<EOF
   }
 }
 EOF
+cp "$tmp/channel.json" "$tmp/nix-termux-channel-x86_64.json"
+cat >"$tmp/fake-bin/pkg" <<'EOF'
+#!/usr/bin/env sh
+if [ "$1" = "--print-architecture" ]; then
+	printf '%s\n' x86_64
+	exit 0
+fi
+exit 1
+EOF
+chmod 755 "$tmp/fake-bin/pkg"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
-	NIX_TERMUX_CHANNEL_URL="file://$tmp/channel.json" \
+	NIX_TERMUX_CHANNEL_BASE_URL="file://$tmp" \
 	sh "$tmp/standalone/install.sh"
 
 grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
 grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
-grep -q '^channel_url=file://.*/channel.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^termux_arch=x86_64$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 
 PATH="$tmp/fake-bin:$PATH" \

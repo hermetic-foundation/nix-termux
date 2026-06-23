@@ -63,7 +63,7 @@ The intended install flow is:
 
 ```sh
 pkg install proot curl tar xz coreutils
-export NIX_TERMUX_CHANNEL_URL=https://example.invalid/nix-termux/nix-termux-channel-aarch64.json
+export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/nix-termux
 curl -L https://example.invalid/nix-termux/install.sh | sh
 nix-termux doctor
 ```
@@ -94,7 +94,8 @@ nix-termux run nixpkgs#hello
 ```
 
 For local development or mirrored artifacts, the installer also accepts
-`NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` directly.
+`NIX_TERMUX_CHANNEL_URL`, `NIX_TERMUX_ARCH`, `NIX_TERMUX_BOOTSTRAP_URL`, and
+`NIX_TERMUX_BOOTSTRAP_SHA256` directly.
 
 After installation, the saved manifest can be reused with:
 

@@ -14,7 +14,9 @@ have() {
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
+termux_arch=${NIX_TERMUX_ARCH:-}
 channel_url=${NIX_TERMUX_CHANNEL_URL:-}
+channel_base_url=${NIX_TERMUX_CHANNEL_BASE_URL:-}
 runtime_archive_url=${NIX_TERMUX_RUNTIME_ARCHIVE_URL:-}
 runtime_archive_sha256=${NIX_TERMUX_RUNTIME_ARCHIVE_SHA256:-}
 bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
@@ -27,7 +29,7 @@ bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
 for command in mkdir chmod cp rm; do
 	have "$command" || die "required command missing: $command"
 done
-for command in dirname grep head sed; do
+for command in dirname grep head sed uname; do
 	have "$command" || die "required command missing: $command"
 done
 
@@ -83,7 +85,10 @@ resolve_manifest_url() {
 		case $base in
 		file://*)
 			base_path=${base#file://}
-			printf 'file://%s/%s\n' "$(dirname -- "$base_path")" "$value"
+			case $base_path in
+			*/) printf 'file://%s%s\n' "$base_path" "$value" ;;
+			*) printf 'file://%s/%s\n' "$(dirname -- "$base_path")" "$value" ;;
+			esac
 			;;
 		*://*)
 			printf '%s/%s\n' "${base%/*}" "$value"
@@ -93,6 +98,30 @@ resolve_manifest_url() {
 			;;
 		esac
 		;;
+	esac
+}
+
+detect_arch() {
+	if [ -n "$termux_arch" ]; then
+		printf '%s\n' "$termux_arch"
+		return
+	fi
+
+	if have pkg; then
+		pkg_arch=$(pkg --print-architecture 2>/dev/null || true)
+		if [ -n "$pkg_arch" ]; then
+			printf '%s\n' "$pkg_arch"
+			return
+		fi
+	fi
+
+	uname_arch=$(uname -m 2>/dev/null || true)
+	case $uname_arch in
+	aarch64 | arm64) printf '%s\n' aarch64 ;;
+	armv7* | armv8l) printf '%s\n' arm ;;
+	i686 | i386) printf '%s\n' i686 ;;
+	x86_64 | amd64) printf '%s\n' x86_64 ;;
+	*) die "could not detect Termux architecture; set NIX_TERMUX_ARCH" ;;
 	esac
 }
 
@@ -148,6 +177,11 @@ script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 source_root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
 
 mkdir -p "$state_dir/tmp"
+
+if [ -z "$channel_url" ] && [ -n "$channel_base_url" ]; then
+	termux_arch=$(detect_arch)
+	channel_url=$(resolve_manifest_url "$channel_base_url/" "nix-termux-channel-$termux_arch.json")
+fi
 
 if [ -n "$channel_url" ]; then
 	channel=$state_dir/tmp/channel.json
@@ -268,7 +302,9 @@ if [ -n "$bootstrap_url" ]; then
 fi
 
 {
+	printf 'termux_arch=%s\n' "$termux_arch"
 	printf 'channel_url=%s\n' "$channel_url"
+	printf 'channel_base_url=%s\n' "$channel_base_url"
 	printf 'runtime_archive_url=%s\n' "$runtime_archive_url"
 	printf 'runtime_archive_sha256=%s\n' "$runtime_archive_sha256"
 	printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"

@@ -47,7 +47,7 @@ release for the tag.
 The preferred install entrypoint is the channel manifest:
 
 ```sh
-export NIX_TERMUX_CHANNEL_URL=https://example.invalid/nix-termux-channel-aarch64.json
+export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/releases/v0.1.0
 curl -L https://example.invalid/install.sh | sh
 ```
 
