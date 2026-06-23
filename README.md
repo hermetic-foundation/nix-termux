@@ -21,6 +21,7 @@ This repository provides:
   installer/wrapper path.
 - A Nix-built bootstrap artifact package and GitHub release workflow for
   x86_64 and aarch64 bootstrap archives.
+- A packaged real-device smoke test for validating releases inside Termux.
 
 The remaining high-risk work is real-device validation on Termux/Android.
 
@@ -59,6 +60,13 @@ nix-termux-bootstrap-<arch>.registration
 
 Tagged GitHub releases build and attach those artifacts through
 `.github/workflows/ci.yml`.
+
+Real Android support should be accepted with the on-device smoke test documented
+in `docs/device-validation.md`:
+
+```sh
+sh "$HOME/.nix-termux/share/tests/device-smoke.sh"
+```
 
 ## Termux Install Shape
 

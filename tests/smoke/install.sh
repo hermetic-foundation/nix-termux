@@ -15,11 +15,12 @@ mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/ru
 host_sh=$(command -v sh)
 cp "$host_sh" "$tmp/prefix/bin/sh"
 cp "$repo_root/installer/install.sh" "$tmp/standalone/install.sh"
-mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime"
+mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime" "$tmp/runtime-source/tests/termux"
 cp "$repo_root/bin/nix-termux" "$tmp/runtime-source/bin/nix-termux"
 cp "$repo_root/installer/install.sh" "$tmp/runtime-source/installer/install.sh"
 cp "$repo_root/installer/uninstall.sh" "$tmp/runtime-source/installer/uninstall.sh"
 cp "$repo_root/runtime/nix-termux.sh" "$tmp/runtime-source/runtime/nix-termux.sh"
+cp "$repo_root/tests/termux/device-smoke.sh" "$tmp/runtime-source/tests/termux/device-smoke.sh"
 (cd "$tmp/runtime-source" && tar -czf "$tmp/runtime.tar.gz" .)
 runtime_sha=$(sha256sum "$tmp/runtime.tar.gz" | awk '{print $1}')
 
@@ -157,6 +158,7 @@ grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activatio
 grep -q '^termux_arch=x86_64$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
+test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \

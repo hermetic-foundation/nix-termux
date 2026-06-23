@@ -35,8 +35,10 @@
               install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
               install -Dm644 docs/bootstrap.md "$out/share/doc/nix-termux/bootstrap.md"
               install -Dm644 docs/channel.md "$out/share/doc/nix-termux/channel.md"
+              install -Dm644 docs/device-validation.md "$out/share/doc/nix-termux/device-validation.md"
               install -Dm644 docs/doctor.md "$out/share/doc/nix-termux/doctor.md"
               install -Dm644 docs/release.md "$out/share/doc/nix-termux/release.md"
+              install -Dm755 tests/termux/device-smoke.sh "$out/share/nix-termux/tests/device-smoke.sh"
               install -Dm644 bootstrap/manifest.schema.json "$out/share/nix-termux/bootstrap/manifest.schema.json"
               install -Dm644 bootstrap/example-manifest.json "$out/share/nix-termux/bootstrap/example-manifest.json"
               install -Dm644 channel/schema.json "$out/share/nix-termux/channel/schema.json"
@@ -87,6 +89,7 @@
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/install.sh"
+            "tests/termux/device-smoke.sh"
           ];
         in
         {
@@ -185,6 +188,7 @@
             grep -qx './installer/install.sh' listing
             grep -qx './installer/uninstall.sh' listing
             grep -qx './runtime/nix-termux.sh' listing
+            grep -qx './tests/termux/device-smoke.sh' listing
             grep -qx './LICENSE' listing
             (cd "$artifact" && sha256sum -c nix-termux-runtime.tar.gz.sha256)
             touch "$out"

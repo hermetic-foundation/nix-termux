@@ -194,11 +194,13 @@ if [ -f "$source_root/bin/nix-termux" ]; then
 	source_install=$source_root/installer/install.sh
 	source_runtime=$source_root/runtime/nix-termux.sh
 	source_uninstall=$source_root/installer/uninstall.sh
+	source_device_smoke=$source_root/tests/termux/device-smoke.sh
 else
 	source_bin=$state_dir/bin/nix-termux
 	source_install=$state_dir/share/installer/install.sh
 	source_runtime=$state_dir/runtime/nix-termux.sh
 	source_uninstall=$state_dir/share/installer/uninstall.sh
+	source_device_smoke=$state_dir/share/tests/device-smoke.sh
 
 	if [ ! -r "$source_bin" ] && [ -n "$runtime_archive_url" ]; then
 		have tar || die "tar is required to unpack NIX_TERMUX_RUNTIME_ARCHIVE_URL"
@@ -222,6 +224,7 @@ else
 		source_install=$runtime_source/installer/install.sh
 		source_runtime=$runtime_source/runtime/nix-termux.sh
 		source_uninstall=$runtime_source/installer/uninstall.sh
+		source_device_smoke=$runtime_source/tests/termux/device-smoke.sh
 	fi
 fi
 
@@ -235,7 +238,7 @@ install_file() {
 	fi
 }
 
-mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/root/usr/bin" "$state_dir/nix"
+mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/nix"
 mkdir -p \
 	"$state_dir/nix/store" \
 	"$state_dir/nix/var/log/nix/drvs" \
@@ -254,7 +257,8 @@ install_file "$source_bin" "$state_dir/bin/nix-termux"
 install_file "$source_install" "$state_dir/share/installer/install.sh"
 install_file "$source_runtime" "$state_dir/runtime/nix-termux.sh"
 install_file "$source_uninstall" "$state_dir/share/installer/uninstall.sh"
-chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh"
+install_file "$source_device_smoke" "$state_dir/share/tests/device-smoke.sh"
+chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh" "$state_dir/share/tests/device-smoke.sh"
 
 cat >"$prefix/bin/nix-termux" <<EOF
 #!$prefix/bin/sh
