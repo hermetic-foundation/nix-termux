@@ -111,7 +111,9 @@
             "installer/install.sh"
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
+            "tools/adb-validate.sh"
             "tools/serve-release.sh"
+            "tests/smoke/adb-validate.sh"
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/device-smoke-options.sh"
@@ -194,6 +196,20 @@
             chmod -R u+w source
             cd source
             sh tests/smoke/device-smoke-options.sh
+            touch "$out"
+          '';
+
+          adb-validate = pkgs.runCommand "nix-termux-adb-validate-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/adb-validate.sh
             touch "$out"
           '';
 
@@ -301,6 +317,7 @@
               shfmt
               jj
               python3
+              android-tools
             ];
           };
         });
