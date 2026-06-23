@@ -11,7 +11,14 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/release"
+mkdir -p "$tmp/bin" "$tmp/release"
+host_sh=$(command -v sh)
+
+cat >"$tmp/bin/python3" <<EOF
+#!$host_sh
+printf '%s\n' "\$*" >"$tmp/python3.args"
+EOF
+chmod 755 "$tmp/bin/python3"
 
 for file in \
 	install.sh \
@@ -54,6 +61,18 @@ if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"
 fi
 grep -q 'release directory missing nix-termux-bootstrap-x86_64.tar.gz' "$tmp/err"
 printf '%s\n' nix-termux-bootstrap-x86_64.tar.gz >"$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"
+
+PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
+# shellcheck disable=SC2016
+grep -q '^tmp_dir=$(mktemp -d)$' "$tmp/serve.out"
+# shellcheck disable=SC2016
+grep -q 'curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"' "$tmp/serve.out"
+# shellcheck disable=SC2016
+grep -q 'curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"' "$tmp/serve.out"
+grep -q 'sha256sum -c install.sh.sha256' "$tmp/serve.out"
+# shellcheck disable=SC2016
+grep -q 'sh "$tmp_dir/install.sh"' "$tmp/serve.out"
+grep -qx -- "-m http.server 8765 --bind 127.0.0.1" "$tmp/python3.args"
 
 printf '%s\n' tampered >>"$tmp/release/install.sh"
 
