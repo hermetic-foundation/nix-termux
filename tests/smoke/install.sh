@@ -355,9 +355,14 @@ printf '%s\n' "$doctor_json" | grep -Eq '"runtimeVersion"[[:space:]]*:[[:space:]
 printf '%s\n' "$doctor_json" | grep -Eq '"installedRuntimeVersion"[[:space:]]*:[[:space:]]*"0.1.0"'
 printf '%s\n' "$doctor_json" | jq -e \
 	--arg sha "$sha" \
+	--arg runtime_sha "$runtime_sha" \
 	'.schemaVersion == 1
 	and .runtimeVersion == "0.1.0"
 	and .installedRuntimeVersion == "0.1.0"
+	and (.config.path | endswith("/etc/nix-termux.conf"))
+	and (.config.channelUrl | test("^file://.*/nix-termux-channel-x86_64.json$"))
+	and .config.runtimeArchiveSha256 == $runtime_sha
+	and (.config.bootstrapManifestUrl | test("^file://.*/bootstrap-manifest.json$"))
 	and .ok == true
 	and .termux.ok == true
 	and .proot.ok == true

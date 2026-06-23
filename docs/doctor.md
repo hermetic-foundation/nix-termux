@@ -22,6 +22,12 @@ The JSON shape is stable for schema version 1 of the runtime:
   "runtimeVersion": "0.1.0",
   "installedRuntimeVersion": "0.1.0",
   "ok": true,
+  "config": {
+    "path": "/data/data/com.termux/files/home/.nix-termux/etc/nix-termux.conf",
+    "channelUrl": "https://example.invalid/nix-termux/nix-termux-channel-aarch64.json",
+    "runtimeArchiveSha256": "<sha256>",
+    "bootstrapManifestUrl": "https://example.invalid/nix-termux/nix-termux-bootstrap-aarch64.json"
+  },
   "termux": {
     "ok": true,
     "prefix": "/data/data/com.termux/files/usr",

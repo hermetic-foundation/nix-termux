@@ -78,6 +78,9 @@ doctor_status() {
 	doctor_dns=false
 	doctor_wrappers=false
 	doctor_installed_runtime_version=
+	doctor_channel_url=
+	doctor_runtime_archive_sha256=
+	doctor_bootstrap_manifest_url=
 	doctor_missing_wrappers=
 	doctor_activation_sha=
 	doctor_status=0
@@ -145,6 +148,9 @@ doctor_status() {
 		doctor_status=1
 	fi
 	doctor_installed_runtime_version=$(config_value runtime_version "$config_file")
+	doctor_channel_url=$(config_value channel_url "$config_file")
+	doctor_runtime_archive_sha256=$(config_value runtime_archive_sha256 "$config_file")
+	doctor_bootstrap_manifest_url=$(config_value bootstrap_manifest_url "$config_file")
 }
 
 doctor_text() {
@@ -152,6 +158,13 @@ doctor_text() {
 		info "runtime: ok ($version, installed $doctor_installed_runtime_version)"
 	else
 		info "runtime: ok ($version)"
+	fi
+	if [ -r "$config_file" ]; then
+		info "config: ok ($config_file)"
+		[ -n "$doctor_channel_url" ] && info "channel: $doctor_channel_url"
+		[ -n "$doctor_bootstrap_manifest_url" ] && info "bootstrap-manifest: $doctor_bootstrap_manifest_url"
+	else
+		info "config: missing ($config_file)"
 	fi
 	if [ "$doctor_termux" = true ]; then
 		info "termux: ok ($termux_prefix)"
@@ -214,6 +227,12 @@ doctor_json() {
   "runtimeVersion": "$(json_escape "$version")",
   "installedRuntimeVersion": "$(json_escape "$doctor_installed_runtime_version")",
   "ok": $([ "$doctor_status" -eq 0 ] && printf true || printf false),
+  "config": {
+    "path": "$(json_escape "$config_file")",
+    "channelUrl": "$(json_escape "$doctor_channel_url")",
+    "runtimeArchiveSha256": "$(json_escape "$doctor_runtime_archive_sha256")",
+    "bootstrapManifestUrl": "$(json_escape "$doctor_bootstrap_manifest_url")"
+  },
   "termux": {
     "ok": $doctor_termux,
     "prefix": "$(json_escape "$termux_prefix")",
