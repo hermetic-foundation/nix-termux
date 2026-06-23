@@ -1,7 +1,7 @@
 # Doctor
 
 `nix-termux doctor` checks whether the Termux runtime, `proot`, bootstrap store,
-Nix profile, CA bundle, and activation metadata are present.
+Nix profile, CA bundle, resolver config, and activation metadata are present.
 
 ```sh
 nix-termux doctor
@@ -42,6 +42,10 @@ The JSON shape is stable for schema version 1 of the runtime:
   "certs": {
     "ok": true,
     "path": "/data/data/com.termux/files/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
+  },
+  "dns": {
+    "ok": true,
+    "path": "/data/data/com.termux/files/home/.nix-termux/root/etc/resolv.conf"
   },
   "activation": {
     "ok": true,

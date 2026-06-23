@@ -11,9 +11,10 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
+mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
 host_sh=$(command -v sh)
 cp "$host_sh" "$tmp/prefix/bin/sh"
+printf '%s\n' "nameserver 192.0.2.53" >"$tmp/prefix/etc/resolv.conf"
 cp "$repo_root/installer/install.sh" "$tmp/standalone/install.sh"
 mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime" "$tmp/runtime-source/tests/termux"
 cp "$repo_root/bin/nix-termux" "$tmp/runtime-source/bin/nix-termux"
@@ -172,6 +173,7 @@ PATH="$tmp/fake-bin:$PATH" \
 
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
+grep -qx 'nameserver 192.0.2.53' "$tmp/home/.nix-termux/root/etc/resolv.conf"
 
 doctor_json=$(
 	PATH="$tmp/fake-bin:$PATH" \
@@ -190,6 +192,7 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .nix.ok == true
 	and .nixConf.ok == true
 	and .certs.ok == true
+	and .dns.ok == true
 	and .activation.ok == true
 	and .activation.bootstrapSha256 == $sha' >/dev/null
 

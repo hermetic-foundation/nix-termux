@@ -22,6 +22,7 @@ nix_conf_file=${NIX_TERMUX_NIX_CONF:-"$root_dir/etc/nix/nix.conf"}
 config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
+resolv_conf_file=${NIX_TERMUX_RESOLV_CONF:-"$root_dir/etc/resolv.conf"}
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
 termux_home=${HOME:-/data/data/com.termux/files/home}
@@ -63,6 +64,7 @@ doctor_status() {
 	doctor_nix_conf=false
 	doctor_certs=false
 	doctor_activation=false
+	doctor_dns=false
 	doctor_activation_sha=
 	doctor_status=0
 
@@ -93,6 +95,11 @@ doctor_status() {
 	fi
 	if [ -r "$cert_file" ]; then
 		doctor_certs=true
+	else
+		doctor_status=1
+	fi
+	if [ -s "$resolv_conf_file" ]; then
+		doctor_dns=true
 	else
 		doctor_status=1
 	fi
@@ -140,6 +147,11 @@ doctor_text() {
 	else
 		info "certs: missing ($cert_file)"
 	fi
+	if [ "$doctor_dns" = true ]; then
+		info "dns: ok ($resolv_conf_file)"
+	else
+		info "dns: missing ($resolv_conf_file)"
+	fi
 	if [ "$doctor_activation" = true ]; then
 		info "activation: ok ($doctor_activation_sha)"
 	elif [ -r "$activation_file" ]; then
@@ -177,6 +189,10 @@ doctor_json() {
   "certs": {
     "ok": $doctor_certs,
     "path": "$(json_escape "$cert_file")"
+  },
+  "dns": {
+    "ok": $doctor_dns,
+    "path": "$(json_escape "$resolv_conf_file")"
   },
   "activation": {
     "ok": $doctor_activation,
@@ -217,6 +233,7 @@ NIX_TERMUX_NIX_CONF=$nix_conf_file
 NIX_TERMUX_CONFIG=$config_file
 NIX_TERMUX_ACTIVATION=$activation_file
 NIX_TERMUX_PROOT=$proot
+NIX_TERMUX_RESOLV_CONF=$resolv_conf_file
 PREFIX=$termux_prefix
 HOME=$termux_home
 EOF
@@ -230,10 +247,48 @@ config_value() {
 	sed -n 's/^'"$key"'=\(.*\)$/\1/p' "$file" | head -n 1
 }
 
+write_resolv_conf() {
+	target=$1
+	source=
+
+	mkdir -p "$(dirname -- "$target")"
+
+	if [ -r "$termux_prefix/etc/resolv.conf" ] && [ -s "$termux_prefix/etc/resolv.conf" ]; then
+		source=$termux_prefix/etc/resolv.conf
+	elif [ -r /etc/resolv.conf ] && [ -s /etc/resolv.conf ]; then
+		source=/etc/resolv.conf
+	fi
+
+	if [ -n "$source" ]; then
+		cp "$source" "$target"
+		return
+	fi
+
+	: >"$target"
+	if have getprop; then
+		for prop in net.dns1 net.dns2 net.dns3 net.dns4; do
+			value=$(getprop "$prop" 2>/dev/null || true)
+			case $value in
+			"" | *[!0-9a-fA-F:.]*)
+				;;
+			*)
+				printf 'nameserver %s\n' "$value" >>"$target"
+				;;
+			esac
+		done
+	fi
+
+	if [ ! -s "$target" ]; then
+		rm -f "$target"
+		return 1
+	fi
+}
+
 enter() {
 	[ -d "$store_dir" ] || die "state not initialized at $state_dir; run installer first"
 	have "$proot" || die "proot is required; install it with: pkg install proot"
 	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/tmp"
+	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"
 
 	shell=${NIX_TERMUX_SHELL:-"$profile_dir/bin/bash"}
 	[ -x "$shell" ] || shell=/bin/sh

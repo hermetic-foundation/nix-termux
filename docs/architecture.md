@@ -32,6 +32,10 @@ $HOME              -> /home/termux
 $PREFIX           -> /termux
 ```
 
+Before entering proot, the runtime writes `root/etc/resolv.conf` from
+`$PREFIX/etc/resolv.conf`, host `/etc/resolv.conf`, or Android `getprop` DNS
+values so Nix can resolve substituter and flake hosts.
+
 ## Wrapper Model
 
 The installer writes wrappers into `$PREFIX/bin`:
