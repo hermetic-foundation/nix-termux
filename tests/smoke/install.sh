@@ -269,6 +269,7 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .proot.ok == true
 	and .store.ok == true
 	and .nix.ok == true
+	and .userProfile.ok == true
 	and .nixConf.ok == true
 	and .certs.ok == true
 	and .dns.ok == true

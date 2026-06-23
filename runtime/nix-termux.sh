@@ -65,6 +65,7 @@ doctor_status() {
 	doctor_proot=false
 	doctor_store=false
 	doctor_nix=false
+	doctor_user_profile=false
 	doctor_nix_conf=false
 	doctor_certs=false
 	doctor_activation=false
@@ -91,6 +92,11 @@ doctor_status() {
 	fi
 	if [ -x "$profile_dir/bin/nix" ]; then
 		doctor_nix=true
+	else
+		doctor_status=1
+	fi
+	if [ -d "$(dirname -- "$user_profile_dir")" ]; then
+		doctor_user_profile=true
 	else
 		doctor_status=1
 	fi
@@ -154,6 +160,11 @@ doctor_text() {
 	else
 		info "nix: missing ($profile_dir/bin/nix)"
 	fi
+	if [ "$doctor_user_profile" = true ]; then
+		info "user-profile: ok ($user_profile_dir)"
+	else
+		info "user-profile: missing ($user_profile_dir)"
+	fi
 	if [ "$doctor_nix_conf" = true ]; then
 		info "nix-conf: ok ($nix_conf_file)"
 	else
@@ -203,6 +214,10 @@ doctor_json() {
   "nix": {
     "ok": $doctor_nix,
     "path": "$(json_escape "$profile_dir/bin/nix")"
+  },
+  "userProfile": {
+    "ok": $doctor_user_profile,
+    "path": "$(json_escape "$user_profile_dir")"
   },
   "nixConf": {
     "ok": $doctor_nix_conf,
