@@ -75,6 +75,14 @@ validate_release_dir() {
 	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
 	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap manifest"
 
+	set -- "$release_dir"/nix-termux-bootstrap-*.tar.gz
+	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.tar.gz"
+	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap archive"
+
+	set -- "$release_dir"/nix-termux-bootstrap-*.registration
+	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.registration"
+	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap registration"
+
 	(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
 		die "release checksum verification failed"
 }
