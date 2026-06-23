@@ -650,6 +650,27 @@ printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile$'
 printf '%s\n' "$env_output" | grep -q "^SSL_CERT_FILE=$tmp/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$"
 
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" env extra >"$tmp/env-extra.out" 2>"$tmp/env-extra.err"; then
+	printf '%s\n' "env with extra arguments unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: env accepts no arguments$' "$tmp/env-extra.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap \
+	"file://$tmp/bootstrap-manifest.json" extra >"$tmp/upgrade-bootstrap-extra.out" 2>"$tmp/upgrade-bootstrap-extra.err"; then
+	printf '%s\n' "upgrade-bootstrap with extra arguments unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade-bootstrap accepts at most one manifest URL$' "$tmp/upgrade-bootstrap-extra.err"
+
 cat >"$tmp/prefix/bin/nix-env" <<EOF
 #!$host_sh
 printf '%s\n' user modified nix-env

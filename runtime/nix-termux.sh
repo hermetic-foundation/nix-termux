@@ -299,6 +299,8 @@ doctor() {
 }
 
 print_env() {
+	[ "$#" -eq 0 ] || die "env accepts no arguments"
+
 	cat <<EOF
 NIX_TERMUX_STATE_DIR=$state_dir
 NIX_TERMUX_VERSION=$version
@@ -475,6 +477,7 @@ upgrade_bootstrap() {
 	manifest_url=${1:-}
 	install_script=${NIX_TERMUX_INSTALL:-"$state_dir/share/installer/install.sh"}
 
+	[ "$#" -le 1 ] || die "upgrade-bootstrap accepts at most one manifest URL"
 	[ -x "$install_script" ] || die "install script not found at $install_script"
 
 	if [ -z "$manifest_url" ]; then
