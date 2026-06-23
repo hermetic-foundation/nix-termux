@@ -16,6 +16,7 @@ state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 store_dir=${NIX_TERMUX_STORE_DIR:-"$state_dir/nix"}
 root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
 profile_dir=${NIX_TERMUX_PROFILE_DIR:-"$store_dir/var/nix/profiles/default"}
+config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
@@ -31,6 +32,8 @@ Commands:
   enter [-- cmd...]   Enter the proot-backed Nix environment.
   run <args...>       Run `nix run <args...>` inside the environment.
   exec <cmd> [args...] Run an arbitrary command inside the environment.
+  upgrade-bootstrap [manifest-url]
+                      Reinstall runtime/bootstrap from a manifest.
   uninstall           Remove wrappers and nix-termux state.
   help                Show this help.
 EOF
@@ -84,10 +87,19 @@ NIX_TERMUX_STATE_DIR=$state_dir
 NIX_TERMUX_STORE_DIR=$store_dir
 NIX_TERMUX_ROOT_DIR=$root_dir
 NIX_TERMUX_PROFILE_DIR=$profile_dir
+NIX_TERMUX_CONFIG=$config_file
 NIX_TERMUX_PROOT=$proot
 PREFIX=$termux_prefix
 HOME=$termux_home
 EOF
+}
+
+config_value() {
+	key=$1
+	file=$2
+
+	[ -r "$file" ] || return 0
+	sed -n 's/^'"$key"'=\(.*\)$/\1/p' "$file" | head -n 1
 }
 
 enter() {
@@ -142,6 +154,24 @@ uninstall() {
 	exec sh "$uninstall_script"
 }
 
+upgrade_bootstrap() {
+	manifest_url=${1:-}
+	install_script=${NIX_TERMUX_INSTALL:-"$state_dir/share/installer/install.sh"}
+
+	[ -x "$install_script" ] || die "install script not found at $install_script"
+
+	if [ -z "$manifest_url" ]; then
+		manifest_url=$(config_value bootstrap_manifest_url "$config_file")
+	fi
+	[ -n "$manifest_url" ] || die "no manifest URL supplied and none saved in $config_file"
+
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=$manifest_url \
+		NIX_TERMUX_STATE_DIR=$state_dir \
+		PREFIX=$termux_prefix \
+		HOME=$termux_home \
+		exec sh "$install_script"
+}
+
 cmd=${1:-help}
 if [ "$#" -gt 0 ]; then
 	shift
@@ -153,6 +183,7 @@ env) print_env "$@" ;;
 enter) enter "$@" ;;
 run) run_nix "$@" ;;
 exec) exec_command "$@" ;;
+upgrade-bootstrap) upgrade_bootstrap "$@" ;;
 uninstall) uninstall "$@" ;;
 help | -h | --help) usage ;;
 *) die "unknown command: $cmd" ;;

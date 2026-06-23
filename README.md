@@ -68,6 +68,18 @@ nix-termux run nixpkgs#hello
 For local development or mirrored artifacts, the installer also accepts
 `NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` directly.
 
+After installation, the saved manifest can be reused with:
+
+```sh
+nix-termux upgrade-bootstrap
+```
+
+or replaced explicitly:
+
+```sh
+nix-termux upgrade-bootstrap https://example.invalid/nix-termux/bootstrap-aarch64.json
+```
+
 ## License
 
 `nix-termux` is licensed under the GNU Affero General Public License version 3

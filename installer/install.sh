@@ -72,9 +72,32 @@ load_manifest() {
 	bootstrap_sha256=${bootstrap_sha256:-"$manifest_sha256"}
 }
 
-repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+source_root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
 
-mkdir -p "$state_dir/bin" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/root/usr/bin" "$state_dir/nix"
+if [ -f "$source_root/bin/nix-termux" ]; then
+	source_bin=$source_root/bin/nix-termux
+	source_install=$source_root/installer/install.sh
+	source_runtime=$source_root/runtime/nix-termux.sh
+	source_uninstall=$source_root/installer/uninstall.sh
+else
+	source_bin=$state_dir/bin/nix-termux
+	source_install=$state_dir/share/installer/install.sh
+	source_runtime=$state_dir/runtime/nix-termux.sh
+	source_uninstall=$state_dir/share/installer/uninstall.sh
+fi
+
+install_file() {
+	source=$1
+	target=$2
+
+	[ -r "$source" ] || die "source file not found: $source"
+	if [ "$source" != "$target" ]; then
+		cp "$source" "$target"
+	fi
+}
+
+mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/root/usr/bin" "$state_dir/nix"
 
 if [ -n "$bootstrap_manifest_url" ]; then
 	manifest=$state_dir/bootstrap-manifest.json
@@ -82,10 +105,11 @@ if [ -n "$bootstrap_manifest_url" ]; then
 	load_manifest "$manifest"
 fi
 
-cp "$repo_root/bin/nix-termux" "$state_dir/bin/nix-termux"
-cp "$repo_root/runtime/nix-termux.sh" "$state_dir/runtime/nix-termux.sh"
-cp "$repo_root/installer/uninstall.sh" "$state_dir/share/installer/uninstall.sh"
-chmod 755 "$state_dir/bin/nix-termux" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh"
+install_file "$source_bin" "$state_dir/bin/nix-termux"
+install_file "$source_install" "$state_dir/share/installer/install.sh"
+install_file "$source_runtime" "$state_dir/runtime/nix-termux.sh"
+install_file "$source_uninstall" "$state_dir/share/installer/uninstall.sh"
+chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh"
 
 cat >"$prefix/bin/nix-termux" <<EOF
 #!$prefix/bin/sh
@@ -117,6 +141,12 @@ if [ -n "$bootstrap_url" ]; then
 	tar -xf "$archive" -C "$state_dir"
 	rm -f "$archive"
 fi
+
+{
+	printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"
+	printf 'bootstrap_url=%s\n' "$bootstrap_url"
+	printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
+} >"$state_dir/etc/nix-termux.conf"
 
 printf '%s\n' "Installed nix-termux to $state_dir"
 printf '%s\n' "Run: nix-termux doctor"

@@ -9,9 +9,11 @@ identity changes, or a parallel add-on ecosystem.
 ```text
 $HOME/.nix-termux/
   bin/nix-termux
+  etc/nix-termux.conf
   runtime/nix-termux.sh
   root/
   nix/
+  share/installer/install.sh
   share/installer/uninstall.sh
 ```
 

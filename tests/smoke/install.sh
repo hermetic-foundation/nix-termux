@@ -101,6 +101,14 @@ PATH="$tmp/fake-bin:$PATH" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" doctor
 
+grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap
+
 output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
