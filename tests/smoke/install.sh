@@ -264,7 +264,8 @@ doctor_json=$(
 
 printf '%s\n' "$doctor_json" | jq -e \
 	--arg sha "$sha" \
-	'.ok == true
+	'.schemaVersion == 1
+	and .ok == true
 	and .termux.ok == true
 	and .proot.ok == true
 	and .store.ok == true

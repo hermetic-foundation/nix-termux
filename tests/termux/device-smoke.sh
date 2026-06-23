@@ -57,6 +57,25 @@ check_json_bool() {
 	fi
 }
 
+check_json_number() {
+	key=$1
+	value=$2
+	file=$3
+
+	if have jq; then
+		jq -e "$key == $value" "$file" >/dev/null
+	else
+		case $key in
+		.schemaVersion)
+			grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*'"$value"'([,[:space:]}]|$)' "$file"
+			;;
+		*)
+			return 1
+			;;
+		esac
+	fi
+}
+
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
 tmp=${TMPDIR:-${PREFIX:-/tmp}/tmp}/nix-termux-device-smoke.$$
@@ -88,6 +107,7 @@ else
 	fail "doctor --json exits successfully"
 fi
 
+check "doctor reports schema version" check_json_number ".schemaVersion" 1 "$doctor_json"
 check "doctor reports ok" check_json_bool ".ok" "$doctor_json"
 check "doctor reports Termux" check_json_bool ".termux.ok" "$doctor_json"
 check "doctor reports proot" check_json_bool ".proot.ok" "$doctor_json"

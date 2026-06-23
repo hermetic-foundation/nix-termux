@@ -197,6 +197,7 @@ doctor_text() {
 doctor_json() {
 	cat <<EOF
 {
+  "schemaVersion": 1,
   "ok": $([ "$doctor_status" -eq 0 ] && printf true || printf false),
   "termux": {
     "ok": $doctor_termux,
