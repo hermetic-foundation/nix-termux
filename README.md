@@ -39,12 +39,15 @@ installs a fake bootstrap archive into a temporary Termux-like prefix.
 Build local release artifacts with:
 
 ```sh
+nix build .#runtime-archive
 nix build .#bootstrap
 ```
 
-The result contains:
+The results contain:
 
 ```text
+nix-termux-runtime.tar.gz
+nix-termux-runtime.tar.gz.sha256
 nix-termux-bootstrap-<arch>.tar.gz
 nix-termux-bootstrap-<arch>.json
 nix-termux-bootstrap-<arch>.registration

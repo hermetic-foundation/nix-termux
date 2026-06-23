@@ -54,6 +54,8 @@
           bootstrap = pkgs.callPackage ./bootstrap/make-bootstrap.nix {
             inherit system;
           };
+
+          runtime-archive = pkgs.callPackage ./runtime/make-runtime-archive.nix { };
         });
 
       apps = forAllSystems (system: {
@@ -139,6 +141,24 @@
             chmod -R u+w source
             cd source
             sh tests/smoke/bootstrap-artifact.sh "$artifact"
+            touch "$out"
+          '';
+
+          runtime-archive = pkgs.runCommand "nix-termux-runtime-archive-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+              pkgs.gnutar
+              pkgs.gzip
+            ];
+            artifact = self.packages.${system}.runtime-archive;
+          } ''
+            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './bin/nix-termux'
+            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './installer/install.sh'
+            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './installer/uninstall.sh'
+            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './runtime/nix-termux.sh'
+            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './LICENSE'
+            sha256sum -c "$artifact"/nix-termux-runtime.tar.gz.sha256
             touch "$out"
           '';
         });

@@ -7,7 +7,15 @@ project-specific deployment service.
 
 ```sh
 nix flake check
+nix build .#runtime-archive
 nix build .#bootstrap
+```
+
+The runtime result contains:
+
+```text
+nix-termux-runtime.tar.gz
+nix-termux-runtime.tar.gz.sha256
 ```
 
 The bootstrap result contains:
