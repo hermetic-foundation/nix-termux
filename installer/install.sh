@@ -24,6 +24,16 @@ bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
 bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
+runtime_archive=$state_dir/tmp/runtime.tar.gz
+runtime_source=$state_dir/tmp/runtime-source
+bootstrap_archive=$state_dir/tmp/bootstrap.tar.gz
+bootstrap_stage=$state_dir/tmp/bootstrap-stage
+
+cleanup_temp() {
+	rm -f "$runtime_archive" "$bootstrap_archive"
+	rm -rf "$runtime_source" "$bootstrap_stage"
+}
+trap cleanup_temp EXIT INT TERM
 
 [ -n "$prefix" ] || die "PREFIX is not set; run this from stock Termux"
 [ -d "$prefix/bin" ] || die "Termux prefix bin directory not found: $prefix/bin"
@@ -250,8 +260,6 @@ else
 
 	if [ -n "$runtime_archive_url" ]; then
 		have tar || die "tar is required to unpack NIX_TERMUX_RUNTIME_ARCHIVE_URL"
-		runtime_archive=$state_dir/tmp/runtime.tar.gz
-		runtime_source=$state_dir/tmp/runtime-source
 
 		rm -rf "$runtime_source"
 		mkdir -p "$runtime_source"
@@ -372,24 +380,20 @@ done
 if [ -n "$bootstrap_url" ]; then
 	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
 
-	archive=$state_dir/bootstrap.tar.gz
-	bootstrap_stage=$state_dir/tmp/bootstrap-stage
 	registration_loaded=no
-	fetch_url "$bootstrap_url" "$archive"
+	fetch_url "$bootstrap_url" "$bootstrap_archive"
 
 	if [ -n "$bootstrap_sha256" ]; then
 		have sha256sum || die "sha256sum is required when NIX_TERMUX_BOOTSTRAP_SHA256 is set"
-		actual=$(sha256sum "$archive")
+		actual=$(sha256sum "$bootstrap_archive")
 		actual=${actual%% *}
 		[ "$actual" = "$bootstrap_sha256" ] || die "bootstrap sha256 mismatch: expected $bootstrap_sha256 got $actual"
 	fi
 
 	rm -rf "$bootstrap_stage"
 	mkdir -p "$bootstrap_stage"
-	tar -xzf "$archive" -C "$bootstrap_stage"
+	tar -xzf "$bootstrap_archive" -C "$bootstrap_stage"
 	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
-	rm -rf "$bootstrap_stage"
-	rm -f "$archive"
 
 	registration=$state_dir/nix-termux/bootstrap.registration
 	if [ -r "$registration" ]; then
