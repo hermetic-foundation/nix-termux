@@ -224,6 +224,15 @@ grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
+cat >"$tmp/home/.nix-termux/share/tests/device-smoke.sh" <<'EOF'
+#!/usr/bin/env sh
+printf 'stub device smoke'
+for arg in "$@"; do
+	printf ' %s' "$arg"
+done
+printf '\n'
+EOF
+chmod 755 "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
 test -d "$tmp/home/.nix-termux/root/home"
 test -d "$tmp/home/.nix-termux/root/root"
 test -d "$tmp/home/.nix-termux/root/tmp"
@@ -266,6 +275,18 @@ version_output=$(
 )
 [ "$version_output" = "0.1.0" ] || {
 	printf 'unexpected version output: %s\n' "$version_output" >&2
+	exit 1
+}
+
+smoke_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" smoke-test --host-stub
+)
+[ "$smoke_output" = "stub device smoke --host-stub" ] || {
+	printf 'unexpected smoke-test output: %s\n' "$smoke_output" >&2
 	exit 1
 }
 

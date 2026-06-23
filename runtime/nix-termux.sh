@@ -43,6 +43,7 @@ Commands:
   enter [-- cmd...]   Enter the proot-backed Nix environment.
   run <args...>       Run `nix run <args...>` inside the environment.
   exec <cmd> [args...] Run an arbitrary command inside the environment.
+  smoke-test [args...] Run the installed Termux device smoke test.
   upgrade-bootstrap [manifest-url]
                       Reinstall runtime/bootstrap from a manifest.
   uninstall           Remove wrappers and nix-termux state.
@@ -418,6 +419,12 @@ exec_command() {
 	enter -- "$@"
 }
 
+smoke_test() {
+	smoke_script=${NIX_TERMUX_DEVICE_SMOKE:-"$state_dir/share/tests/device-smoke.sh"}
+	[ -x "$smoke_script" ] || die "device smoke test not found at $smoke_script"
+	exec sh "$smoke_script" "$@"
+}
+
 uninstall() {
 	uninstall_script=${NIX_TERMUX_UNINSTALL:-"$state_dir/share/installer/uninstall.sh"}
 	[ -x "$uninstall_script" ] || die "uninstall script not found at $uninstall_script"
@@ -453,6 +460,7 @@ env) print_env "$@" ;;
 enter) enter "$@" ;;
 run) run_nix "$@" ;;
 exec) exec_command "$@" ;;
+smoke-test) smoke_test "$@" ;;
 upgrade-bootstrap) upgrade_bootstrap "$@" ;;
 uninstall) uninstall "$@" ;;
 version | -V | --version) version "$@" ;;

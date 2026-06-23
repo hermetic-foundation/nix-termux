@@ -15,7 +15,7 @@ Then run:
 
 ```sh
 nix-termux doctor --json
-sh "$HOME/.nix-termux/share/tests/device-smoke.sh"
+nix-termux smoke-test
 ```
 
 The smoke test checks Termux detection, wrapper installation, `proot`, the Nix
@@ -26,7 +26,7 @@ Networked Nix evaluation is intentionally opt-in because it can be slow and
 depends on the device connection:
 
 ```sh
-NIX_TERMUX_DEVICE_SMOKE_NETWORK=1 sh "$HOME/.nix-termux/share/tests/device-smoke.sh"
+NIX_TERMUX_DEVICE_SMOKE_NETWORK=1 nix-termux smoke-test
 ```
 
 For unpublished or mirrored artifacts, point the installer at a local channel:
@@ -34,8 +34,10 @@ For unpublished or mirrored artifacts, point the installer at a local channel:
 ```sh
 export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/nix-termux
 curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" | sh
-sh "$HOME/.nix-termux/share/tests/device-smoke.sh"
+nix-termux smoke-test
 ```
 
-The first supported target is `aarch64` Termux. Other architectures can use the
-same smoke test once matching channel and bootstrap artifacts exist.
+The command runs the installed script at
+`$HOME/.nix-termux/share/tests/device-smoke.sh`. The first supported target is
+`aarch64` Termux. Other architectures can use the same smoke test once matching
+channel and bootstrap artifacts exist.
