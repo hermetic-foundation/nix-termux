@@ -18,6 +18,7 @@ root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
 profile_dir=${NIX_TERMUX_PROFILE_DIR:-"$store_dir/var/nix/profiles/default"}
 cert_file=${NIX_TERMUX_SSL_CERT_FILE:-"$profile_dir/etc/ssl/certs/ca-bundle.crt"}
 config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
+activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
@@ -86,6 +87,19 @@ doctor() {
 		status=1
 	fi
 
+	if [ -r "$activation_file" ]; then
+		activation_sha=$(config_value bootstrap_sha256 "$activation_file")
+		if [ -n "$activation_sha" ]; then
+			info "activation: ok ($activation_sha)"
+		else
+			info "activation: malformed ($activation_file)"
+			status=1
+		fi
+	else
+		info "activation: missing ($activation_file)"
+		status=1
+	fi
+
 	return "$status"
 }
 
@@ -97,6 +111,7 @@ NIX_TERMUX_ROOT_DIR=$root_dir
 NIX_TERMUX_PROFILE_DIR=$profile_dir
 NIX_TERMUX_SSL_CERT_FILE=$cert_file
 NIX_TERMUX_CONFIG=$config_file
+NIX_TERMUX_ACTIVATION=$activation_file
 NIX_TERMUX_PROOT=$proot
 PREFIX=$termux_prefix
 HOME=$termux_home

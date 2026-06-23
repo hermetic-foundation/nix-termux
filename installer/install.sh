@@ -168,6 +168,7 @@ if [ -n "$bootstrap_url" ]; then
 	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
 
 	archive=$state_dir/bootstrap.tar
+	registration_loaded=no
 	fetch_url "$bootstrap_url" "$archive"
 
 	if [ -n "$bootstrap_sha256" ]; then
@@ -182,7 +183,15 @@ if [ -n "$bootstrap_url" ]; then
 	registration=$state_dir/nix-termux/bootstrap.registration
 	if [ -r "$registration" ]; then
 		"$prefix/bin/nix-termux" exec nix-store --load-db <"$registration"
+		registration_loaded=yes
 	fi
+
+	{
+		printf 'bootstrap_url=%s\n' "$bootstrap_url"
+		printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
+		printf 'registration=%s\n' "$registration"
+		printf 'registration_loaded=%s\n' "$registration_loaded"
+	} >"$state_dir/etc/bootstrap-activation.conf"
 fi
 
 {

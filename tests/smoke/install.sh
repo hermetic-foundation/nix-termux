@@ -116,6 +116,8 @@ PATH="$tmp/fake-bin:$PATH" \
 	sh "$repo_root/installer/install.sh"
 
 grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
+grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
+grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
