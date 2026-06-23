@@ -26,14 +26,14 @@ cat >"$tmp/bin/nix-termux" <<EOF
 #!$host_sh
 case \$1 in
 version)
-	printf '%s\n' 0.1.0
+	printf '%s\n' 0.2.3
 	;;
 doctor)
 	cat <<'JSON'
 {
   "schemaVersion": 1,
-  "runtimeVersion": "0.1.0",
-  "installedRuntimeVersion": "0.1.0",
+  "runtimeVersion": "0.2.3",
+  "installedRuntimeVersion": "0.2.3",
   "ok": true,
   "termux": { "ok": true },
   "proot": { "ok": true },
