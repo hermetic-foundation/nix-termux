@@ -35,6 +35,10 @@ The JSON shape is stable for schema version 1 of the runtime:
     "ok": true,
     "path": "/data/data/com.termux/files/home/.nix-termux/nix/var/nix/profiles/default/bin/nix"
   },
+  "nixConf": {
+    "ok": true,
+    "path": "/data/data/com.termux/files/home/.nix-termux/root/etc/nix/nix.conf"
+  },
   "certs": {
     "ok": true,
     "path": "/data/data/com.termux/files/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"

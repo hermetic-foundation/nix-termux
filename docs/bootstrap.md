@@ -18,6 +18,7 @@ nix/var/nix/profiles/default/bin/nix
 nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 nix/var/nix/profiles/per-user/termux/
 nix/var/nix/temproots/
+root/etc/nix/nix.conf
 root/usr/bin/env
 nix-termux/bootstrap.registration
 ```

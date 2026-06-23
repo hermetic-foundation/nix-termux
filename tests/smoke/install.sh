@@ -64,6 +64,7 @@ mkdir -p \
 	"$tmp/bootstrap/nix/store" \
 	"$tmp/bootstrap/nix/var/nix/profiles/default/bin" \
 	"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs" \
+	"$tmp/bootstrap/root/etc/nix" \
 	"$tmp/bootstrap/root/usr/bin"
 
 cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix" <<EOF
@@ -90,6 +91,7 @@ printf '\n'
 EOF
 chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix-store"
 cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
+printf '%s\n' "experimental-features = nix-command flakes" >"$tmp/bootstrap/root/etc/nix/nix.conf"
 printf '%s\n' "fake cert bundle" >"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
 mkdir -p "$tmp/bootstrap/nix-termux"
 printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registration"
@@ -166,6 +168,7 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .proot.ok == true
 	and .store.ok == true
 	and .nix.ok == true
+	and .nixConf.ok == true
 	and .certs.ok == true
 	and .activation.ok == true
 	and .activation.bootstrapSha256 == $sha' >/dev/null

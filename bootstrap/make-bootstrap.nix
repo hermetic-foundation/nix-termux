@@ -66,6 +66,7 @@ stdenvNoCC.mkDerivation {
       bootstrap/nix/var/nix/profiles/per-user/termux \
       bootstrap/nix/var/nix/temproots \
       bootstrap/nix-termux \
+      bootstrap/root/etc/nix \
       bootstrap/root/usr/bin \
       bootstrap/root/bin
 
@@ -83,6 +84,14 @@ stdenvNoCC.mkDerivation {
     ln -s ${coreutils}/bin/env bootstrap/root/usr/bin/env
     ln -s ${bashInteractive}/bin/bash bootstrap/root/bin/sh
     cp ${closure}/registration bootstrap/nix-termux/bootstrap.registration
+    cat > bootstrap/root/etc/nix/nix.conf <<'EOF'
+experimental-features = nix-command flakes
+sandbox = false
+build-users-group =
+max-jobs = auto
+substituters = https://cache.nixos.org/
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWw6OAkD9K2xYc0Y7M2e5mB3BfW7Q=
+EOF
 
     tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf bootstrap.tar -C bootstrap .
     gzip -n bootstrap.tar

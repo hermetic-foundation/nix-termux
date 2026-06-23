@@ -17,6 +17,7 @@ store_dir=${NIX_TERMUX_STORE_DIR:-"$state_dir/nix"}
 root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
 profile_dir=${NIX_TERMUX_PROFILE_DIR:-"$store_dir/var/nix/profiles/default"}
 cert_file=${NIX_TERMUX_SSL_CERT_FILE:-"$profile_dir/etc/ssl/certs/ca-bundle.crt"}
+nix_conf_file=${NIX_TERMUX_NIX_CONF:-"$root_dir/etc/nix/nix.conf"}
 config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
@@ -58,6 +59,7 @@ doctor_status() {
 	doctor_proot=false
 	doctor_store=false
 	doctor_nix=false
+	doctor_nix_conf=false
 	doctor_certs=false
 	doctor_activation=false
 	doctor_activation_sha=
@@ -80,6 +82,11 @@ doctor_status() {
 	fi
 	if [ -x "$profile_dir/bin/nix" ]; then
 		doctor_nix=true
+	else
+		doctor_status=1
+	fi
+	if [ -r "$nix_conf_file" ]; then
+		doctor_nix_conf=true
 	else
 		doctor_status=1
 	fi
@@ -122,6 +129,11 @@ doctor_text() {
 	else
 		info "nix: missing ($profile_dir/bin/nix)"
 	fi
+	if [ "$doctor_nix_conf" = true ]; then
+		info "nix-conf: ok ($nix_conf_file)"
+	else
+		info "nix-conf: missing ($nix_conf_file)"
+	fi
 	if [ "$doctor_certs" = true ]; then
 		info "certs: ok ($cert_file)"
 	else
@@ -156,6 +168,10 @@ doctor_json() {
   "nix": {
     "ok": $doctor_nix,
     "path": "$(json_escape "$profile_dir/bin/nix")"
+  },
+  "nixConf": {
+    "ok": $doctor_nix_conf,
+    "path": "$(json_escape "$nix_conf_file")"
   },
   "certs": {
     "ok": $doctor_certs,
@@ -195,6 +211,7 @@ NIX_TERMUX_STORE_DIR=$store_dir
 NIX_TERMUX_ROOT_DIR=$root_dir
 NIX_TERMUX_PROFILE_DIR=$profile_dir
 NIX_TERMUX_SSL_CERT_FILE=$cert_file
+NIX_TERMUX_NIX_CONF=$nix_conf_file
 NIX_TERMUX_CONFIG=$config_file
 NIX_TERMUX_ACTIVATION=$activation_file
 NIX_TERMUX_PROOT=$proot
@@ -243,6 +260,7 @@ enter() {
 		USER=termux \
 		LOGNAME=termux \
 		PATH="/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" \
+		NIX_CONF_DIR=/etc/nix \
 		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		"$@"
 }
