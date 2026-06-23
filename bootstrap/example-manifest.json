@@ -1,0 +1,17 @@
+{
+  "$schema": "./manifest.schema.json",
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "aarch64",
+    "nixSystem": "aarch64-linux"
+  },
+  "archive": {
+    "url": "https://example.invalid/nix-termux/bootstrap-aarch64.tar",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix"
+  }
+}

@@ -38,15 +38,15 @@ cp "$repo_root/installer/uninstall.sh" "$state_dir/share/installer/uninstall.sh"
 chmod 755 "$state_dir/bin/nix-termux" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh"
 
 cat >"$prefix/bin/nix-termux" <<EOF
-#!/usr/bin/env sh
+#!$prefix/bin/sh
 export NIX_TERMUX_LIBEXEC='$state_dir/runtime'
-exec '$state_dir/bin/nix-termux' "\$@"
+exec sh '$state_dir/bin/nix-termux' "\$@"
 EOF
 chmod 755 "$prefix/bin/nix-termux"
 
 for name in nix nix-shell nix-env nix-store nix-build; do
 	cat >"$prefix/bin/$name" <<EOF
-#!/usr/bin/env sh
+#!$prefix/bin/sh
 exec '$prefix/bin/nix-termux' exec $name "\$@"
 EOF
 	chmod 755 "$prefix/bin/$name"

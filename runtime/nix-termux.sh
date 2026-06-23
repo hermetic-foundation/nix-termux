@@ -139,7 +139,7 @@ exec_command() {
 uninstall() {
 	uninstall_script=${NIX_TERMUX_UNINSTALL:-"$state_dir/share/installer/uninstall.sh"}
 	[ -x "$uninstall_script" ] || die "uninstall script not found at $uninstall_script"
-	exec "$uninstall_script"
+	exec sh "$uninstall_script"
 }
 
 cmd=${1:-help}

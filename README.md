@@ -17,6 +17,8 @@ This repository is at the first implementation stage. It provides:
 - A stock-Termux installer skeleton.
 - `nix-termux` runtime commands for `doctor`, `enter`, `run`, `env`, and
   `uninstall`.
+- A versioned bootstrap manifest contract and host smoke test for the
+  installer/wrapper path.
 
 The bootstrap artifact format is intentionally simple and still needs real
 Nix closure publishing before this is useful as an end-user installer.
@@ -29,6 +31,9 @@ nix flake check
 shellcheck bin/nix-termux installer/*.sh runtime/*.sh
 shfmt -w bin/nix-termux installer/*.sh runtime/*.sh
 ```
+
+`nix flake check` runs shell formatting, ShellCheck, and a host smoke test that
+installs a fake bootstrap archive into a temporary Termux-like prefix.
 
 ## Termux Install Shape
 

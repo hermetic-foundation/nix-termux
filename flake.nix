@@ -32,6 +32,10 @@
               install -Dm755 installer/uninstall.sh "$out/share/nix-termux/installer/uninstall.sh"
               install -Dm644 LICENSE "$out/share/licenses/nix-termux/LICENSE"
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
+              install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
+              install -Dm644 docs/bootstrap.md "$out/share/doc/nix-termux/bootstrap.md"
+              install -Dm644 bootstrap/manifest.schema.json "$out/share/nix-termux/bootstrap/manifest.schema.json"
+              install -Dm644 bootstrap/example-manifest.json "$out/share/nix-termux/bootstrap/example-manifest.json"
               cp -R runtime "$out/share/nix-termux/runtime"
               runHook postInstall
             '';
@@ -62,6 +66,7 @@
             "installer/install.sh"
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
+            "tests/smoke/install.sh"
           ];
         in
         {
@@ -82,6 +87,21 @@
             cp -R "$src" source
             cd source
             shellcheck ${builtins.concatStringsSep " " scripts}
+            touch "$out"
+          '';
+
+          install-smoke = pkgs.runCommand "nix-termux-install-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.curl
+              pkgs.gnutar
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/install.sh
             touch "$out"
           '';
         });
