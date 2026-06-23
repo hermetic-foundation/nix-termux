@@ -47,12 +47,8 @@ check_json_bool() {
 		.*.ok)
 			section=${key#.}
 			section=${section%%.*}
-			awk -v section="$section" '
-				$0 ~ "\"" section "\"" { in_section = 1; next }
-				in_section && /}/ { exit }
-				in_section && /"ok"[[:space:]]*:[[:space:]]*true/ { found = 1; exit }
-				END { exit found ? 0 : 1 }
-			' "$file"
+			sed -n '/"'"$section"'"[[:space:]]*:/,/}/p' "$file" |
+				grep -Eq '"ok"[[:space:]]*:[[:space:]]*true'
 			;;
 		*)
 			return 1

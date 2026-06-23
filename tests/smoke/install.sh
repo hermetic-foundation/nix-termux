@@ -32,6 +32,10 @@ cp "$repo_root/installer/install.sh" "$tmp/runtime-source/installer/install.sh"
 cp "$repo_root/installer/uninstall.sh" "$tmp/runtime-source/installer/uninstall.sh"
 cp "$repo_root/runtime/nix-termux.sh" "$tmp/runtime-source/runtime/nix-termux.sh"
 cp "$repo_root/tests/termux/device-smoke.sh" "$tmp/runtime-source/tests/termux/device-smoke.sh"
+if grep -Eq '(^|[^[:alnum:]_])awk([^[:alnum:]_]|$)' "$tmp/runtime-source/tests/termux/device-smoke.sh"; then
+	printf '%s\n' "device smoke must not require awk" >&2
+	exit 1
+fi
 (cd "$tmp/runtime-source" && tar -czf "$tmp/runtime.tar.gz" .)
 runtime_sha=$(sha256sum "$tmp/runtime.tar.gz" | awk '{print $1}')
 
