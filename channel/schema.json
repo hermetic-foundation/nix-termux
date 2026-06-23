@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/midischwarz12/nix-termux/channel/schema.json",
+  "title": "nix-termux channel manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "platform",
+    "runtime",
+    "bootstrapManifest"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "termuxArch",
+        "nixSystem"
+      ],
+      "properties": {
+        "termuxArch": {
+          "type": "string",
+          "enum": [
+            "aarch64",
+            "arm",
+            "i686",
+            "x86_64"
+          ]
+        },
+        "nixSystem": {
+          "type": "string",
+          "enum": [
+            "aarch64-linux",
+            "armv7l-linux",
+            "i686-linux",
+            "x86_64-linux"
+          ]
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "sha256"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "bootstrapManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

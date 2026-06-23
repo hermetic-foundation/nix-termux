@@ -14,6 +14,7 @@ have() {
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
+channel_url=${NIX_TERMUX_CHANNEL_URL:-}
 runtime_archive_url=${NIX_TERMUX_RUNTIME_ARCHIVE_URL:-}
 runtime_archive_sha256=${NIX_TERMUX_RUNTIME_ARCHIVE_SHA256:-}
 bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
@@ -57,6 +58,14 @@ json_string_value() {
 	file=$2
 
 	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n 1
+}
+
+json_string_value_n() {
+	key=$1
+	index=$2
+	file=$3
+
+	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
 }
 
 resolve_manifest_url() {
@@ -112,10 +121,39 @@ load_manifest() {
 	bootstrap_sha256=${bootstrap_sha256:-"$manifest_sha256"}
 }
 
+load_channel() {
+	channel=$1
+
+	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$channel" ||
+		die "unsupported channel manifest schemaVersion"
+	grep -Eq '"runtime"[[:space:]]*:' "$channel" ||
+		die "channel manifest missing runtime"
+	grep -Eq '"bootstrapManifest"[[:space:]]*:' "$channel" ||
+		die "channel manifest missing bootstrapManifest"
+
+	channel_runtime_url=$(json_string_value_n url 1 "$channel")
+	channel_bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
+	channel_runtime_sha256=$(json_string_value sha256 "$channel")
+
+	[ -n "$channel_runtime_url" ] || die "channel manifest missing runtime.url"
+	[ -n "$channel_runtime_sha256" ] || die "channel manifest missing runtime.sha256"
+	[ -n "$channel_bootstrap_manifest_url" ] || die "channel manifest missing bootstrapManifest.url"
+
+	runtime_archive_url=${runtime_archive_url:-"$(resolve_manifest_url "$channel_url" "$channel_runtime_url")"}
+	runtime_archive_sha256=${runtime_archive_sha256:-"$channel_runtime_sha256"}
+	bootstrap_manifest_url=${bootstrap_manifest_url:-"$(resolve_manifest_url "$channel_url" "$channel_bootstrap_manifest_url")"}
+}
+
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 source_root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
 
 mkdir -p "$state_dir/tmp"
+
+if [ -n "$channel_url" ]; then
+	channel=$state_dir/tmp/channel.json
+	fetch_url "$channel_url" "$channel"
+	load_channel "$channel"
+fi
 
 if [ -f "$source_root/bin/nix-termux" ]; then
 	source_bin=$source_root/bin/nix-termux
@@ -230,6 +268,7 @@ if [ -n "$bootstrap_url" ]; then
 fi
 
 {
+	printf 'channel_url=%s\n' "$channel_url"
 	printf 'runtime_archive_url=%s\n' "$runtime_archive_url"
 	printf 'runtime_archive_sha256=%s\n' "$runtime_archive_sha256"
 	printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"

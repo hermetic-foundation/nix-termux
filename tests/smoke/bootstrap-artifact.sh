@@ -30,14 +30,18 @@ grep -q '"rootDir": "root"' "$manifest"
 grep -q '"nixBin": "nix/var/nix/profiles/default/bin/nix"' "$manifest"
 grep -q '"registration": "nix-termux/bootstrap.registration"' "$manifest"
 
-tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/bin/nix'
-tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/bin/bash'
-tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt'
-tar -tzf "$archive" | grep -qx './nix/var/log/nix/drvs/'
-tar -tzf "$archive" | grep -qx './nix/var/nix/db/'
-tar -tzf "$archive" | grep -qx './nix/var/nix/gcroots/auto/'
-tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/per-user/termux/'
-tar -tzf "$archive" | grep -qx './nix/var/nix/temproots/'
-tar -tzf "$archive" | grep -qx './root/usr/bin/env'
-tar -tzf "$archive" | grep -qx './root/bin/sh'
-tar -tzf "$archive" | grep -qx './nix-termux/bootstrap.registration'
+listing=${TMPDIR:-/tmp}/nix-termux-bootstrap-listing.$$
+trap 'rm -f "$listing"' EXIT INT TERM
+tar -tzf "$archive" >"$listing"
+
+grep -qx './nix/var/nix/profiles/default/bin/nix' "$listing"
+grep -qx './nix/var/nix/profiles/default/bin/bash' "$listing"
+grep -qx './nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt' "$listing"
+grep -qx './nix/var/log/nix/drvs/' "$listing"
+grep -qx './nix/var/nix/db/' "$listing"
+grep -qx './nix/var/nix/gcroots/auto/' "$listing"
+grep -qx './nix/var/nix/profiles/per-user/termux/' "$listing"
+grep -qx './nix/var/nix/temproots/' "$listing"
+grep -qx './root/usr/bin/env' "$listing"
+grep -qx './root/bin/sh' "$listing"
+grep -qx './nix-termux/bootstrap.registration' "$listing"

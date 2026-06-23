@@ -21,6 +21,7 @@ nix-termux-runtime.tar.gz.sha256
 The bootstrap result contains:
 
 ```text
+nix-termux-channel-<arch>.json
 nix-termux-bootstrap-<arch>.tar.gz
 nix-termux-bootstrap-<arch>.json
 nix-termux-bootstrap-<arch>.registration
@@ -42,6 +43,16 @@ runners, writes `SHA256SUMS`, and attaches the result files to the GitHub
 release for the tag.
 
 ## Artifact URL Shape
+
+The preferred install entrypoint is the channel manifest:
+
+```sh
+export NIX_TERMUX_CHANNEL_URL=https://example.invalid/nix-termux-channel-aarch64.json
+curl -L https://example.invalid/install.sh | sh
+```
+
+The channel manifest points to the runtime archive and the bootstrap manifest.
+Relative URLs are resolved against `NIX_TERMUX_CHANNEL_URL`.
 
 Release manifests can refer to archives beside the manifest:
 

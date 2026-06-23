@@ -115,19 +115,34 @@ cat >"$tmp/bootstrap-manifest.json" <<EOF
   }
 }
 EOF
+cat >"$tmp/channel.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "runtime": {
+    "url": "runtime.tar.gz",
+    "sha256": "$runtime_sha"
+  },
+  "bootstrapManifest": {
+    "url": "bootstrap-manifest.json"
+  }
+}
+EOF
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
-	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
-	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
-	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-manifest.json" \
+	NIX_TERMUX_CHANNEL_URL="file://$tmp/channel.json" \
 	sh "$tmp/standalone/install.sh"
 
 grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
 grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
+grep -q '^channel_url=file://.*/channel.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 
 PATH="$tmp/fake-bin:$PATH" \

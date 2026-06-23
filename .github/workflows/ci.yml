@@ -84,6 +84,8 @@ jobs:
           nix build .#bootstrap
           mkdir -p dist
           cp result/* dist/
+          nix build .#channel
+          cp result/* dist/
 
       - name: Upload bootstrap artifacts
         uses: actions/upload-artifact@v4

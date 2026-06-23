@@ -34,10 +34,12 @@
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
               install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
               install -Dm644 docs/bootstrap.md "$out/share/doc/nix-termux/bootstrap.md"
+              install -Dm644 docs/channel.md "$out/share/doc/nix-termux/channel.md"
               install -Dm644 docs/doctor.md "$out/share/doc/nix-termux/doctor.md"
               install -Dm644 docs/release.md "$out/share/doc/nix-termux/release.md"
               install -Dm644 bootstrap/manifest.schema.json "$out/share/nix-termux/bootstrap/manifest.schema.json"
               install -Dm644 bootstrap/example-manifest.json "$out/share/nix-termux/bootstrap/example-manifest.json"
+              install -Dm644 channel/schema.json "$out/share/nix-termux/channel/schema.json"
               cp -R runtime "$out/share/nix-termux/runtime"
               runHook postInstall
             '';
@@ -56,6 +58,12 @@
           };
 
           runtime-archive = pkgs.callPackage ./runtime/make-runtime-archive.nix { };
+
+          channel = pkgs.callPackage ./channel/make-channel.nix {
+            inherit system;
+            runtimeArchive = self.packages.${system}.runtime-archive;
+            bootstrap = self.packages.${system}.bootstrap;
+          };
         });
 
       apps = forAllSystems (system: {
@@ -75,6 +83,7 @@
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
             "tests/smoke/bootstrap-artifact.sh"
+            "tests/smoke/channel-artifact.sh"
             "tests/smoke/install.sh"
           ];
         in
@@ -144,6 +153,22 @@
             touch "$out"
           '';
 
+          channel-artifact = pkgs.runCommand "nix-termux-channel-artifact-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.findutils
+              pkgs.jq
+            ];
+            src = self;
+            artifact = self.packages.${system}.channel;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/channel-artifact.sh "$artifact"
+            touch "$out"
+          '';
+
           runtime-archive = pkgs.runCommand "nix-termux-runtime-archive-smoke" {
             nativeBuildInputs = [
               pkgs.coreutils
@@ -153,11 +178,12 @@
             ];
             artifact = self.packages.${system}.runtime-archive;
           } ''
-            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './bin/nix-termux'
-            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './installer/install.sh'
-            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './installer/uninstall.sh'
-            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './runtime/nix-termux.sh'
-            tar -tzf "$artifact"/nix-termux-runtime.tar.gz | grep -qx './LICENSE'
+            tar -tzf "$artifact"/nix-termux-runtime.tar.gz > listing
+            grep -qx './bin/nix-termux' listing
+            grep -qx './installer/install.sh' listing
+            grep -qx './installer/uninstall.sh' listing
+            grep -qx './runtime/nix-termux.sh' listing
+            grep -qx './LICENSE' listing
             sha256sum -c "$artifact"/nix-termux-runtime.tar.gz.sha256
             touch "$out"
           '';

@@ -60,6 +60,12 @@ runtime/nix-termux.sh
 Running from a source checkout does not need this archive because the installer
 can read those files directly.
 
+## Channel Manifest
+
+The preferred remote install path is `NIX_TERMUX_CHANNEL_URL`. A channel
+manifest points to both the runtime archive and the architecture-specific
+bootstrap manifest, reducing install setup to one URL.
+
 ## Bootstrap Model
 
 Bootstrap artifacts are fetched when `NIX_TERMUX_BOOTSTRAP_MANIFEST_URL` or
