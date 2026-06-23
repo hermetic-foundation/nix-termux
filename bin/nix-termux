@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+set -eu
+
+if [ -n "${NIX_TERMUX_LIBEXEC:-}" ]; then
+	libexec=$NIX_TERMUX_LIBEXEC
+else
+	script=$0
+	case $script in
+	*/*) script_dir=${script%/*} ;;
+	*) script_dir=. ;;
+	esac
+	libexec=$script_dir/../runtime
+fi
+
+main=$libexec/nix-termux.sh
+if [ ! -r "$main" ]; then
+	printf '%s\n' "nix-termux: runtime not found at $main" >&2
+	exit 127
+fi
+
+exec "$main" "$@"
