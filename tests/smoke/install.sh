@@ -289,6 +289,7 @@ doctor_json=$(
 printf '%s\n' "$doctor_json" | jq -e \
 	--arg sha "$sha" \
 	'.schemaVersion == 1
+	and .runtimeVersion == "0.1.0"
 	and .ok == true
 	and .termux.ok == true
 	and .proot.ok == true
