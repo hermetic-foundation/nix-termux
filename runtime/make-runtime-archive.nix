@@ -18,11 +18,13 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p archive/bin archive/installer archive/runtime archive/docs archive/bootstrap archive/channel archive/tests/termux
+    mkdir -p archive/bin archive/installer archive/runtime archive/tools archive/docs archive/bootstrap archive/channel archive/tests/termux
     install -Dm755 bin/nix-termux archive/bin/nix-termux
     install -Dm755 installer/install.sh archive/installer/install.sh
     install -Dm755 installer/uninstall.sh archive/installer/uninstall.sh
     install -Dm755 runtime/nix-termux.sh archive/runtime/nix-termux.sh
+    install -Dm755 tools/adb-validate.sh archive/tools/adb-validate.sh
+    install -Dm755 tools/serve-release.sh archive/tools/serve-release.sh
     install -Dm644 LICENSE archive/LICENSE
     install -Dm644 README.md archive/README.md
     cp -R docs/. archive/docs/

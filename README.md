@@ -76,6 +76,9 @@ or through the installed runtime command:
 nix-termux smoke-test
 ```
 
+Host-side validation helpers are available in a source checkout and in the Nix
+package under `share/nix-termux/tools/`.
+
 ## Termux Install Shape
 
 The intended install flow is:

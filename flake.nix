@@ -30,6 +30,8 @@
               install -Dm755 bin/nix-termux "$out/bin/nix-termux"
               install -Dm755 installer/install.sh "$out/share/nix-termux/installer/install.sh"
               install -Dm755 installer/uninstall.sh "$out/share/nix-termux/installer/uninstall.sh"
+              install -Dm755 tools/adb-validate.sh "$out/share/nix-termux/tools/adb-validate.sh"
+              install -Dm755 tools/serve-release.sh "$out/share/nix-termux/tools/serve-release.sh"
               install -Dm644 LICENSE "$out/share/licenses/nix-termux/LICENSE"
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
               install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
@@ -312,6 +314,21 @@
             test -x "$artifact"/install.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/install.sh
             (cd "$artifact" && sha256sum -c install.sh.sha256)
+            touch "$out"
+          '';
+
+          package-artifact = pkgs.runCommand "nix-termux-package-artifact-smoke" {
+            artifact = self.packages.${system}.default;
+          } ''
+            test -x "$artifact"/bin/nix-termux
+            test -x "$artifact"/share/nix-termux/installer/install.sh
+            test -x "$artifact"/share/nix-termux/installer/uninstall.sh
+            test -x "$artifact"/share/nix-termux/tools/adb-validate.sh
+            test -x "$artifact"/share/nix-termux/tools/serve-release.sh
+            test -x "$artifact"/share/nix-termux/tests/device-smoke.sh
+            test -r "$artifact"/share/doc/nix-termux/device-validation.md
+            test -r "$artifact"/share/nix-termux/bootstrap/manifest.schema.json
+            test -r "$artifact"/share/nix-termux/channel/schema.json
             touch "$out"
           '';
 
