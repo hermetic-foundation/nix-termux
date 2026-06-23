@@ -280,6 +280,7 @@ mkdir -p \
 	"$state_dir/nix/var/log/nix/drvs" \
 	"$state_dir/nix/var/nix/db" \
 	"$state_dir/nix/var/nix/gcroots/auto" \
+	"$state_dir/nix/var/nix/profiles/per-user/root" \
 	"$state_dir/nix/var/nix/profiles/per-user/termux" \
 	"$state_dir/nix/var/nix/temproots"
 

@@ -63,11 +63,13 @@ stdenvNoCC.mkDerivation {
       bootstrap/nix/var/nix/gcroots/auto \
       bootstrap/nix/var/nix/profiles/default/bin \
       bootstrap/nix/var/nix/profiles/default/etc/ssl/certs \
+      bootstrap/nix/var/nix/profiles/per-user/root \
       bootstrap/nix/var/nix/profiles/per-user/termux \
       bootstrap/nix/var/nix/temproots \
       bootstrap/nix-termux \
       bootstrap/root/etc/nix \
       bootstrap/root/home \
+      bootstrap/root/root \
       bootstrap/root/tmp \
       bootstrap/root/usr/bin \
       bootstrap/root/bin

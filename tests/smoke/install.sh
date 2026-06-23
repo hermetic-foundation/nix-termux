@@ -191,8 +191,11 @@ grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
 test -d "$tmp/home/.nix-termux/root/home"
+test -d "$tmp/home/.nix-termux/root/root"
 test -d "$tmp/home/.nix-termux/root/tmp"
 test -d "$tmp/home/.nix-termux/tmp"
+test -d "$tmp/home/.nix-termux/nix/var/nix/profiles/per-user/root"
+test -d "$tmp/home/.nix-termux/nix/var/nix/profiles/per-user/termux"
 for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	test -x "$tmp/prefix/bin/$name"
 	grep -q 'nix-termux managed wrapper' "$tmp/prefix/bin/$name"
