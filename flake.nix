@@ -119,6 +119,7 @@
             "tests/smoke/device-smoke-options.sh"
             "tests/smoke/install.sh"
             "tests/smoke/runtime-archive.sh"
+            "tests/smoke/serve-release.sh"
             "tests/smoke/version-consistency.sh"
             "tests/termux/device-smoke.sh"
           ];
@@ -210,6 +211,21 @@
             chmod -R u+w source
             cd source
             sh tests/smoke/adb-validate.sh
+            touch "$out"
+          '';
+
+          serve-release = pkgs.runCommand "nix-termux-serve-release-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+              pkgs.python3
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/serve-release.sh
             touch "$out"
           '';
 

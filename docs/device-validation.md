@@ -49,7 +49,7 @@ tools/serve-release.sh result 192.0.2.10 8000
 
 Use a host address that the Android device can reach over the local network.
 The helper validates the release directory, prints the Termux install commands,
-and serves the files until interrupted.
+checks `SHA256SUMS`, and serves the files until interrupted.
 
 With USB debugging enabled, you can also stage the Termux-side validation
 script over `adb`:
@@ -60,7 +60,8 @@ tools/adb-validate.sh --network http://192.0.2.10:8000
 
 The adb helper pushes a script to
 `/sdcard/Download/nix-termux-validate.sh`, tries to bring Termux to the
-foreground, and prints the command to run inside Termux.
+foreground, and prints the command to run inside Termux. The pushed script
+verifies `install.sh.sha256` before running the installer.
 
 The command runs the installed script at
 `$HOME/.nix-termux/share/tests/device-smoke.sh`. The first supported target is

@@ -48,6 +48,7 @@ esac
 
 [ -d "$release_dir" ] || die "release directory not found: $release_dir"
 command -v python3 >/dev/null 2>&1 || die "python3 is required to serve release files"
+command -v sha256sum >/dev/null 2>&1 || die "sha256sum is required to verify release files"
 
 for file in \
 	install.sh \
@@ -65,6 +66,9 @@ set -- "$release_dir"/nix-termux-channel-*.json
 set -- "$release_dir"/nix-termux-bootstrap-*.json
 [ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
 [ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap manifest"
+
+(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
+	die "release checksum verification failed"
 
 base_url=http://$host:$port
 
