@@ -20,6 +20,12 @@ cat >"$tmp/prefix/bin/nix-hash" <<EOF
 printf '%s\n' original nix-hash
 EOF
 chmod 755 "$tmp/prefix/bin/nix-hash"
+cat >"$tmp/prefix/bin/nix-env" <<EOF
+#!$host_sh
+# mentions nix-termux but is not a managed wrapper
+printf '%s\n' original nix-env
+EOF
+chmod 755 "$tmp/prefix/bin/nix-env"
 printf '%s\n' "nameserver 192.0.2.53" >"$tmp/prefix/etc/resolv.conf"
 cp "$repo_root/installer/install.sh" "$tmp/standalone/install.sh"
 if grep -q 'awk' "$tmp/standalone/install.sh"; then
@@ -267,6 +273,7 @@ for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-ga
 	grep -q "exec '$tmp/prefix/bin/nix-termux' exec $name" "$tmp/prefix/bin/$name"
 done
 grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/home/.nix-termux/share/prefix-backup/nix-hash"
+grep -qx '# mentions nix-termux but is not a managed wrapper' "$tmp/home/.nix-termux/share/prefix-backup/nix-env"
 
 for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	output=$(
@@ -515,5 +522,7 @@ PATH="$tmp/fake-bin:$PATH" \
 [ ! -e "$tmp/prefix/bin/nix-termux" ]
 [ -x "$tmp/prefix/bin/nix-hash" ]
 grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/prefix/bin/nix-hash"
+[ -x "$tmp/prefix/bin/nix-env" ]
+grep -qx '# mentions nix-termux but is not a managed wrapper' "$tmp/prefix/bin/nix-env"
 [ ! -e "$tmp/home/.nix-profile" ]
 [ ! -d "$tmp/home/.nix-termux" ]

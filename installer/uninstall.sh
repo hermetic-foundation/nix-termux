@@ -12,7 +12,7 @@ is_managed_wrapper() {
 	target=$1
 
 	[ -f "$target" ] || return 1
-	grep -q 'nix-termux' "$target"
+	grep -q '^# nix-termux managed wrapper$' "$target"
 }
 
 restore_prefix_command() {

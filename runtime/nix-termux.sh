@@ -124,7 +124,7 @@ doctor_status() {
 	fi
 	for name in $wrapper_names; do
 		target=$termux_prefix/bin/$name
-		if [ ! -x "$target" ] || ! grep -q 'nix-termux' "$target"; then
+		if [ ! -x "$target" ] || ! grep -q '^# nix-termux managed wrapper$' "$target"; then
 			doctor_missing_wrappers="${doctor_missing_wrappers}${doctor_missing_wrappers:+ }$name"
 		fi
 	done
