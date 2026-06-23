@@ -413,6 +413,8 @@ grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
+test -L "$tmp/home/.nix-profile"
+[ "$(readlink "$tmp/home/.nix-profile")" = "/nix/var/nix/profiles/per-user/termux/profile" ]
 if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
 	printf '%s\n' "temporary install files left after install" >&2
 	exit 1
@@ -524,6 +526,7 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .store.ok == true
 	and .nix.ok == true
 	and .userProfile.ok == true
+	and .homeProfile.ok == true
 	and .nixConf.ok == true
 	and .certs.ok == true
 	and .dns.ok == true

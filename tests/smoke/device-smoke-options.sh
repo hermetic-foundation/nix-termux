@@ -54,6 +54,7 @@ doctor)
   "store": { "ok": true },
   "nix": { "ok": true },
   "userProfile": { "ok": true },
+  "homeProfile": { "ok": true },
   "nixConf": { "ok": true },
   "certs": { "ok": true },
   "dns": { "ok": true },

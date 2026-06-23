@@ -25,6 +25,7 @@ bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
 bootstrap_archive_ready=no
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
+managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 runtime_archive=$state_dir/tmp/runtime.tar.gz
 runtime_source=$state_dir/tmp/runtime-source
 bootstrap_archive=$state_dir/tmp/bootstrap.tar.gz
@@ -39,7 +40,7 @@ trap cleanup_temp EXIT INT TERM
 [ -n "$prefix" ] || die "PREFIX is not set; run this from stock Termux"
 [ -d "$prefix/bin" ] || die "Termux prefix bin directory not found: $prefix/bin"
 
-for command in mkdir chmod cp mv rm; do
+for command in mkdir chmod cp ln mv rm; do
 	have "$command" || die "required command missing: $command"
 done
 for command in basename dirname grep head sed uname; do
@@ -397,6 +398,10 @@ mkdir -p \
 	"$state_dir/nix/var/nix/profiles/per-user/root" \
 	"$state_dir/nix/var/nix/profiles/per-user/termux" \
 	"$state_dir/nix/var/nix/temproots"
+
+if [ ! -e "$HOME/.nix-profile" ] && [ ! -L "$HOME/.nix-profile" ]; then
+	ln -s "$managed_profile_target" "$HOME/.nix-profile"
+fi
 
 if [ -n "$bootstrap_manifest_url" ]; then
 	manifest=$state_dir/bootstrap-manifest.json

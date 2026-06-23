@@ -1,8 +1,8 @@
 # Doctor
 
 `nix-termux doctor` checks whether the Termux runtime, `proot`, bootstrap store,
-Nix default profile, Termux user profile layout, CA bundle, resolver config,
-wrapper commands, and activation metadata are present.
+Nix default profile, Termux user profile layout, home profile path, CA bundle,
+resolver config, wrapper commands, and activation metadata are present.
 
 ```sh
 nix-termux doctor
@@ -48,6 +48,10 @@ The JSON shape is stable for schema version 1 of the runtime:
   "userProfile": {
     "ok": true,
     "path": "/data/data/com.termux/files/home/.nix-termux/nix/var/nix/profiles/per-user/termux/profile"
+  },
+  "homeProfile": {
+    "ok": true,
+    "path": "/data/data/com.termux/files/home/.nix-profile"
   },
   "nixConf": {
     "ok": true,

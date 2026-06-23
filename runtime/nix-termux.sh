@@ -72,6 +72,7 @@ doctor_status() {
 	doctor_store=false
 	doctor_nix=false
 	doctor_user_profile=false
+	doctor_home_profile=false
 	doctor_nix_conf=false
 	doctor_certs=false
 	doctor_activation=false
@@ -83,6 +84,7 @@ doctor_status() {
 	doctor_bootstrap_manifest_url=
 	doctor_missing_wrappers=
 	doctor_activation_sha=
+	doctor_home_profile_path=$termux_home/.nix-profile
 	doctor_status=0
 
 	if is_termux; then
@@ -107,6 +109,11 @@ doctor_status() {
 	fi
 	if [ -d "$(dirname -- "$user_profile_dir")" ]; then
 		doctor_user_profile=true
+	else
+		doctor_status=1
+	fi
+	if [ -e "$doctor_home_profile_path" ] || [ -L "$doctor_home_profile_path" ]; then
+		doctor_home_profile=true
 	else
 		doctor_status=1
 	fi
@@ -191,6 +198,11 @@ doctor_text() {
 	else
 		info "user-profile: missing ($user_profile_dir)"
 	fi
+	if [ "$doctor_home_profile" = true ]; then
+		info "home-profile: ok ($doctor_home_profile_path)"
+	else
+		info "home-profile: missing ($doctor_home_profile_path)"
+	fi
 	if [ "$doctor_nix_conf" = true ]; then
 		info "nix-conf: ok ($nix_conf_file)"
 	else
@@ -253,6 +265,10 @@ doctor_json() {
   "userProfile": {
     "ok": $doctor_user_profile,
     "path": "$(json_escape "$user_profile_dir")"
+  },
+  "homeProfile": {
+    "ok": $doctor_home_profile,
+    "path": "$(json_escape "$doctor_home_profile_path")"
   },
   "nixConf": {
     "ok": $doctor_nix_conf,
