@@ -69,19 +69,14 @@ validate_release_dir() {
 
 	set -- "$release_dir"/nix-termux-channel-*.json
 	[ -r "$1" ] || die "release directory missing nix-termux-channel-*.json"
-	[ "$#" -eq 1 ] || die "release directory must contain exactly one channel manifest"
 
 	set -- "$release_dir"/nix-termux-bootstrap-*.json
 	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
-	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap manifest"
-
-	set -- "$release_dir"/nix-termux-bootstrap-*.tar.gz
-	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.tar.gz"
-	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap archive"
-
-	set -- "$release_dir"/nix-termux-bootstrap-*.registration
-	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.registration"
-	[ "$#" -eq 1 ] || die "release directory must contain exactly one bootstrap registration"
+	for manifest in "$@"; do
+		base=${manifest%.json}
+		[ -r "$base.tar.gz" ] || die "release directory missing $(basename -- "$base.tar.gz")"
+		[ -r "$base.registration" ] || die "release directory missing $(basename -- "$base.registration")"
+	done
 
 	(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
 		die "release checksum verification failed"
