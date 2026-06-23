@@ -112,7 +112,7 @@ doctor_status() {
 	else
 		doctor_status=1
 	fi
-	if [ -e "$doctor_home_profile_path" ] || [ -L "$doctor_home_profile_path" ]; then
+	if [ -d "$doctor_home_profile_path" ] || [ -L "$doctor_home_profile_path" ]; then
 		doctor_home_profile=true
 	else
 		doctor_status=1

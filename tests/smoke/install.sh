@@ -537,6 +537,20 @@ printf '%s\n' "$doctor_json" | jq -e \
 
 grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 
+rm "$tmp/home/.nix-profile"
+printf '%s\n' "not a profile directory" >"$tmp/home/.nix-profile"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" doctor --json >"$tmp/doctor-bad-home-profile.json"; then
+	printf '%s\n' "doctor unexpectedly accepted regular .nix-profile file" >&2
+	exit 1
+fi
+jq -e '.ok == false and .homeProfile.ok == false' "$tmp/doctor-bad-home-profile.json" >/dev/null
+rm "$tmp/home/.nix-profile"
+ln -s /nix/var/nix/profiles/per-user/termux/profile "$tmp/home/.nix-profile"
+
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
