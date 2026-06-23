@@ -11,8 +11,22 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/bin" "$tmp/prefix/bin"
+mkdir -p "$tmp/bin" "$tmp/core-bin" "$tmp/prefix/bin"
 host_sh=$(command -v sh)
+host_cat=$(command -v cat)
+host_grep=$(command -v grep)
+host_head=$(command -v head)
+host_mkdir=$(command -v mkdir)
+host_rm=$(command -v rm)
+host_sed=$(command -v sed)
+
+ln -s "$host_cat" "$tmp/core-bin/cat"
+ln -s "$host_grep" "$tmp/core-bin/grep"
+ln -s "$host_head" "$tmp/core-bin/head"
+ln -s "$host_mkdir" "$tmp/core-bin/mkdir"
+ln -s "$host_rm" "$tmp/core-bin/rm"
+ln -s "$host_sed" "$tmp/core-bin/sed"
+ln -s "$host_sh" "$tmp/core-bin/sh"
 
 cat >"$tmp/bin/proot" <<'EOF'
 #!HOST_SH
@@ -26,14 +40,14 @@ cat >"$tmp/bin/nix-termux" <<EOF
 #!$host_sh
 case \$1 in
 version)
-	printf '%s\n' 0.2.3
+	printf '%s\n' '0.2.3+smoke'
 	;;
 doctor)
 	cat <<'JSON'
 {
   "schemaVersion": 1,
-  "runtimeVersion": "0.2.3",
-  "installedRuntimeVersion": "0.2.3",
+  "runtimeVersion": "0.2.3+smoke",
+  "installedRuntimeVersion": "0.2.3+smoke",
   "ok": true,
   "termux": { "ok": true },
   "proot": { "ok": true },
@@ -84,7 +98,7 @@ EOF
 done
 
 run_smoke() {
-	PATH="$tmp/bin:$tmp/prefix/bin:$PATH" \
+	PATH="$tmp/bin:$tmp/prefix/bin:$tmp/core-bin" \
 		PREFIX="$tmp/prefix" \
 		HOME="$tmp/home" \
 		sh "$repo_root/tests/termux/device-smoke.sh" "$@"

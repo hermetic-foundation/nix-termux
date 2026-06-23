@@ -118,7 +118,8 @@ check_json_string() {
 		case $key in
 		.runtimeVersion | .installedRuntimeVersion)
 			json_key=${key#.}
-			grep -Eq "\"$json_key\"[[:space:]]*:[[:space:]]*\"$value\"" "$file"
+			actual=$(sed -n 's/.*"'"$json_key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n 1)
+			[ "$actual" = "$value" ]
 			;;
 		*)
 			return 1
