@@ -57,6 +57,8 @@
             inherit system;
           };
 
+          installer = pkgs.callPackage ./installer/make-installer.nix { };
+
           runtime-archive = pkgs.callPackage ./runtime/make-runtime-archive.nix { };
 
           channel = pkgs.callPackage ./channel/make-channel.nix {
@@ -184,7 +186,20 @@
             grep -qx './installer/uninstall.sh' listing
             grep -qx './runtime/nix-termux.sh' listing
             grep -qx './LICENSE' listing
-            sha256sum -c "$artifact"/nix-termux-runtime.tar.gz.sha256
+            (cd "$artifact" && sha256sum -c nix-termux-runtime.tar.gz.sha256)
+            touch "$out"
+          '';
+
+          installer-artifact = pkgs.runCommand "nix-termux-installer-artifact-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+            ];
+            artifact = self.packages.${system}.installer;
+          } ''
+            test -x "$artifact"/install.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/install.sh
+            (cd "$artifact" && sha256sum -c install.sh.sha256)
             touch "$out"
           '';
         });

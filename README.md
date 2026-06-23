@@ -39,6 +39,7 @@ installs a fake bootstrap archive into a temporary Termux-like prefix.
 Build local release artifacts with:
 
 ```sh
+nix build .#installer
 nix build .#runtime-archive
 nix build .#bootstrap
 ```
@@ -46,6 +47,8 @@ nix build .#bootstrap
 The results contain:
 
 ```text
+install.sh
+install.sh.sha256
 nix-termux-runtime.tar.gz
 nix-termux-runtime.tar.gz.sha256
 nix-termux-channel-<arch>.json

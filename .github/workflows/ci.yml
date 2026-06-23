@@ -45,8 +45,10 @@ jobs:
 
       - name: Build runtime archive
         run: |
-          nix build .#runtime-archive
+          nix build .#installer
           mkdir -p dist
+          cp result/* dist/
+          nix build .#runtime-archive
           cp result/* dist/
 
       - name: Upload runtime archive

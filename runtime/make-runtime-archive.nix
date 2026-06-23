@@ -33,7 +33,7 @@ stdenvNoCC.mkDerivation {
 
     mkdir -p "$out"
     cp nix-termux-runtime.tar.gz "$out/nix-termux-runtime.tar.gz"
-    sha256sum "$out/nix-termux-runtime.tar.gz" > "$out/nix-termux-runtime.tar.gz.sha256"
+    (cd "$out" && sha256sum nix-termux-runtime.tar.gz > nix-termux-runtime.tar.gz.sha256)
 
     runHook postInstall
   '';
