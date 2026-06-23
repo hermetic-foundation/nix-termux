@@ -34,6 +34,7 @@
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
               install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
               install -Dm644 docs/bootstrap.md "$out/share/doc/nix-termux/bootstrap.md"
+              install -Dm644 docs/doctor.md "$out/share/doc/nix-termux/doctor.md"
               install -Dm644 docs/release.md "$out/share/doc/nix-termux/release.md"
               install -Dm644 bootstrap/manifest.schema.json "$out/share/nix-termux/bootstrap/manifest.schema.json"
               install -Dm644 bootstrap/example-manifest.json "$out/share/nix-termux/bootstrap/example-manifest.json"

@@ -10,18 +10,19 @@ replace them without depending on project-specific deployment infrastructure.
 
 ## Status
 
-This repository is at the first implementation stage. It provides:
+This repository provides:
 
 - AGPLv3-or-later licensing from the first commit.
 - A Nix flake and `direnv` entry with `use flake`.
-- A stock-Termux installer skeleton.
-- `nix-termux` runtime commands for `doctor`, `enter`, `run`, `env`, and
-  `uninstall`.
+- A stock-Termux installer/runtime that keeps the normal Termux app in place.
+- `nix-termux` runtime commands for `doctor`, `enter`, `run`, `env`,
+  `upgrade-bootstrap`, and `uninstall`.
 - A versioned bootstrap manifest contract and host smoke test for the
   installer/wrapper path.
+- A Nix-built bootstrap artifact package and GitHub release workflow for
+  x86_64 and aarch64 bootstrap archives.
 
-The bootstrap artifact format is intentionally simple and still needs real
-Nix closure publishing before this is useful as an end-user installer.
+The remaining high-risk work is real-device validation on Termux/Android.
 
 ## Development
 
@@ -61,6 +62,12 @@ pkg install proot curl tar xz coreutils
 export NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=https://example.invalid/nix-termux/bootstrap-aarch64.json
 curl -L https://example.invalid/nix-termux/install.sh | sh
 nix-termux doctor
+```
+
+For scripts and Termux add-ons, `doctor` also has machine-readable output:
+
+```sh
+nix-termux doctor --json
 ```
 
 The installer writes project files below:
