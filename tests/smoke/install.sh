@@ -44,6 +44,13 @@ if grep -Eq '(^|[^[:alnum:]_])awk([^[:alnum:]_]|$)' "$tmp/runtime-source/tests/t
 fi
 (cd "$tmp/runtime-source" && tar -czf "$tmp/runtime.tar.gz" .)
 runtime_sha=$(sha256sum "$tmp/runtime.tar.gz" | awk '{print $1}')
+mkdir -p "$tmp/runtime-missing/runtime" "$tmp/runtime-missing/bin" "$tmp/runtime-missing/installer" "$tmp/runtime-missing/tests/termux"
+cp "$repo_root/bin/nix-termux" "$tmp/runtime-missing/bin/nix-termux"
+cp "$repo_root/installer/install.sh" "$tmp/runtime-missing/installer/install.sh"
+cp "$repo_root/installer/uninstall.sh" "$tmp/runtime-missing/installer/uninstall.sh"
+cp "$repo_root/tests/termux/device-smoke.sh" "$tmp/runtime-missing/tests/termux/device-smoke.sh"
+(cd "$tmp/runtime-missing" && tar -czf "$tmp/runtime-missing.tar.gz" .)
+runtime_missing_sha=$(sha256sum "$tmp/runtime-missing.tar.gz" | awk '{print $1}')
 cp -R "$tmp/runtime-source" "$tmp/runtime-source-v2"
 # shellcheck disable=SC2016
 sed 's/version=${NIX_TERMUX_VERSION:-0.1.0}/version=${NIX_TERMUX_VERSION:-0.1.1}/' \
@@ -228,6 +235,18 @@ if PATH="$tmp/fake-bin:$PATH" \
 	exit 1
 fi
 grep -q 'channel manifest architecture mismatch: expected aarch64 got x86_64' "$tmp/channel-mismatch.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/runtime-missing-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/runtime-missing-home/.nix-termux" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime-missing.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_missing_sha" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/runtime-missing.err"; then
+	printf '%s\n' "runtime archive missing runtime script unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'runtime archive missing runtime/nix-termux.sh' "$tmp/runtime-missing.err"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/mismatch-home" \

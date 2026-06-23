@@ -283,8 +283,16 @@ else
 	fi
 fi
 
-[ -r "$source_bin" ] ||
-	die "runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL"
+validate_runtime_sources() {
+	[ -r "$source_bin" ] ||
+		die "runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL"
+	[ -r "$source_install" ] || die "runtime archive missing installer/install.sh"
+	[ -r "$source_runtime" ] || die "runtime archive missing runtime/nix-termux.sh"
+	[ -r "$source_uninstall" ] || die "runtime archive missing installer/uninstall.sh"
+	[ -r "$source_device_smoke" ] || die "runtime archive missing tests/termux/device-smoke.sh"
+}
+
+validate_runtime_sources
 # shellcheck disable=SC2016
 runtime_version=$(sed -n 's/^version=${NIX_TERMUX_VERSION:-\([^}]*\)}$/\1/p' "$source_runtime" | head -n 1)
 runtime_version=${runtime_version:-${NIX_TERMUX_VERSION:-0.1.0}}
