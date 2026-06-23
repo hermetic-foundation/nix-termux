@@ -89,6 +89,7 @@
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/install.sh"
+            "tests/smoke/runtime-archive.sh"
             "tests/termux/device-smoke.sh"
           ];
         in
@@ -181,16 +182,13 @@
               pkgs.gnutar
               pkgs.gzip
             ];
+            src = self;
             artifact = self.packages.${system}.runtime-archive;
           } ''
-            tar -tzf "$artifact"/nix-termux-runtime.tar.gz > listing
-            grep -qx './bin/nix-termux' listing
-            grep -qx './installer/install.sh' listing
-            grep -qx './installer/uninstall.sh' listing
-            grep -qx './runtime/nix-termux.sh' listing
-            grep -qx './tests/termux/device-smoke.sh' listing
-            grep -qx './LICENSE' listing
-            (cd "$artifact" && sha256sum -c nix-termux-runtime.tar.gz.sha256)
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/runtime-archive.sh "$artifact"
             touch "$out"
           '';
 
