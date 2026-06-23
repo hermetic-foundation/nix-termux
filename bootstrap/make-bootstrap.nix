@@ -94,6 +94,24 @@ max-jobs = auto
 substituters = https://cache.nixos.org/
 trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWw6OAkD9K2xYc0Y7M2e5mB3BfW7Q=
 EOF
+    cat > bootstrap/root/etc/passwd <<'EOF'
+root:x:0:0:root:/root:/bin/sh
+termux:x:1000:1000:termux:/home/termux:/bin/sh
+EOF
+    cat > bootstrap/root/etc/group <<'EOF'
+root:x:0:
+termux:x:1000:
+EOF
+    cat > bootstrap/root/etc/nsswitch.conf <<'EOF'
+passwd: files
+group: files
+hosts: files dns
+EOF
+    cat > bootstrap/root/etc/hosts <<'EOF'
+127.0.0.1 localhost
+::1 localhost
+EOF
+    printf '%s\n' nix-termux > bootstrap/root/etc/hostname
 
     tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf bootstrap.tar -C bootstrap .
     gzip -n bootstrap.tar

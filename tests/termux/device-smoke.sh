@@ -104,6 +104,7 @@ check "doctor reports activation" check_json_bool ".activation.ok" "$doctor_json
 check "nix wrapper runs" nix --version
 check "nix-store wrapper runs" nix-store --version
 check "nix-termux exec runs nix" nix-termux exec nix --version
+check "proot resolves termux user" nix-termux exec sh -c 'grep -q "^termux:" /etc/passwd && grep -q "^termux:" /etc/group'
 # shellcheck disable=SC2016
 check "proot provides writable /tmp" nix-termux exec sh -c 'test -d /tmp && test -w /tmp && test "$TMPDIR" = /tmp'
 

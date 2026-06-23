@@ -46,5 +46,26 @@ grep -qx './root/home/' "$listing"
 grep -qx './root/tmp/' "$listing"
 grep -qx './root/usr/bin/env' "$listing"
 grep -qx './root/bin/sh' "$listing"
+grep -qx './root/etc/passwd' "$listing"
+grep -qx './root/etc/group' "$listing"
+grep -qx './root/etc/nsswitch.conf' "$listing"
+grep -qx './root/etc/hosts' "$listing"
+grep -qx './root/etc/hostname' "$listing"
 grep -qx './root/etc/nix/nix.conf' "$listing"
 grep -qx './nix-termux/bootstrap.registration' "$listing"
+
+extract_dir=${TMPDIR:-/tmp}/nix-termux-bootstrap-extract.$$
+rm -rf "$extract_dir"
+mkdir -p "$extract_dir"
+trap 'rm -f "$listing"; rm -rf "$extract_dir"' EXIT INT TERM
+tar -xzf "$archive" -C "$extract_dir" \
+	./root/etc/passwd \
+	./root/etc/group \
+	./root/etc/nsswitch.conf \
+	./root/etc/hosts \
+	./root/etc/hostname
+grep -qx 'termux:x:1000:1000:termux:/home/termux:/bin/sh' "$extract_dir/root/etc/passwd"
+grep -qx 'termux:x:1000:' "$extract_dir/root/etc/group"
+grep -qx 'hosts: files dns' "$extract_dir/root/etc/nsswitch.conf"
+grep -qx '127.0.0.1 localhost' "$extract_dir/root/etc/hosts"
+grep -qx 'nix-termux' "$extract_dir/root/etc/hostname"
