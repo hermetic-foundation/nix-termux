@@ -226,6 +226,8 @@ test -d "$tmp/home/.cache"
 test -d "$tmp/home/.config"
 test -d "$tmp/home/.local/share"
 test -d "$tmp/home/.local/state"
+test -L "$tmp/home/.nix-profile"
+[ "$(readlink "$tmp/home/.nix-profile")" = "/nix/var/nix/profiles/per-user/termux/profile" ]
 
 doctor_json=$(
 	PATH="$tmp/fake-bin:$PATH" \
@@ -338,6 +340,19 @@ cert_output=$(
 	exit 1
 }
 
+# shellcheck disable=SC2016
+profiles_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_PROFILES"'
+)
+[ "$profiles_output" = "/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" ] || {
+	printf 'unexpected NIX_PROFILES output: %s\n' "$profiles_output" >&2
+	exit 1
+}
+
 env_output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
@@ -351,6 +366,7 @@ printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
 printf '%s\n' "$env_output" | grep -q "^XDG_STATE_HOME=$tmp/home/.local/state$"
 printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
+printf '%s\n' "$env_output" | grep -q '^NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile$'
 printf '%s\n' "$env_output" | grep -q "^SSL_CERT_FILE=$tmp/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$"
 
 PATH="$tmp/fake-bin:$PATH" \

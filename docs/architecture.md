@@ -34,11 +34,13 @@ $PREFIX           -> /termux
 
 Inside proot, the runtime exports stable XDG directories under
 `/home/termux`: `.config`, `.cache`, `.local/share`, and `.local/state`.
-It also exports `NIX_REMOTE=local`, `NIX_SSL_CERT_FILE`/`SSL_CERT_FILE`, and a
-default `NIX_PATH=nixpkgs=flake:nixpkgs` so legacy commands such as `nix-shell
-'<nixpkgs>'` work through the same flake-backed nixpkgs reference as modern
-`nix run nixpkgs#...` commands. Set `NIX_TERMUX_NIX_PATH` before invoking a
-wrapper to use a custom path.
+It also exports `NIX_REMOTE=local`, `NIX_SSL_CERT_FILE`/`SSL_CERT_FILE`,
+`NIX_PROFILES`, and a default `NIX_PATH=nixpkgs=flake:nixpkgs` so legacy
+commands such as `nix-shell '<nixpkgs>'` work through the same flake-backed
+nixpkgs reference as modern `nix run nixpkgs#...` commands. Set
+`NIX_TERMUX_NIX_PATH` before invoking a wrapper to use a custom path.
+When entering proot, the runtime creates `~/.nix-profile` as a symlink to the
+Termux user profile if that path is not already present.
 
 Before entering proot, the runtime writes `root/etc/resolv.conf` from
 `$PREFIX/etc/resolv.conf`, host `/etc/resolv.conf`, or Android `getprop` DNS

@@ -17,6 +17,7 @@ store_dir=${NIX_TERMUX_STORE_DIR:-"$state_dir/nix"}
 root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
 tmp_dir=${NIX_TERMUX_TMP_DIR:-"$state_dir/tmp"}
 profile_dir=${NIX_TERMUX_PROFILE_DIR:-"$store_dir/var/nix/profiles/default"}
+user_profile_dir=${NIX_TERMUX_USER_PROFILE_DIR:-"$store_dir/var/nix/profiles/per-user/termux/profile"}
 cert_file=${NIX_TERMUX_SSL_CERT_FILE:-"$profile_dir/etc/ssl/certs/ca-bundle.crt"}
 nix_conf_file=${NIX_TERMUX_NIX_CONF:-"$root_dir/etc/nix/nix.conf"}
 config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
@@ -253,6 +254,7 @@ NIX_TERMUX_STORE_DIR=$store_dir
 NIX_TERMUX_ROOT_DIR=$root_dir
 NIX_TERMUX_TMP_DIR=$tmp_dir
 NIX_TERMUX_PROFILE_DIR=$profile_dir
+NIX_TERMUX_USER_PROFILE_DIR=$user_profile_dir
 NIX_TERMUX_SSL_CERT_FILE=$cert_file
 NIX_TERMUX_NIX_CONF=$nix_conf_file
 NIX_TERMUX_CONFIG=$config_file
@@ -267,6 +269,7 @@ XDG_DATA_HOME=$termux_home/.local/share
 XDG_STATE_HOME=$termux_home/.local/state
 NIX_REMOTE=local
 NIX_PATH=$nix_path
+NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile
 SSL_CERT_FILE=$cert_file
 EOF
 }
@@ -321,6 +324,9 @@ enter() {
 	have "$proot" || die "proot is required; install it with: pkg install proot"
 	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/root" "$root_dir/tmp" "$store_dir/var/nix/profiles/per-user/root" "$store_dir/var/nix/profiles/per-user/termux"
 	mkdir -p "$termux_home/.cache" "$termux_home/.config" "$termux_home/.local/share" "$termux_home/.local/state"
+	if [ ! -e "$termux_home/.nix-profile" ] && [ ! -L "$termux_home/.nix-profile" ]; then
+		ln -s /nix/var/nix/profiles/per-user/termux/profile "$termux_home/.nix-profile"
+	fi
 	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"
 
 	shell=${NIX_TERMUX_SHELL:-"$profile_dir/bin/bash"}
@@ -360,6 +366,7 @@ enter() {
 		NIX_CONF_DIR=/etc/nix \
 		NIX_REMOTE=local \
 		NIX_PATH="$nix_path" \
+		NIX_PROFILES="/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" \
 		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		"$@"
