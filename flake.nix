@@ -113,6 +113,7 @@
             "runtime/nix-termux.sh"
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
+            "tests/smoke/device-smoke-options.sh"
             "tests/smoke/install.sh"
             "tests/smoke/runtime-archive.sh"
             "tests/smoke/version-consistency.sh"
@@ -178,6 +179,20 @@
             chmod -R u+w source
             cd source
             sh tests/smoke/version-consistency.sh
+            touch "$out"
+          '';
+
+          device-smoke-options = pkgs.runCommand "nix-termux-device-smoke-options" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/device-smoke-options.sh
             touch "$out"
           '';
 

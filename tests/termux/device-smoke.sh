@@ -4,6 +4,37 @@
 set -eu
 
 failures=0
+network=${NIX_TERMUX_DEVICE_SMOKE_NETWORK:-0}
+
+usage() {
+	cat <<'EOF'
+Usage: device-smoke.sh [--network] [--no-network]
+
+Options:
+  --network     Also run a networked `nix run nixpkgs#hello` check.
+  --no-network  Skip the networked check, overriding the environment.
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+	case $1 in
+	--network)
+		network=1
+		;;
+	--no-network)
+		network=0
+		;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*)
+		usage >&2
+		exit 2
+		;;
+	esac
+	shift
+done
 
 say() {
 	printf '%s\n' "$*"
@@ -172,10 +203,10 @@ check "proot provides Nix profile env" nix-termux exec sh -c 'test "$NIX_PROFILE
 # shellcheck disable=SC2016
 check "proot puts user profile on PATH" nix-termux exec sh -c 'case $PATH in /home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:*) exit 0 ;; *) exit 1 ;; esac'
 
-if [ "${NIX_TERMUX_DEVICE_SMOKE_NETWORK:-0}" = "1" ]; then
+if [ "$network" = "1" ]; then
 	check "nix run can fetch and execute hello" nix-termux run nixpkgs#hello
 else
-	say "skip - nix run nixpkgs#hello (set NIX_TERMUX_DEVICE_SMOKE_NETWORK=1)"
+	say "skip - nix run nixpkgs#hello (pass --network or set NIX_TERMUX_DEVICE_SMOKE_NETWORK=1)"
 fi
 
 if [ "$failures" -ne 0 ]; then

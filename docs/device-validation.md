@@ -26,8 +26,11 @@ Networked Nix evaluation is intentionally opt-in because it can be slow and
 depends on the device connection:
 
 ```sh
-NIX_TERMUX_DEVICE_SMOKE_NETWORK=1 nix-termux smoke-test
+nix-termux smoke-test --network
 ```
+
+Use `--no-network` to force an offline-only run when
+`NIX_TERMUX_DEVICE_SMOKE_NETWORK=1` is set in the environment.
 
 For unpublished or mirrored artifacts, point the installer at a local channel:
 
