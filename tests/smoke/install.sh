@@ -174,6 +174,16 @@ EOF
 chmod 755 "$tmp/fake-bin/pkg"
 
 if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/no-channel-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/no-channel-home/.nix-termux" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/no-channel.err"; then
+	printf '%s\n' "standalone install without channel unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL' "$tmp/no-channel.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/mismatch-home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/mismatch-home/.nix-termux" \
@@ -190,6 +200,8 @@ if PATH="$tmp/fake-bin:$PATH" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/mismatch-home/.nix-termux" \
 	NIX_TERMUX_ARCH=aarch64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
 	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-manifest.json" \
 	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-mismatch.err"; then
 	printf '%s\n' "wrong-arch bootstrap install unexpectedly succeeded" >&2
@@ -333,6 +345,7 @@ nix_path_output=$(
 		HOME="$tmp/home" \
 		PREFIX="$tmp/prefix" \
 		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		NIX_PATH='' \
 		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_PATH"'
 )
 [ "$nix_path_output" = "nixpkgs=flake:nixpkgs" ] || {
@@ -398,6 +411,7 @@ env_output=$(
 		HOME="$tmp/home" \
 		PREFIX="$tmp/prefix" \
 		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		NIX_PATH='' \
 		"$tmp/prefix/bin/nix-termux" env
 )
 printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"

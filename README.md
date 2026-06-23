@@ -116,6 +116,9 @@ another nixpkgs source.
 For local development or mirrored artifacts, the installer also accepts
 `NIX_TERMUX_CHANNEL_URL`, `NIX_TERMUX_ARCH`, `NIX_TERMUX_BOOTSTRAP_URL`, and
 `NIX_TERMUX_BOOTSTRAP_SHA256` directly.
+When running a standalone `install.sh` with `curl | sh`, provide either
+`NIX_TERMUX_CHANNEL_BASE_URL`, `NIX_TERMUX_CHANNEL_URL`, or
+`NIX_TERMUX_RUNTIME_ARCHIVE_URL` so the installer can fetch the runtime files.
 
 After installation, the saved manifest can be reused with:
 

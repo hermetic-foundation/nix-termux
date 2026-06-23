@@ -246,6 +246,9 @@ else
 	fi
 fi
 
+[ -r "$source_bin" ] ||
+	die "runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL"
+
 install_file() {
 	source=$1
 	target=$2
