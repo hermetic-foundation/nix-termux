@@ -16,6 +16,7 @@ state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 store_dir=${NIX_TERMUX_STORE_DIR:-"$state_dir/nix"}
 root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
 profile_dir=${NIX_TERMUX_PROFILE_DIR:-"$store_dir/var/nix/profiles/default"}
+cert_file=${NIX_TERMUX_SSL_CERT_FILE:-"$profile_dir/etc/ssl/certs/ca-bundle.crt"}
 config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
 
@@ -78,6 +79,13 @@ doctor() {
 		status=1
 	fi
 
+	if [ -r "$cert_file" ]; then
+		info "certs: ok ($cert_file)"
+	else
+		info "certs: missing ($cert_file)"
+		status=1
+	fi
+
 	return "$status"
 }
 
@@ -87,6 +95,7 @@ NIX_TERMUX_STATE_DIR=$state_dir
 NIX_TERMUX_STORE_DIR=$store_dir
 NIX_TERMUX_ROOT_DIR=$root_dir
 NIX_TERMUX_PROFILE_DIR=$profile_dir
+NIX_TERMUX_SSL_CERT_FILE=$cert_file
 NIX_TERMUX_CONFIG=$config_file
 NIX_TERMUX_PROOT=$proot
 PREFIX=$termux_prefix
@@ -134,7 +143,7 @@ enter() {
 		USER=termux \
 		LOGNAME=termux \
 		PATH="/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" \
-		NIX_SSL_CERT_FILE=/termux/etc/tls/cert.pem \
+		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		"$@"
 }
 

@@ -32,6 +32,7 @@ grep -q '"registration": "nix-termux/bootstrap.registration"' "$manifest"
 
 tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/bin/nix'
 tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/bin/bash'
+tar -tzf "$archive" | grep -qx './nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt'
 tar -tzf "$archive" | grep -qx './root/usr/bin/env'
 tar -tzf "$archive" | grep -qx './root/bin/sh'
 tar -tzf "$archive" | grep -qx './nix-termux/bootstrap.registration'

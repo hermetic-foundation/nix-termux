@@ -56,7 +56,7 @@ stdenvNoCC.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    mkdir -p bootstrap/nix/store bootstrap/nix/var/nix/profiles/default/bin bootstrap/nix-termux bootstrap/root/usr/bin bootstrap/root/bin bootstrap/termux/etc/tls
+    mkdir -p bootstrap/nix/store bootstrap/nix/var/nix/profiles/default/bin bootstrap/nix/var/nix/profiles/default/etc/ssl/certs bootstrap/nix-termux bootstrap/root/usr/bin bootstrap/root/bin
 
     while IFS= read -r path; do
       cp -a "$path" bootstrap/nix/store/
@@ -67,10 +67,10 @@ stdenvNoCC.mkDerivation {
     ln -s ${nix}/bin/nix-store bootstrap/nix/var/nix/profiles/default/bin/nix-store
     ln -s ${nix}/bin/nix-build bootstrap/nix/var/nix/profiles/default/bin/nix-build
     ln -s ${bashInteractive}/bin/bash bootstrap/nix/var/nix/profiles/default/bin/bash
+    ln -s ${cacert}/etc/ssl/certs/ca-bundle.crt bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 
     ln -s ${coreutils}/bin/env bootstrap/root/usr/bin/env
     ln -s ${bashInteractive}/bin/bash bootstrap/root/bin/sh
-    ln -s ${cacert}/etc/ssl/certs/ca-bundle.crt bootstrap/termux/etc/tls/cert.pem
     cp ${closure}/registration bootstrap/nix-termux/bootstrap.registration
 
     tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf bootstrap.tar -C bootstrap .
