@@ -62,7 +62,8 @@ The intended install flow is:
 
 ```sh
 pkg install proot curl tar xz coreutils
-export NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=https://example.invalid/nix-termux/bootstrap-aarch64.json
+export NIX_TERMUX_RUNTIME_ARCHIVE_URL=https://example.invalid/nix-termux/nix-termux-runtime.tar.gz
+export NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=https://example.invalid/nix-termux/nix-termux-bootstrap-aarch64.json
 curl -L https://example.invalid/nix-termux/install.sh | sh
 nix-termux doctor
 ```

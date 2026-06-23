@@ -14,6 +14,8 @@ have() {
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
+runtime_archive_url=${NIX_TERMUX_RUNTIME_ARCHIVE_URL:-}
+runtime_archive_sha256=${NIX_TERMUX_RUNTIME_ARCHIVE_SHA256:-}
 bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
 bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
@@ -113,6 +115,8 @@ load_manifest() {
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 source_root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
 
+mkdir -p "$state_dir/tmp"
+
 if [ -f "$source_root/bin/nix-termux" ]; then
 	source_bin=$source_root/bin/nix-termux
 	source_install=$source_root/installer/install.sh
@@ -123,6 +127,30 @@ else
 	source_install=$state_dir/share/installer/install.sh
 	source_runtime=$state_dir/runtime/nix-termux.sh
 	source_uninstall=$state_dir/share/installer/uninstall.sh
+
+	if [ ! -r "$source_bin" ] && [ -n "$runtime_archive_url" ]; then
+		have tar || die "tar is required to unpack NIX_TERMUX_RUNTIME_ARCHIVE_URL"
+		runtime_archive=$state_dir/tmp/runtime.tar.gz
+		runtime_source=$state_dir/tmp/runtime-source
+
+		rm -rf "$runtime_source"
+		mkdir -p "$runtime_source"
+		fetch_url "$runtime_archive_url" "$runtime_archive"
+
+		if [ -n "$runtime_archive_sha256" ]; then
+			have sha256sum || die "sha256sum is required when NIX_TERMUX_RUNTIME_ARCHIVE_SHA256 is set"
+			actual=$(sha256sum "$runtime_archive" | awk '{print $1}')
+			[ "$actual" = "$runtime_archive_sha256" ] || die "runtime archive sha256 mismatch: expected $runtime_archive_sha256 got $actual"
+		fi
+
+		tar -xzf "$runtime_archive" -C "$runtime_source"
+		rm -f "$runtime_archive"
+
+		source_bin=$runtime_source/bin/nix-termux
+		source_install=$runtime_source/installer/install.sh
+		source_runtime=$runtime_source/runtime/nix-termux.sh
+		source_uninstall=$runtime_source/installer/uninstall.sh
+	fi
 fi
 
 install_file() {
@@ -202,6 +230,8 @@ if [ -n "$bootstrap_url" ]; then
 fi
 
 {
+	printf 'runtime_archive_url=%s\n' "$runtime_archive_url"
+	printf 'runtime_archive_sha256=%s\n' "$runtime_archive_sha256"
 	printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"
 	printf 'bootstrap_url=%s\n' "$bootstrap_url"
 	printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"

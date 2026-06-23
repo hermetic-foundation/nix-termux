@@ -56,3 +56,11 @@ Release manifests can refer to archives beside the manifest:
 The installer resolves relative archive URLs against
 `NIX_TERMUX_BOOTSTRAP_MANIFEST_URL`, so users and mirrors can host the manifest
 and archive together without modifying the archive hash.
+
+The standalone installer also needs the runtime archive when it is not run from
+a source checkout or existing installation:
+
+```sh
+export NIX_TERMUX_RUNTIME_ARCHIVE_URL=https://example.invalid/nix-termux-runtime.tar.gz
+export NIX_TERMUX_RUNTIME_ARCHIVE_SHA256=<sha256>
+```

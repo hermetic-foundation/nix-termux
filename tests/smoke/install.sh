@@ -11,9 +11,17 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/fake-bin" "$tmp/bootstrap"
+mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
 host_sh=$(command -v sh)
 cp "$host_sh" "$tmp/prefix/bin/sh"
+cp "$repo_root/installer/install.sh" "$tmp/standalone/install.sh"
+mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime"
+cp "$repo_root/bin/nix-termux" "$tmp/runtime-source/bin/nix-termux"
+cp "$repo_root/installer/install.sh" "$tmp/runtime-source/installer/install.sh"
+cp "$repo_root/installer/uninstall.sh" "$tmp/runtime-source/installer/uninstall.sh"
+cp "$repo_root/runtime/nix-termux.sh" "$tmp/runtime-source/runtime/nix-termux.sh"
+(cd "$tmp/runtime-source" && tar -czf "$tmp/runtime.tar.gz" .)
+runtime_sha=$(sha256sum "$tmp/runtime.tar.gz" | awk '{print $1}')
 
 cat >"$tmp/fake-bin/proot" <<EOF
 #!$host_sh
@@ -112,12 +120,15 @@ PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
 	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-manifest.json" \
-	sh "$repo_root/installer/install.sh"
+	sh "$tmp/standalone/install.sh"
 
 grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
 grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
+grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
