@@ -31,7 +31,7 @@ wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel 
 for command in mkdir chmod cp mv rm; do
 	have "$command" || die "required command missing: $command"
 done
-for command in dirname grep head sed uname; do
+for command in basename dirname grep head sed uname; do
 	have "$command" || die "required command missing: $command"
 done
 
@@ -295,6 +295,16 @@ install_file() {
 	fi
 }
 
+write_file() {
+	target=$1
+	target_dir=$(dirname -- "$target")
+	target_tmp=$target_dir/.install.$(basename -- "$target").$$
+
+	rm -f "$target_tmp"
+	cat >"$target_tmp"
+	mv -f "$target_tmp" "$target"
+}
+
 is_managed_wrapper() {
 	target=$1
 
@@ -363,6 +373,7 @@ if [ -n "$bootstrap_url" ]; then
 	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
 
 	archive=$state_dir/bootstrap.tar.gz
+	bootstrap_stage=$state_dir/tmp/bootstrap-stage
 	registration_loaded=no
 	fetch_url "$bootstrap_url" "$archive"
 
@@ -373,7 +384,11 @@ if [ -n "$bootstrap_url" ]; then
 		[ "$actual" = "$bootstrap_sha256" ] || die "bootstrap sha256 mismatch: expected $bootstrap_sha256 got $actual"
 	fi
 
-	tar -xzf "$archive" -C "$state_dir"
+	rm -rf "$bootstrap_stage"
+	mkdir -p "$bootstrap_stage"
+	tar -xzf "$archive" -C "$bootstrap_stage"
+	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
+	rm -rf "$bootstrap_stage"
 	rm -f "$archive"
 
 	registration=$state_dir/nix-termux/bootstrap.registration
@@ -387,7 +402,7 @@ if [ -n "$bootstrap_url" ]; then
 		printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
 		printf 'registration=%s\n' "$registration"
 		printf 'registration_loaded=%s\n' "$registration_loaded"
-	} >"$state_dir/etc/bootstrap-activation.conf"
+	} | write_file "$state_dir/etc/bootstrap-activation.conf"
 fi
 
 {
@@ -400,7 +415,7 @@ fi
 	printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"
 	printf 'bootstrap_url=%s\n' "$bootstrap_url"
 	printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
-} >"$state_dir/etc/nix-termux.conf"
+} | write_file "$state_dir/etc/nix-termux.conf"
 
 printf '%s\n' "Installed nix-termux to $state_dir"
 printf '%s\n' "Run: nix-termux doctor"

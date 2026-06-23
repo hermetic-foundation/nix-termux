@@ -262,6 +262,7 @@ if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
 	printf '%s\n' "temporary install files left after install" >&2
 	exit 1
 fi
+test ! -e "$tmp/home/.nix-termux/tmp/bootstrap-stage"
 cat >"$tmp/home/.nix-termux/share/tests/device-smoke.sh" <<'EOF'
 #!/usr/bin/env sh
 printf 'stub device smoke'
@@ -400,6 +401,7 @@ if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
 	printf '%s\n' "temporary install files left after upgrade" >&2
 	exit 1
 fi
+test ! -e "$tmp/home/.nix-termux/tmp/bootstrap-stage"
 
 output=$(
 	PATH="$tmp/fake-bin:$PATH" \
