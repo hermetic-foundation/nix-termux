@@ -21,7 +21,9 @@ restore_prefix_command() {
 	backup=$state_dir/share/prefix-backup/$name
 
 	if [ -e "$backup" ]; then
-		mv "$backup" "$target"
+		if [ ! -e "$target" ] || is_managed_wrapper "$target"; then
+			mv "$backup" "$target"
+		fi
 	elif is_managed_wrapper "$target"; then
 		rm -f "$target"
 	fi

@@ -650,6 +650,12 @@ printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile$'
 printf '%s\n' "$env_output" | grep -q "^SSL_CERT_FILE=$tmp/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$"
 
+cat >"$tmp/prefix/bin/nix-env" <<EOF
+#!$host_sh
+printf '%s\n' user modified nix-env
+EOF
+chmod 755 "$tmp/prefix/bin/nix-env"
+
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
@@ -660,6 +666,6 @@ PATH="$tmp/fake-bin:$PATH" \
 [ -x "$tmp/prefix/bin/nix-hash" ]
 grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/prefix/bin/nix-hash"
 [ -x "$tmp/prefix/bin/nix-env" ]
-grep -qx '# mentions nix-termux but is not a managed wrapper' "$tmp/prefix/bin/nix-env"
+grep -Fqx "printf '%s\\n' user modified nix-env" "$tmp/prefix/bin/nix-env"
 [ ! -e "$tmp/home/.nix-profile" ]
 [ ! -d "$tmp/home/.nix-termux" ]
