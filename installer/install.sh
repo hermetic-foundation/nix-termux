@@ -305,7 +305,7 @@ done
 if [ -n "$bootstrap_url" ]; then
 	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
 
-	archive=$state_dir/bootstrap.tar
+	archive=$state_dir/bootstrap.tar.gz
 	registration_loaded=no
 	fetch_url "$bootstrap_url" "$archive"
 
@@ -315,7 +315,7 @@ if [ -n "$bootstrap_url" ]; then
 		[ "$actual" = "$bootstrap_sha256" ] || die "bootstrap sha256 mismatch: expected $bootstrap_sha256 got $actual"
 	fi
 
-	tar -xf "$archive" -C "$state_dir"
+	tar -xzf "$archive" -C "$state_dir"
 	rm -f "$archive"
 
 	registration=$state_dir/nix-termux/bootstrap.registration

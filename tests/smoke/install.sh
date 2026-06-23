@@ -104,8 +104,8 @@ printf '%s\n' "fake cert bundle" >"$tmp/bootstrap/nix/var/nix/profiles/default/e
 mkdir -p "$tmp/bootstrap/nix-termux"
 printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registration"
 
-(cd "$tmp/bootstrap" && tar -cf "$tmp/bootstrap.tar" .)
-sha=$(sha256sum "$tmp/bootstrap.tar" | awk '{print $1}')
+(cd "$tmp/bootstrap" && tar -czf "$tmp/bootstrap.tar.gz" .)
+sha=$(sha256sum "$tmp/bootstrap.tar.gz" | awk '{print $1}')
 cat >"$tmp/bootstrap-manifest.json" <<EOF
 {
   "schemaVersion": 1,
@@ -114,7 +114,7 @@ cat >"$tmp/bootstrap-manifest.json" <<EOF
     "nixSystem": "x86_64-linux"
   },
   "archive": {
-    "url": "bootstrap.tar",
+    "url": "bootstrap.tar.gz",
     "sha256": "$sha"
   },
   "layout": {

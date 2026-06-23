@@ -39,7 +39,7 @@ Bootstrap manifests use schema version 1 and are validated by
     "nixSystem": "aarch64-linux"
   },
   "archive": {
-    "url": "https://example.invalid/nix-termux/bootstrap-aarch64.tar",
+    "url": "https://example.invalid/nix-termux/bootstrap-aarch64.tar.gz",
     "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "layout": {
