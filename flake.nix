@@ -46,6 +46,46 @@
           };
         });
 
+      apps = forAllSystems (system: {
+        default = {
+          type = "app";
+          program = "${self.packages.${system}.default}/bin/nix-termux";
+          meta.description = "Run the nix-termux CLI";
+        };
+      });
+
+      checks = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          scripts = [
+            "bin/nix-termux"
+            "installer/install.sh"
+            "installer/uninstall.sh"
+            "runtime/nix-termux.sh"
+          ];
+        in
+        {
+          shell-format = pkgs.runCommand "nix-termux-shell-format" {
+            nativeBuildInputs = [ pkgs.shfmt ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            cd source
+            shfmt -d ${builtins.concatStringsSep " " scripts}
+            touch "$out"
+          '';
+
+          shellcheck = pkgs.runCommand "nix-termux-shellcheck" {
+            nativeBuildInputs = [ pkgs.shellcheck ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            cd source
+            shellcheck ${builtins.concatStringsSep " " scripts}
+            touch "$out"
+          '';
+        });
+
       devShells = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
