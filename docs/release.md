@@ -44,10 +44,10 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The `ci` workflow builds `.#installer` and `.#runtime-archive` on x86_64, builds
-`.#bootstrap` and `.#channel` on native x86_64 and aarch64 Linux runners,
-writes `SHA256SUMS`, and attaches the result files to the GitHub release for
-the tag.
+The `ci` workflow builds `.#release` on native x86_64 and aarch64 Linux
+runners, merges the bundles, rejects conflicting duplicate common artifacts,
+recomputes `SHA256SUMS`, and attaches the result files to the GitHub release
+for the tag.
 
 ## Artifact URL Shape
 
