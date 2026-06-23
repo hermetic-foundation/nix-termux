@@ -68,6 +68,31 @@
             runtimeArchive = self.packages.${system}.runtime-archive;
             bootstrap = self.packages.${system}.bootstrap;
           };
+
+          release = pkgs.runCommand "nix-termux-release-${system}" {
+            nativeBuildInputs = [ pkgs.coreutils ];
+            installer = self.packages.${system}.installer;
+            runtimeArchive = self.packages.${system}.runtime-archive;
+            channel = self.packages.${system}.channel;
+            bootstrap = self.packages.${system}.bootstrap;
+          } ''
+            mkdir -p "$out"
+            cp --no-preserve=mode "$installer"/* "$out"/
+            cp --no-preserve=mode "$runtimeArchive"/* "$out"/
+            cp --no-preserve=mode "$channel"/* "$out"/
+            cp --no-preserve=mode "$bootstrap"/* "$out"/
+            chmod 755 "$out"/install.sh
+            (cd "$out" && sha256sum \
+              install.sh \
+              install.sh.sha256 \
+              nix-termux-runtime.tar.gz \
+              nix-termux-runtime.tar.gz.sha256 \
+              nix-termux-channel-*.json \
+              nix-termux-bootstrap-*.tar.gz \
+              nix-termux-bootstrap-*.json \
+              nix-termux-bootstrap-*.registration \
+              > SHA256SUMS)
+          '';
         });
 
       apps = forAllSystems (system: {
@@ -218,6 +243,28 @@
             test -x "$artifact"/install.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/install.sh
             (cd "$artifact" && sha256sum -c install.sh.sha256)
+            touch "$out"
+          '';
+
+          release-artifact = pkgs.runCommand "nix-termux-release-artifact-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.findutils
+              pkgs.gnugrep
+            ];
+            artifact = self.packages.${system}.release;
+          } ''
+            test -x "$artifact"/install.sh
+            test -r "$artifact"/nix-termux-runtime.tar.gz
+            test -r "$artifact"/nix-termux-runtime.tar.gz.sha256
+            test -r "$artifact"/SHA256SUMS
+            test "$(find "$artifact" -name 'nix-termux-channel-*.json' | wc -l)" -eq 1
+            test "$(find "$artifact" -name 'nix-termux-bootstrap-*.json' | wc -l)" -eq 1
+            test "$(find "$artifact" -name 'nix-termux-bootstrap-*.tar.gz' | wc -l)" -eq 1
+            test "$(find "$artifact" -name 'nix-termux-bootstrap-*.registration' | wc -l)" -eq 1
+            grep -q 'nix-termux-runtime.tar.gz' "$artifact"/SHA256SUMS
+            grep -q 'install.sh' "$artifact"/SHA256SUMS
+            (cd "$artifact" && sha256sum -c SHA256SUMS)
             touch "$out"
           '';
         });

@@ -43,9 +43,10 @@ Build local release artifacts with:
 nix build .#installer
 nix build .#runtime-archive
 nix build .#bootstrap
+nix build .#release
 ```
 
-The results contain:
+The release result is a hostable directory containing:
 
 ```text
 install.sh
@@ -56,6 +57,7 @@ nix-termux-channel-<arch>.json
 nix-termux-bootstrap-<arch>.tar.gz
 nix-termux-bootstrap-<arch>.json
 nix-termux-bootstrap-<arch>.registration
+SHA256SUMS
 ```
 
 Tagged GitHub releases build and attach those artifacts through

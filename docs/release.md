@@ -11,30 +11,27 @@ nix build .#installer
 nix build .#runtime-archive
 nix build .#bootstrap
 nix build .#channel
+nix build .#release
 ```
 
-The installer result contains:
+The release result is a complete hostable directory for the current system's
+Termux architecture:
 
 ```text
 install.sh
 install.sh.sha256
-```
-
-The runtime result contains:
-
-```text
 nix-termux-runtime.tar.gz
 nix-termux-runtime.tar.gz.sha256
-```
-
-The bootstrap and channel results contain:
-
-```text
 nix-termux-channel-<arch>.json
 nix-termux-bootstrap-<arch>.tar.gz
 nix-termux-bootstrap-<arch>.json
 nix-termux-bootstrap-<arch>.registration
+SHA256SUMS
 ```
+
+The individual `.#installer`, `.#runtime-archive`, `.#bootstrap`, and
+`.#channel` packages remain available when a release pipeline wants separate
+artifacts.
 
 ## Publish
 
