@@ -21,6 +21,10 @@ EOF
 chmod 755 "$tmp/prefix/bin/nix-hash"
 printf '%s\n' "nameserver 192.0.2.53" >"$tmp/prefix/etc/resolv.conf"
 cp "$repo_root/installer/install.sh" "$tmp/standalone/install.sh"
+if grep -q 'awk' "$tmp/standalone/install.sh"; then
+	printf '%s\n' "standalone installer must not require awk" >&2
+	exit 1
+fi
 mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime" "$tmp/runtime-source/tests/termux"
 cp "$repo_root/bin/nix-termux" "$tmp/runtime-source/bin/nix-termux"
 cp "$repo_root/installer/install.sh" "$tmp/runtime-source/installer/install.sh"

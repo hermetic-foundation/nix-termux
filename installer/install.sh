@@ -230,7 +230,8 @@ else
 
 		if [ -n "$runtime_archive_sha256" ]; then
 			have sha256sum || die "sha256sum is required when NIX_TERMUX_RUNTIME_ARCHIVE_SHA256 is set"
-			actual=$(sha256sum "$runtime_archive" | awk '{print $1}')
+			actual=$(sha256sum "$runtime_archive")
+			actual=${actual%% *}
 			[ "$actual" = "$runtime_archive_sha256" ] || die "runtime archive sha256 mismatch: expected $runtime_archive_sha256 got $actual"
 		fi
 
@@ -328,7 +329,8 @@ if [ -n "$bootstrap_url" ]; then
 
 	if [ -n "$bootstrap_sha256" ]; then
 		have sha256sum || die "sha256sum is required when NIX_TERMUX_BOOTSTRAP_SHA256 is set"
-		actual=$(sha256sum "$archive" | awk '{print $1}')
+		actual=$(sha256sum "$archive")
+		actual=${actual%% *}
 		[ "$actual" = "$bootstrap_sha256" ] || die "bootstrap sha256 mismatch: expected $bootstrap_sha256 got $actual"
 	fi
 
