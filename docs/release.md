@@ -10,6 +10,7 @@ nix flake check
 nix build .#installer
 nix build .#runtime-archive
 nix build .#bootstrap
+nix build .#channel
 ```
 
 The installer result contains:
@@ -26,7 +27,7 @@ nix-termux-runtime.tar.gz
 nix-termux-runtime.tar.gz.sha256
 ```
 
-The bootstrap result contains:
+The bootstrap and channel results contain:
 
 ```text
 nix-termux-channel-<arch>.json

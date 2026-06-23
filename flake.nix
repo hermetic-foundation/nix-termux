@@ -167,11 +167,12 @@
             ];
             src = self;
             artifact = self.packages.${system}.channel;
+            runtimeArtifact = self.packages.${system}.runtime-archive;
           } ''
             cp -R "$src" source
             chmod -R u+w source
             cd source
-            sh tests/smoke/channel-artifact.sh "$artifact"
+            sh tests/smoke/channel-artifact.sh "$artifact" "$runtimeArtifact"
             touch "$out"
           '';
 
