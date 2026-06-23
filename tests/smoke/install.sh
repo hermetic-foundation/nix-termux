@@ -228,6 +228,8 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .nixConf.ok == true
 	and .certs.ok == true
 	and .dns.ok == true
+	and .wrappers.ok == true
+	and .wrappers.missing == ""
 	and .activation.ok == true
 	and .activation.bootstrapSha256 == $sha' >/dev/null
 

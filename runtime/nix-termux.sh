@@ -23,6 +23,7 @@ config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
 resolv_conf_file=${NIX_TERMUX_RESOLV_CONF:-"$root_dir/etc/resolv.conf"}
+wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
 termux_home=${HOME:-/data/data/com.termux/files/home}
@@ -65,6 +66,8 @@ doctor_status() {
 	doctor_certs=false
 	doctor_activation=false
 	doctor_dns=false
+	doctor_wrappers=false
+	doctor_missing_wrappers=
 	doctor_activation_sha=
 	doctor_status=0
 
@@ -100,6 +103,17 @@ doctor_status() {
 	fi
 	if [ -s "$resolv_conf_file" ]; then
 		doctor_dns=true
+	else
+		doctor_status=1
+	fi
+	for name in $wrapper_names; do
+		target=$termux_prefix/bin/$name
+		if [ ! -x "$target" ] || ! grep -q 'nix-termux' "$target"; then
+			doctor_missing_wrappers="${doctor_missing_wrappers}${doctor_missing_wrappers:+ }$name"
+		fi
+	done
+	if [ -z "$doctor_missing_wrappers" ]; then
+		doctor_wrappers=true
 	else
 		doctor_status=1
 	fi
@@ -152,6 +166,11 @@ doctor_text() {
 	else
 		info "dns: missing ($resolv_conf_file)"
 	fi
+	if [ "$doctor_wrappers" = true ]; then
+		info "wrappers: ok ($termux_prefix/bin)"
+	else
+		info "wrappers: missing or unmanaged ($doctor_missing_wrappers)"
+	fi
 	if [ "$doctor_activation" = true ]; then
 		info "activation: ok ($doctor_activation_sha)"
 	elif [ -r "$activation_file" ]; then
@@ -193,6 +212,11 @@ doctor_json() {
   "dns": {
     "ok": $doctor_dns,
     "path": "$(json_escape "$resolv_conf_file")"
+  },
+  "wrappers": {
+    "ok": $doctor_wrappers,
+    "directory": "$(json_escape "$termux_prefix/bin")",
+    "missing": "$(json_escape "$doctor_missing_wrappers")"
   },
   "activation": {
     "ok": $doctor_activation,

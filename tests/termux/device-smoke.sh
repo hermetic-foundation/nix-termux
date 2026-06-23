@@ -100,6 +100,7 @@ check "doctor reports nix" check_json_bool ".nix.ok" "$doctor_json"
 check "doctor reports nix.conf" check_json_bool ".nixConf.ok" "$doctor_json"
 check "doctor reports certs" check_json_bool ".certs.ok" "$doctor_json"
 check "doctor reports dns" check_json_bool ".dns.ok" "$doctor_json"
+check "doctor reports wrappers" check_json_bool ".wrappers.ok" "$doctor_json"
 check "doctor reports activation" check_json_bool ".activation.ok" "$doctor_json"
 
 check "nix wrapper runs" nix --version
