@@ -88,6 +88,16 @@ fi
 grep -q 'nix-termux-channel-x86_64.json references missing bootstrap manifest: missing-bootstrap-x86_64.json' "$tmp/err"
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
+printf '%s\n' outside >"$tmp/outside-bootstrap.json"
+sed 's/nix-termux-bootstrap-x86_64.json/..\/outside-bootstrap.json/' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted unsafe channel bootstrap reference" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json references unsafe bootstrap manifest URL: ../outside-bootstrap.json' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 # shellcheck disable=SC2016
 grep -q '^tmp_dir=$(mktemp -d)$' "$tmp/serve.out"

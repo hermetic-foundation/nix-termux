@@ -33,6 +33,17 @@ json_string_value_n() {
 	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
 }
 
+is_local_filename() {
+	case $1 in
+	"" | */* | .*)
+		return 1
+		;;
+	*)
+		return 0
+		;;
+	esac
+}
+
 [ "${1:-}" != "-h" ] || {
 	usage
 	exit 0
@@ -84,6 +95,8 @@ validate_release_dir() {
 		bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
 		[ "$runtime_url" = "nix-termux-runtime.tar.gz" ] ||
 			die "$(basename -- "$channel") references unsupported runtime URL: $runtime_url"
+		is_local_filename "$bootstrap_manifest_url" ||
+			die "$(basename -- "$channel") references unsafe bootstrap manifest URL: $bootstrap_manifest_url"
 		actual_runtime_sha=$(sha256sum "$release_dir/nix-termux-runtime.tar.gz")
 		actual_runtime_sha=${actual_runtime_sha%% *}
 		[ "$runtime_sha" = "$actual_runtime_sha" ] ||
