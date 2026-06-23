@@ -24,6 +24,9 @@ bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
 for command in mkdir chmod cp rm; do
 	have "$command" || die "required command missing: $command"
 done
+for command in dirname grep head sed; do
+	have "$command" || die "required command missing: $command"
+done
 
 if ! have proot; then
 	die "proot is required; install it with: pkg install proot"
@@ -37,6 +40,9 @@ fetch_url() {
 	file://*)
 		cp "${url#file://}" "$output"
 		;;
+	/*)
+		cp "$url" "$output"
+		;;
 	*)
 		have curl || die "curl is required to fetch $url"
 		curl -L "$url" -o "$output"
@@ -49,6 +55,34 @@ json_string_value() {
 	file=$2
 
 	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n 1
+}
+
+resolve_manifest_url() {
+	base=$1
+	value=$2
+
+	case $value in
+	*://*)
+		printf '%s\n' "$value"
+		;;
+	/*)
+		printf '%s\n' "$value"
+		;;
+	*)
+		case $base in
+		file://*)
+			base_path=${base#file://}
+			printf 'file://%s/%s\n' "$(dirname -- "$base_path")" "$value"
+			;;
+		*://*)
+			printf '%s/%s\n' "${base%/*}" "$value"
+			;;
+		*)
+			printf '%s\n' "$value"
+			;;
+		esac
+		;;
+	esac
 }
 
 load_manifest() {
@@ -67,12 +101,12 @@ load_manifest() {
 			die "unsupported bootstrap manifest registration"
 	fi
 
-	manifest_url=$(json_string_value url "$manifest")
+	manifest_archive_url=$(json_string_value url "$manifest")
 	manifest_sha256=$(json_string_value sha256 "$manifest")
-	[ -n "$manifest_url" ] || die "bootstrap manifest missing archive.url"
+	[ -n "$manifest_archive_url" ] || die "bootstrap manifest missing archive.url"
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
 
-	bootstrap_url=${bootstrap_url:-"$manifest_url"}
+	bootstrap_url=${bootstrap_url:-"$(resolve_manifest_url "$bootstrap_manifest_url" "$manifest_archive_url")"}
 	bootstrap_sha256=${bootstrap_sha256:-"$manifest_sha256"}
 }
 

@@ -94,7 +94,7 @@ cat >"$tmp/bootstrap-manifest.json" <<EOF
     "nixSystem": "x86_64-linux"
   },
   "archive": {
-    "url": "file://$tmp/bootstrap.tar",
+    "url": "bootstrap.tar",
     "sha256": "$sha"
   },
   "layout": {
