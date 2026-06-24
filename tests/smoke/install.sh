@@ -1362,6 +1362,32 @@ upgraded_version_output=$(
 grep -q '^runtime_version=0.1.1$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_v2_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/channel-v2.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+cp "$tmp/home/.nix-termux/etc/nix-termux.conf" "$tmp/nix-termux.conf.good"
+sed 's|^channel_url=.*$|channel_url=file://bad channel.json|' \
+	"$tmp/nix-termux.conf.good" >"$tmp/home/.nix-termux/etc/nix-termux.conf"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade >"$tmp/upgrade-saved-space.out" 2>"$tmp/upgrade-saved-space.err"; then
+	printf '%s\n' "upgrade with whitespace in saved channel URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade channel URL must not contain whitespace$' "$tmp/upgrade-saved-space.err"
+cp "$tmp/nix-termux.conf.good" "$tmp/home/.nix-termux/etc/nix-termux.conf"
+
+sed 's|^bootstrap_manifest_url=.*$|bootstrap_manifest_url=file://bad bootstrap.json|' \
+	"$tmp/nix-termux.conf.good" >"$tmp/home/.nix-termux/etc/nix-termux.conf"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap >"$tmp/upgrade-bootstrap-saved-space.out" 2>"$tmp/upgrade-bootstrap-saved-space.err"; then
+	printf '%s\n' "upgrade-bootstrap with whitespace in saved manifest URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade-bootstrap manifest URL must not contain whitespace$' "$tmp/upgrade-bootstrap-saved-space.err"
+cp "$tmp/nix-termux.conf.good" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
 	printf '%s\n' "temporary install files left after upgrade" >&2
 	exit 1
