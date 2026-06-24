@@ -763,6 +763,51 @@ done
 grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/home/.nix-termux/share/prefix-backup/nix-hash"
 grep -qx '# mentions nix-termux but is not a managed wrapper' "$tmp/home/.nix-termux/share/prefix-backup/nix-env"
 
+quote_home="$tmp/quote'home"
+quote_prefix="$tmp/quote'prefix"
+mkdir -p "$quote_home" "$quote_prefix/bin" "$quote_prefix/etc"
+cp "$host_sh" "$quote_prefix/bin/sh"
+printf '%s\n' "nameserver 192.0.2.54" >"$quote_prefix/etc/resolv.conf"
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$quote_home" \
+	PREFIX="$quote_prefix" \
+	NIX_TERMUX_STATE_DIR="$quote_home/.nix-termux" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	sh "$tmp/standalone/install.sh" >/dev/null
+quote_version=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$quote_home" \
+		PREFIX="$quote_prefix" \
+		NIX_TERMUX_STATE_DIR="$quote_home/.nix-termux" \
+		"$quote_prefix/bin/nix-termux" version
+)
+[ "$quote_version" = "0.1.0" ] || {
+	printf 'unexpected quoted path version output: %s\n' "$quote_version" >&2
+	exit 1
+}
+mkdir -p "$quote_home/.nix-termux/nix/var/nix/profiles/default/bin"
+cat >"$quote_home/.nix-termux/nix/var/nix/profiles/default/bin/nix" <<EOF
+#!$host_sh
+printf 'quoted fake nix'
+for arg in "\$@"; do
+	printf ' %s' "\$arg"
+done
+printf '\n'
+EOF
+chmod 755 "$quote_home/.nix-termux/nix/var/nix/profiles/default/bin/nix"
+quote_nix_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$quote_home" \
+		PREFIX="$quote_prefix" \
+		NIX_TERMUX_STATE_DIR="$quote_home/.nix-termux" \
+		"$quote_prefix/bin/nix" --version
+)
+[ "$quote_nix_output" = "quoted fake nix --version" ] || {
+	printf 'unexpected quoted path nix output: %s\n' "$quote_nix_output" >&2
+	exit 1
+}
+
 for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	output=$(
 		PATH="$tmp/fake-bin:$PATH" \

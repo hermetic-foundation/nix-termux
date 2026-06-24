@@ -12,6 +12,10 @@ have() {
 	command -v "$1" >/dev/null 2>&1
 }
 
+shell_quote() {
+	printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
 [ "$#" -eq 0 ] || die "install accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -487,11 +491,15 @@ for name in $wrapper_names; do
 	backup_prefix_command "$name"
 done
 
+nix_termux_libexec_quoted=$(shell_quote "$state_dir/runtime")
+nix_termux_bin_quoted=$(shell_quote "$state_dir/bin/nix-termux")
+nix_termux_wrapper_quoted=$(shell_quote "$prefix/bin/nix-termux")
+
 cat >"$prefix/bin/nix-termux" <<EOF
 #!$prefix/bin/sh
 # nix-termux managed wrapper
-export NIX_TERMUX_LIBEXEC='$state_dir/runtime'
-exec sh '$state_dir/bin/nix-termux' "\$@"
+export NIX_TERMUX_LIBEXEC=$nix_termux_libexec_quoted
+exec sh $nix_termux_bin_quoted "\$@"
 EOF
 chmod 755 "$prefix/bin/nix-termux"
 
@@ -500,7 +508,7 @@ for name in $wrapper_names; do
 	cat >"$prefix/bin/$name" <<EOF
 #!$prefix/bin/sh
 # nix-termux managed wrapper
-exec '$prefix/bin/nix-termux' exec $name "\$@"
+exec $nix_termux_wrapper_quoted exec $name "\$@"
 EOF
 	chmod 755 "$prefix/bin/$name"
 done
