@@ -48,6 +48,7 @@ PATH="$tmp/bin:$PATH" \
 grep -q '^serial=emulator-5554$' "$tmp/adb.log"
 grep -qx '/sdcard/Download/custom-nix-termux.sh' "$tmp/remote-path"
 grep -q "NIX_TERMUX_CHANNEL_BASE_URL='http://127.0.0.1:8000'" "$tmp/pushed.sh"
+grep -q 'pkg install -y -o Dpkg::Options::=--force-confold proot curl tar xz-utils coreutils' "$tmp/pushed.sh"
 # shellcheck disable=SC2016
 grep -q 'curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"' "$tmp/pushed.sh"
 # shellcheck disable=SC2016
