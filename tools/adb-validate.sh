@@ -84,6 +84,13 @@ case $base_url in
 	die "base-url must not contain whitespace"
 	;;
 esac
+case $base_url in
+http://* | https://*)
+	;;
+*)
+	die "base-url must start with http:// or https://"
+	;;
+esac
 command -v adb >/dev/null 2>&1 || die "adb is required"
 
 adb_cmd() {
