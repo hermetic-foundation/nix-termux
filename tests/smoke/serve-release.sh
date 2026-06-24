@@ -223,6 +223,18 @@ if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 1
 fi
 grep -q 'serve-release.sh: port must be between 1 and 65535' "$tmp/err"
 
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" "host with space" 8766 >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted host with whitespace" >&2
+	exit 1
+fi
+grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace or slashes' "$tmp/err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" "bad/host" 8766 >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted host with slash" >&2
+	exit 1
+fi
+grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace or slashes' "$tmp/err"
+
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 grep -q "^export NIX_TERMUX_CHANNEL_BASE_URL='http://127.0.0.1:8765'$" "$tmp/serve.out"
 # shellcheck disable=SC2016
@@ -235,9 +247,6 @@ grep -q 'sha256sum -c install.sh.sha256' "$tmp/serve.out"
 # shellcheck disable=SC2016
 grep -q 'sh "$tmp_dir/install.sh"' "$tmp/serve.out"
 grep -qx -- "-m http.server 8765 --bind 127.0.0.1" "$tmp/python3.args"
-
-PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" "host with space" 8766 >"$tmp/serve-quoted.out"
-grep -q "^export NIX_TERMUX_CHANNEL_BASE_URL='http://host with space:8766'$" "$tmp/serve-quoted.out"
 
 cp "$tmp/release/SHA256SUMS" "$tmp/sha256sums.good"
 sed '1s/^[0-9a-f][0-9a-f]*/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/' \

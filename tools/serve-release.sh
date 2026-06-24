@@ -174,6 +174,12 @@ fi
 	exit 2
 }
 
+case $host in
+*[[:space:]/]*)
+	die "host must be a hostname or IP address without whitespace or slashes"
+	;;
+esac
+
 case $port in
 '' | *[!0-9]*)
 	die "port must be numeric"
