@@ -81,6 +81,9 @@ stdenvNoCC.mkDerivation {
       cp -a "$path" bootstrap/nix/store/
     done < ${closure}/store-paths
 
+    for path in ${coreutils}/bin/*; do
+      ln -s "$path" "bootstrap/nix/var/nix/profiles/default/bin/$(basename "$path")"
+    done
     ln -s ${nix}/bin/nix bootstrap/nix/var/nix/profiles/default/bin/nix
     ln -s ${nix}/bin/nix-env bootstrap/nix/var/nix/profiles/default/bin/nix-env
     ln -s ${nix}/bin/nix-store bootstrap/nix/var/nix/profiles/default/bin/nix-store
