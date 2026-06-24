@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 {
   description = "Nix in stock Termux through a small proot-backed runtime";
 
