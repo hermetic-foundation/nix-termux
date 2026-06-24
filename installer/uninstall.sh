@@ -40,14 +40,15 @@ validate_home() {
 
 [ "$#" -eq 0 ] || die "uninstall accepts no arguments"
 
-state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
+uninstall_home=${HOME:-}
+state_dir=${NIX_TERMUX_STATE_DIR:-"$uninstall_home/.nix-termux"}
 prefix=${PREFIX:-}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 
+validate_home
 validate_state_dir
 validate_prefix
-validate_home
 
 is_managed_wrapper() {
 	target=$1

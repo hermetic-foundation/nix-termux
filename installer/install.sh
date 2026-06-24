@@ -64,7 +64,8 @@ validate_home() {
 
 [ "$#" -eq 0 ] || die "install accepts no arguments"
 
-state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
+install_home=${HOME:-}
+state_dir=${NIX_TERMUX_STATE_DIR:-"$install_home/.nix-termux"}
 runtime_version=${NIX_TERMUX_VERSION:-}
 prefix=${PREFIX:-}
 termux_arch=${NIX_TERMUX_ARCH:-}
@@ -83,9 +84,9 @@ runtime_source=$state_dir/tmp/runtime-source
 bootstrap_archive=$state_dir/tmp/bootstrap.tar.gz
 bootstrap_stage=$state_dir/tmp/bootstrap-stage
 
+validate_home
 validate_state_dir
 validate_prefix
-validate_home
 
 cleanup_temp() {
 	rm -f "$runtime_archive" "$bootstrap_archive"

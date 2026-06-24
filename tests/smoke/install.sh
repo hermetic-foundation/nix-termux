@@ -644,6 +644,26 @@ if env \
 fi
 grep -q '^nix-termux: HOME must not be empty$' "$tmp/runtime-home-empty.err"
 
+if env -u HOME \
+	PATH="$tmp/fake-bin:$PATH" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home-unset-state" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/install-home-unset.err"; then
+	printf '%s\n' "install with unset home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^install.sh: HOME must not be empty$' "$tmp/install-home-unset.err"
+test ! -e "$tmp/home-unset-state/etc/nix-termux.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+runtime_home_unset_output=$(
+	env -u HOME \
+		NIX_TERMUX_STATE_DIR="$tmp/runtime-home-unset-state" \
+		sh "$repo_root/runtime/nix-termux.sh" env
+)
+printf '%s\n' "$runtime_home_unset_output" | grep -q '^HOME=/data/data/com.termux/files/home$'
+printf '%s\n' "$runtime_home_unset_output" | grep -q '^NIX_TERMUX_STATE_DIR='"$tmp/runtime-home-unset-state"'$'
+
 if HOME=/ \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home-root-state" \
@@ -676,6 +696,16 @@ if env \
 	exit 1
 fi
 grep -q '^uninstall.sh: HOME must not be empty$' "$tmp/uninstall-home-empty.err"
+test ! -e "$tmp/prefix/bin/nix"
+
+if env -u HOME \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home-unset-state" \
+	sh "$repo_root/installer/uninstall.sh" >"$tmp/uninstall-home-unset.out" 2>"$tmp/uninstall-home-unset.err"; then
+	printf '%s\n' "uninstall with unset home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^uninstall.sh: HOME must not be empty$' "$tmp/uninstall-home-unset.err"
 test ! -e "$tmp/prefix/bin/nix"
 
 if PATH="$tmp/missing-cat-bin" \

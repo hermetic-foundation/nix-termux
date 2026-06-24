@@ -14,7 +14,10 @@ info() {
 	printf '%s\n' "$*"
 }
 
-state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
+termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
+termux_home=${HOME:-/data/data/com.termux/files/home}
+
+state_dir=${NIX_TERMUX_STATE_DIR:-"$termux_home/.nix-termux"}
 store_dir=${NIX_TERMUX_STORE_DIR:-"$state_dir/nix"}
 root_dir=${NIX_TERMUX_ROOT_DIR:-"$state_dir/root"}
 tmp_dir=${NIX_TERMUX_TMP_DIR:-"$state_dir/tmp"}
@@ -31,8 +34,6 @@ manage_home_profile=${NIX_TERMUX_MANAGE_HOME_PROFILE:-yes}
 managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
-termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
-termux_home=${HOME:-/data/data/com.termux/files/home}
 nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
 proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin
 proot_default_shell=/nix/var/nix/profiles/default/bin/bash
