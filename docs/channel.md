@@ -32,7 +32,7 @@ curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.s
 sh "$tmp_dir/install.sh"
 ```
 
-The installer detects the Termux architecture with `pkg --print-architecture`
+The installer detects the Termux architecture with `dpkg --print-architecture`
 and fetches `nix-termux-channel-$arch.json` from that base URL. Set
 `NIX_TERMUX_ARCH` to override detection, or set `NIX_TERMUX_CHANNEL_URL` to use
 an exact channel manifest URL.

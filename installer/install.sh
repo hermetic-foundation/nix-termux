@@ -285,10 +285,10 @@ detect_arch() {
 		return
 	fi
 
-	if have pkg; then
-		pkg_arch=$(pkg --print-architecture 2>/dev/null || true)
-		if [ -n "$pkg_arch" ]; then
-			printf '%s\n' "$pkg_arch"
+	if have dpkg; then
+		dpkg_arch=$(dpkg --print-architecture 2>/dev/null || true)
+		if [ -n "$dpkg_arch" ]; then
+			printf '%s\n' "$dpkg_arch"
 			return
 		fi
 	fi

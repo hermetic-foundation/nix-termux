@@ -494,7 +494,7 @@ cat >"$tmp/bootstrap-missing-layout-registration-manifest.json" <<EOF
   }
 }
 EOF
-cat >"$tmp/fake-bin/pkg" <<EOF
+cat >"$tmp/fake-bin/dpkg" <<EOF
 #!$host_sh
 if [ "\$1" = "--print-architecture" ]; then
 	printf '%s\n' x86_64
@@ -502,7 +502,7 @@ if [ "\$1" = "--print-architecture" ]; then
 fi
 exit 1
 EOF
-chmod 755 "$tmp/fake-bin/pkg"
+chmod 755 "$tmp/fake-bin/dpkg"
 cat >"$tmp/fake-bin/curl" <<EOF
 #!$host_sh
 case " \$* " in
@@ -522,9 +522,9 @@ esac
 EOF
 chmod 755 "$tmp/fake-bin/curl"
 cp "$tmp/fake-bin/proot" "$tmp/no-jq-bin/proot"
-cp "$tmp/fake-bin/pkg" "$tmp/no-jq-bin/pkg"
+cp "$tmp/fake-bin/dpkg" "$tmp/no-jq-bin/dpkg"
 cp "$tmp/fake-bin/proot" "$tmp/missing-cat-bin/proot"
-cp "$tmp/fake-bin/pkg" "$tmp/missing-cat-bin/pkg"
+cp "$tmp/fake-bin/dpkg" "$tmp/missing-cat-bin/dpkg"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/install-extra-home" \
