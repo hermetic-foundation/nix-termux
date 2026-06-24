@@ -79,6 +79,18 @@ nix-termux smoke-test
 Host-side validation helpers are available in a source checkout and in the Nix
 package under `share/nix-termux/tools/`.
 
+For emulator validation, build a release and use an existing Android Virtual
+Device plus a stock Termux APK:
+
+```sh
+nix build .#release
+tools/emulator-validate.sh --avd nix-termux-api-35 --termux-apk ~/Downloads/termux.apk --network
+```
+
+The helper serves the release to the emulator through `10.0.2.2`, stages the
+Termux-side smoke script with `adb`, and keeps the local server running while
+you execute the printed command inside Termux.
+
 ## Termux Install Shape
 
 The intended install flow is:

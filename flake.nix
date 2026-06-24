@@ -33,6 +33,7 @@
               install -Dm755 installer/install.sh "$out/share/nix-termux/installer/install.sh"
               install -Dm755 installer/uninstall.sh "$out/share/nix-termux/installer/uninstall.sh"
               install -Dm755 tools/adb-validate.sh "$out/share/nix-termux/tools/adb-validate.sh"
+              install -Dm755 tools/emulator-validate.sh "$out/share/nix-termux/tools/emulator-validate.sh"
               install -Dm755 tools/serve-release.sh "$out/share/nix-termux/tools/serve-release.sh"
               install -Dm644 LICENSE "$out/share/licenses/nix-termux/LICENSE"
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
@@ -116,12 +117,14 @@
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
             "tools/adb-validate.sh"
+            "tools/emulator-validate.sh"
             "tools/serve-release.sh"
             "tests/smoke/adb-validate.sh"
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/device-smoke-options.sh"
             "tests/smoke/docs-install.sh"
+            "tests/smoke/emulator-validate.sh"
             "tests/smoke/github-actions.sh"
             "tests/smoke/install.sh"
             "tests/smoke/runtime-archive.sh"
@@ -259,6 +262,20 @@
             touch "$out"
           '';
 
+          emulator-validate = pkgs.runCommand "nix-termux-emulator-validate-smoke" {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/emulator-validate.sh
+            touch "$out"
+          '';
+
           serve-release = pkgs.runCommand "nix-termux-serve-release-smoke" {
             nativeBuildInputs = [
               pkgs.coreutils
@@ -350,12 +367,14 @@
             test -x "$artifact"/share/nix-termux/installer/install.sh
             test -x "$artifact"/share/nix-termux/installer/uninstall.sh
             test -x "$artifact"/share/nix-termux/tools/adb-validate.sh
+            test -x "$artifact"/share/nix-termux/tools/emulator-validate.sh
             test -x "$artifact"/share/nix-termux/tools/serve-release.sh
             test -x "$artifact"/share/nix-termux/tests/device-smoke.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/bin/nix-termux
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/installer/install.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/installer/uninstall.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/adb-validate.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/emulator-validate.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/serve-release.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tests/device-smoke.sh
             test -r "$artifact"/share/doc/nix-termux/device-validation.md

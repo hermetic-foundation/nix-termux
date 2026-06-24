@@ -76,6 +76,47 @@ The adb helper pushes a script to
 foreground, and prints the command to run inside Termux. The pushed script
 verifies `install.sh.sha256` before running the installer.
 
+## Android Emulator
+
+Emulator validation is useful before testing on a physical device. It still
+uses stock Termux and the same on-device smoke test; the emulator helper only
+starts the device, serves the release, installs an optional Termux APK, and
+stages the validation script.
+
+Prerequisites:
+
+- Android SDK `emulator` and platform tools on `PATH`.
+- An existing AVD, for example one created by Android Studio.
+- A Termux APK from F-Droid or the Termux GitHub releases.
+- A local release build from `nix build .#release`.
+
+Run:
+
+```sh
+nix build .#release
+tools/emulator-validate.sh \
+  --avd nix-termux-api-35 \
+  --termux-apk ~/Downloads/termux.apk \
+  --network
+```
+
+The helper serves the release on `127.0.0.1:8000` and points the emulator at
+`http://10.0.2.2:8000`, which is the Android emulator address for the host
+loopback interface. It prints the command to run inside Termux, then keeps the
+release server alive until interrupted.
+
+For an already-running emulator or device:
+
+```sh
+tools/emulator-validate.sh --no-start --serial emulator-5554 --network
+```
+
+To inspect the commands without starting anything:
+
+```sh
+tools/emulator-validate.sh --dry-run --avd nix-termux-api-35 --network
+```
+
 The command runs the installed script at
 `$HOME/.nix-termux/share/tests/device-smoke.sh`. The first supported target is
 `aarch64` Termux. Other architectures can use the same smoke test once matching
