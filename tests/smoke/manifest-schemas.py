@@ -17,6 +17,14 @@ def validate(schema, path):
     jsonschema.Draft202012Validator(schema).validate(load_json(path))
 
 
+def assert_invalid(schema, manifest, message):
+    try:
+        jsonschema.Draft202012Validator(schema).validate(manifest)
+    except jsonschema.ValidationError:
+        return
+    raise SystemExit(message)
+
+
 def exactly_one(directory, pattern):
     matches = sorted(Path(directory).glob(pattern))
     if len(matches) != 1:
@@ -41,10 +49,40 @@ def main():
     jsonschema.Draft202012Validator.check_schema(bootstrap_schema)
     jsonschema.Draft202012Validator.check_schema(channel_schema)
 
+    example_bootstrap = load_json(Path("bootstrap/example-manifest.json"))
     validate(bootstrap_schema, Path("bootstrap/example-manifest.json"))
     validate(bootstrap_schema, exactly_one(bootstrap_artifact, "nix-termux-bootstrap-*.json"))
     validate(bootstrap_schema, exactly_one(channel_artifact, "nix-termux-bootstrap-*.json"))
-    validate(channel_schema, exactly_one(channel_artifact, "nix-termux-channel-*.json"))
+    channel_manifest_path = exactly_one(channel_artifact, "nix-termux-channel-*.json")
+    validate(channel_schema, channel_manifest_path)
+
+    invalid_bootstrap = dict(example_bootstrap)
+    invalid_bootstrap["archive"] = dict(example_bootstrap["archive"])
+    invalid_bootstrap["archive"]["url"] = "bootstrap bad.tar.gz"
+    assert_invalid(
+        bootstrap_schema,
+        invalid_bootstrap,
+        "bootstrap schema accepted archive.url with whitespace",
+    )
+
+    channel_manifest = load_json(channel_manifest_path)
+    invalid_channel = dict(channel_manifest)
+    invalid_channel["runtime"] = dict(channel_manifest["runtime"])
+    invalid_channel["runtime"]["url"] = "runtime bad.tar.gz"
+    assert_invalid(
+        channel_schema,
+        invalid_channel,
+        "channel schema accepted runtime.url with whitespace",
+    )
+
+    invalid_channel = dict(channel_manifest)
+    invalid_channel["bootstrapManifest"] = dict(channel_manifest["bootstrapManifest"])
+    invalid_channel["bootstrapManifest"]["url"] = "bootstrap manifest.json"
+    assert_invalid(
+        channel_schema,
+        invalid_channel,
+        "channel schema accepted bootstrapManifest.url with whitespace",
+    )
 
 
 if __name__ == "__main__":

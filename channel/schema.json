@@ -56,7 +56,8 @@
       "properties": {
         "url": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^\\S+$"
         },
         "sha256": {
           "type": "string",
@@ -73,7 +74,8 @@
       "properties": {
         "url": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^\\S+$"
         }
       }
     }
