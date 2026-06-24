@@ -347,6 +347,8 @@
             test -x "$artifact"/share/nix-termux/tools/serve-release.sh
             test -x "$artifact"/share/nix-termux/tests/device-smoke.sh
             test -r "$artifact"/share/doc/nix-termux/device-validation.md
+            test -r "$artifact"/share/licenses/nix-termux/LICENSE
+            grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$artifact"/share/licenses/nix-termux/LICENSE
             test -r "$artifact"/share/nix-termux/bootstrap/manifest.schema.json
             test -r "$artifact"/share/nix-termux/channel/schema.json
             touch "$out"
