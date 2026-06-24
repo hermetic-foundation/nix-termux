@@ -32,6 +32,14 @@ validate_state_dir() {
 	esac
 }
 
+validate_prefix() {
+	case $prefix in
+	/ | . | ..)
+		die "PREFIX must not be $prefix"
+		;;
+	esac
+}
+
 [ "$#" -eq 0 ] || die "install accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -54,6 +62,7 @@ bootstrap_archive=$state_dir/tmp/bootstrap.tar.gz
 bootstrap_stage=$state_dir/tmp/bootstrap-stage
 
 validate_state_dir
+validate_prefix
 
 cleanup_temp() {
 	rm -f "$runtime_archive" "$bootstrap_archive"

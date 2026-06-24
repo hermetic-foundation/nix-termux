@@ -16,6 +16,14 @@ validate_state_dir() {
 	esac
 }
 
+validate_prefix() {
+	case $prefix in
+	/ | . | ..)
+		die "PREFIX must not be $prefix"
+		;;
+	esac
+}
+
 [ "$#" -eq 0 ] || die "uninstall accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -24,6 +32,7 @@ wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel 
 managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 
 validate_state_dir
+validate_prefix
 
 is_managed_wrapper() {
 	target=$1

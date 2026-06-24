@@ -86,6 +86,14 @@ validate_state_dir() {
 	esac
 }
 
+validate_prefix() {
+	case $termux_prefix in
+	/ | . | ..)
+		die "PREFIX must not be $termux_prefix"
+		;;
+	esac
+}
+
 is_termux() {
 	[ -n "${PREFIX:-}" ] && [ -d "$termux_prefix" ] && [ -d "$termux_home" ]
 }
@@ -577,6 +585,7 @@ if [ "$#" -gt 0 ]; then
 fi
 
 validate_state_dir
+validate_prefix
 
 case "$cmd" in
 doctor) doctor "$@" ;;
