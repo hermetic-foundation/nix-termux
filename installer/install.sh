@@ -439,11 +439,20 @@ chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$
 if [ -n "$bootstrap_url" ]; then
 	registration_loaded=no
 	[ "$bootstrap_archive_ready" = yes ] || die "bootstrap archive was not prepared"
-	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
 
-	registration=$state_dir/nix-termux/bootstrap.registration
-	sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
+	registration=$bootstrap_stage/nix-termux/bootstrap.registration
+	NIX_TERMUX_STORE_DIR=$bootstrap_stage/nix \
+		NIX_TERMUX_ROOT_DIR=$bootstrap_stage/root \
+		NIX_TERMUX_PROFILE_DIR=$bootstrap_stage/nix/var/nix/profiles/default \
+		NIX_TERMUX_USER_PROFILE_DIR=$bootstrap_stage/nix/var/nix/profiles/per-user/termux/profile \
+		NIX_TERMUX_SSL_CERT_FILE=$bootstrap_stage/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
+		NIX_TERMUX_NIX_CONF=$bootstrap_stage/root/etc/nix/nix.conf \
+		NIX_TERMUX_RESOLV_CONF=$bootstrap_stage/root/etc/resolv.conf \
+		sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
 	registration_loaded=yes
+
+	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
+	registration=$state_dir/nix-termux/bootstrap.registration
 
 	{
 		printf 'bootstrap_url=%s\n' "$bootstrap_url"

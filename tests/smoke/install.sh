@@ -94,10 +94,11 @@ while [ "\$#" -gt 0 ]; do
 			;;
 	esac
 done
-if [ -x "\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default/bin/\$1" ]; then
+profile_bin=\${NIX_TERMUX_PROFILE_DIR:-"\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default"}/bin
+if [ -x "\$profile_bin/\$1" ]; then
 	command=\$1
 	shift
-	exec "\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default/bin/\$command" "\$@"
+	exec "\$profile_bin/\$command" "\$@"
 fi
 exec "\$@"
 EOF
@@ -159,6 +160,7 @@ rm -f "$tmp/bootstrap-missing-registration/nix-termux/bootstrap.registration"
 (cd "$tmp/bootstrap-missing-registration" && tar -czf "$tmp/bootstrap-missing-registration.tar.gz" .)
 missing_registration_sha=$(sha256sum "$tmp/bootstrap-missing-registration.tar.gz" | awk '{print $1}')
 cp -R "$tmp/bootstrap" "$tmp/bootstrap-load-db-fail"
+printf '%s\n' "failed bootstrap marker" >"$tmp/bootstrap-load-db-fail/nix/store/bootstrap-load-db-fail-marker"
 cat >"$tmp/bootstrap-load-db-fail/nix/var/nix/profiles/default/bin/nix-store" <<EOF
 #!$host_sh
 printf '%s\n' "load db failed" >&2
@@ -593,6 +595,20 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .activation.bootstrapSha256 == $sha' >/dev/null
 
 grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+
+printf '%s\n' "live bootstrap marker" >"$tmp/home/.nix-termux/nix/store/live-marker"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap "file://$tmp/bootstrap-load-db-fail-manifest.json" 2>"$tmp/bootstrap-upgrade-load-db-fail.err"; then
+	printf '%s\n' "failed bootstrap upgrade unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'load db failed' "$tmp/bootstrap-upgrade-load-db-fail.err"
+grep -qx 'live bootstrap marker' "$tmp/home/.nix-termux/nix/store/live-marker"
+grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/home/.nix-termux/nix/store/bootstrap-load-db-fail-marker"
 
 rm "$tmp/home/.nix-profile"
 printf '%s\n' "not a profile directory" >"$tmp/home/.nix-profile"
