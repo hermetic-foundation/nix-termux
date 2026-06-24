@@ -606,6 +606,15 @@ if HOME=/ \
 fi
 grep -q '^nix-termux: HOME must not be /$' "$tmp/runtime-home-root.err"
 
+if env \
+	HOME= \
+	NIX_TERMUX_STATE_DIR="$tmp/home-empty-state" \
+	sh "$repo_root/runtime/nix-termux.sh" version >"$tmp/runtime-home-empty.out" 2>"$tmp/runtime-home-empty.err"; then
+	printf '%s\n' "runtime with empty home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: HOME must not be empty$' "$tmp/runtime-home-empty.err"
+
 if HOME=/ \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home-root-state" \

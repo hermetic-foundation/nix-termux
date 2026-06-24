@@ -95,6 +95,9 @@ validate_prefix() {
 }
 
 validate_home() {
+	if [ "${HOME+x}" = x ] && [ -z "$HOME" ]; then
+		die "HOME must not be empty"
+	fi
 	case $termux_home in
 	/ | . | ..)
 		die "HOME must not be $termux_home"
