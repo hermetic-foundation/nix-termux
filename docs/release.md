@@ -35,7 +35,9 @@ artifacts.
 
 Release validation checks the standalone `install.sh.sha256` file used by the
 install snippets, the standalone `nix-termux-runtime.tar.gz.sha256` file used by
-mirrors, and the aggregate `SHA256SUMS` manifest.
+mirrors, and the aggregate `SHA256SUMS` manifest. The standalone checksum files
+must name their exact targets, and each bootstrap `.registration` sidecar must
+match the `nix-termux/bootstrap.registration` file inside its bootstrap archive.
 
 ## Publish
 

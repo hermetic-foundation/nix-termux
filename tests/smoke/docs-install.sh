@@ -45,3 +45,19 @@ grep -q 'SHA256SUMS' docs/release.md || {
 	printf '%s\n' "docs/release.md missing aggregate release checksum validation" >&2
 	exit 1
 }
+grep -q 'must name their exact targets' docs/release.md || {
+	printf '%s\n' "docs/release.md missing exact sidecar target validation" >&2
+	exit 1
+}
+grep -q 'bootstrap .*registration.* sidecar' docs/release.md || {
+	printf '%s\n' "docs/release.md missing bootstrap registration sidecar validation" >&2
+	exit 1
+}
+grep -q 'nix-termux-runtime.tar.gz.sha256' docs/device-validation.md || {
+	printf '%s\n' "docs/device-validation.md missing runtime sidecar validation" >&2
+	exit 1
+}
+grep -q 'registration sidecars' docs/device-validation.md || {
+	printf '%s\n' "docs/device-validation.md missing bootstrap registration validation" >&2
+	exit 1
+}
