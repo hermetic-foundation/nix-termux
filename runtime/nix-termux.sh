@@ -28,6 +28,7 @@ proot=${NIX_TERMUX_PROOT:-proot}
 resolv_conf_file=${NIX_TERMUX_RESOLV_CONF:-"$root_dir/etc/resolv.conf"}
 android_bind_dirs=${NIX_TERMUX_ANDROID_BIND_DIRS:-"/sdcard /storage"}
 manage_home_profile=${NIX_TERMUX_MANAGE_HOME_PROFILE:-yes}
+managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
@@ -116,7 +117,11 @@ doctor_status() {
 	else
 		doctor_status=1
 	fi
-	if [ -d "$doctor_home_profile_path" ] || [ -L "$doctor_home_profile_path" ]; then
+	if [ -L "$doctor_home_profile_path" ]; then
+		[ "$(readlink "$doctor_home_profile_path")" = "$managed_profile_target" ] &&
+			doctor_home_profile=true ||
+			doctor_status=1
+	elif [ -d "$doctor_home_profile_path" ]; then
 		doctor_home_profile=true
 	else
 		doctor_status=1

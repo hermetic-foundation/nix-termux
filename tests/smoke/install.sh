@@ -883,6 +883,25 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 jq -e '.ok == false and .homeProfile.ok == false' "$tmp/doctor-bad-home-profile.json" >/dev/null
 rm "$tmp/home/.nix-profile"
+ln -s /wrong/profile "$tmp/home/.nix-profile"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" doctor --json >"$tmp/doctor-bad-home-profile-link.json"; then
+	printf '%s\n' "doctor unexpectedly accepted wrong .nix-profile symlink" >&2
+	exit 1
+fi
+jq -e '.ok == false and .homeProfile.ok == false' "$tmp/doctor-bad-home-profile-link.json" >/dev/null
+rm "$tmp/home/.nix-profile"
+mkdir "$tmp/home/.nix-profile"
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" doctor --json >"$tmp/doctor-home-profile-dir.json"
+jq -e '.ok == true and .homeProfile.ok == true' "$tmp/doctor-home-profile-dir.json" >/dev/null
+rm -r "$tmp/home/.nix-profile"
 ln -s /nix/var/nix/profiles/per-user/termux/profile "$tmp/home/.nix-profile"
 
 PATH="$tmp/fake-bin:$PATH" \
