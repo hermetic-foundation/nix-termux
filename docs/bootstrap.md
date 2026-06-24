@@ -78,8 +78,9 @@ sh "$tmp_dir/install.sh"
 ```
 
 The manifest `platform.termuxArch` must match the detected or overridden Termux
-architecture. The installer rejects mismatches before fetching or unpacking the
-bootstrap archive.
+architecture, and `platform.nixSystem` must be the corresponding Nix system.
+The installer rejects mismatches before fetching or unpacking the bootstrap
+archive.
 
 Direct `NIX_TERMUX_BOOTSTRAP_URL` and `NIX_TERMUX_BOOTSTRAP_SHA256` values are
 still supported and override manifest archive fields when set.

@@ -34,6 +34,12 @@ def exactly_one(directory, pattern):
     return matches[0]
 
 
+def mismatched_nix_system(termux_arch):
+    if termux_arch == "x86_64":
+        return "aarch64-linux"
+    return "x86_64-linux"
+
+
 def main():
     if len(sys.argv) != 5:
         raise SystemExit(
@@ -65,6 +71,17 @@ def main():
         "bootstrap schema accepted archive.url with whitespace",
     )
 
+    invalid_bootstrap = dict(example_bootstrap)
+    invalid_bootstrap["platform"] = dict(example_bootstrap["platform"])
+    invalid_bootstrap["platform"]["nixSystem"] = mismatched_nix_system(
+        invalid_bootstrap["platform"]["termuxArch"]
+    )
+    assert_invalid(
+        bootstrap_schema,
+        invalid_bootstrap,
+        "bootstrap schema accepted mismatched platform nixSystem",
+    )
+
     channel_manifest = load_json(channel_manifest_path)
     invalid_channel = dict(channel_manifest)
     invalid_channel["runtime"] = dict(channel_manifest["runtime"])
@@ -82,6 +99,17 @@ def main():
         channel_schema,
         invalid_channel,
         "channel schema accepted bootstrapManifest.url with whitespace",
+    )
+
+    invalid_channel = dict(channel_manifest)
+    invalid_channel["platform"] = dict(channel_manifest["platform"])
+    invalid_channel["platform"]["nixSystem"] = mismatched_nix_system(
+        invalid_channel["platform"]["termuxArch"]
+    )
+    assert_invalid(
+        channel_schema,
+        invalid_channel,
+        "channel schema accepted mismatched platform nixSystem",
     )
 
 

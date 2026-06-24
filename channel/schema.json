@@ -25,6 +25,48 @@
         "termuxArch",
         "nixSystem"
       ],
+      "oneOf": [
+        {
+          "properties": {
+            "termuxArch": {
+              "const": "aarch64"
+            },
+            "nixSystem": {
+              "const": "aarch64-linux"
+            }
+          }
+        },
+        {
+          "properties": {
+            "termuxArch": {
+              "const": "arm"
+            },
+            "nixSystem": {
+              "const": "armv7l-linux"
+            }
+          }
+        },
+        {
+          "properties": {
+            "termuxArch": {
+              "const": "i686"
+            },
+            "nixSystem": {
+              "const": "i686-linux"
+            }
+          }
+        },
+        {
+          "properties": {
+            "termuxArch": {
+              "const": "x86_64"
+            },
+            "nixSystem": {
+              "const": "x86_64-linux"
+            }
+          }
+        }
+      ],
       "properties": {
         "termuxArch": {
           "type": "string",
