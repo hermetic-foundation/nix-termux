@@ -110,6 +110,24 @@ fi
 grep -q 'nix-termux-channel-x86_64.json platform.termuxArch mismatch: expected x86_64 got aarch64' "$tmp/err"
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
+sed '/"nixSystem": "x86_64-linux"/d' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted channel without nixSystem" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json missing platform.nixSystem' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
+sed 's/"nixSystem": "x86_64-linux"/"nixSystem": "aarch64-linux"/' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted channel nix system mismatch" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json platform.nixSystem mismatch: expected x86_64-linux got aarch64-linux' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
 cp "$tmp/release/nix-termux-bootstrap-x86_64.json" "$tmp/bootstrap-x86_64.good"
 sed 's/"schemaVersion": 1/"schemaVersion": 2/' \
 	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
@@ -136,6 +154,24 @@ if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"
 	exit 1
 fi
 grep -q 'nix-termux-bootstrap-x86_64.json platform.termuxArch mismatch: expected x86_64 got aarch64' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
+
+sed '/"nixSystem": "x86_64-linux"/d' \
+	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted bootstrap without nixSystem" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json missing platform.nixSystem' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
+
+sed 's/"nixSystem": "x86_64-linux"/"nixSystem": "aarch64-linux"/' \
+	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted bootstrap nix system mismatch" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json platform.nixSystem mismatch: expected x86_64-linux got aarch64-linux' "$tmp/err"
 cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
 
 rm "$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"

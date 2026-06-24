@@ -46,6 +46,16 @@ manifest_arch_from_name() {
 	printf '%s\n' "$name"
 }
 
+expected_nix_system() {
+	case $1 in
+	aarch64) printf '%s\n' aarch64-linux ;;
+	arm) printf '%s\n' armv7l-linux ;;
+	i686) printf '%s\n' i686-linux ;;
+	x86_64) printf '%s\n' x86_64-linux ;;
+	*) die "unsupported Termux architecture in release manifest name: $1" ;;
+	esac
+}
+
 is_local_filename() {
 	case $1 in
 	"" | */* | .*)
@@ -105,16 +115,22 @@ validate_release_dir() {
 	for channel in "$@"; do
 		channel_name=$(basename -- "$channel")
 		expected_arch=$(manifest_arch_from_name "$channel_name")
+		expected_system=$(expected_nix_system "$expected_arch")
 		grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$channel" ||
 			die "$channel_name has unsupported schemaVersion"
 		runtime_url=$(json_string_value_n url 1 "$channel")
 		runtime_sha=$(json_string_value_n sha256 1 "$channel")
 		bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
 		channel_arch=$(json_string_value_n termuxArch 1 "$channel")
+		channel_system=$(json_string_value_n nixSystem 1 "$channel")
 		[ -n "$channel_arch" ] ||
 			die "$channel_name missing platform.termuxArch"
+		[ -n "$channel_system" ] ||
+			die "$channel_name missing platform.nixSystem"
 		[ "$channel_arch" = "$expected_arch" ] ||
 			die "$channel_name platform.termuxArch mismatch: expected $expected_arch got $channel_arch"
+		[ "$channel_system" = "$expected_system" ] ||
+			die "$channel_name platform.nixSystem mismatch: expected $expected_system got $channel_system"
 		[ "$runtime_url" = "nix-termux-runtime.tar.gz" ] ||
 			die "$channel_name references unsupported runtime URL: $runtime_url"
 		is_local_filename "$bootstrap_manifest_url" ||
@@ -136,16 +152,22 @@ validate_release_dir() {
 		base=${manifest%.json}
 		manifest_name=$(basename -- "$manifest")
 		expected_arch=$(manifest_arch_from_name "$manifest_name")
+		expected_system=$(expected_nix_system "$expected_arch")
 		grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
 			die "$manifest_name has unsupported schemaVersion"
 		archive_url=$(json_string_value_n url 1 "$manifest")
 		archive_sha=$(json_string_value_n sha256 1 "$manifest")
 		manifest_arch=$(json_string_value_n termuxArch 1 "$manifest")
+		manifest_system=$(json_string_value_n nixSystem 1 "$manifest")
 		expected_archive=$(basename -- "$base.tar.gz")
 		[ -n "$manifest_arch" ] ||
 			die "$manifest_name missing platform.termuxArch"
+		[ -n "$manifest_system" ] ||
+			die "$manifest_name missing platform.nixSystem"
 		[ "$manifest_arch" = "$expected_arch" ] ||
 			die "$manifest_name platform.termuxArch mismatch: expected $expected_arch got $manifest_arch"
+		[ "$manifest_system" = "$expected_system" ] ||
+			die "$manifest_name platform.nixSystem mismatch: expected $expected_system got $manifest_system"
 		[ "$archive_url" = "$expected_archive" ] ||
 			die "$manifest_name references unsupported archive URL: $archive_url"
 		[ -r "$base.tar.gz" ] || die "release directory missing $(basename -- "$base.tar.gz")"
