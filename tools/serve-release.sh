@@ -69,6 +69,21 @@ is_local_filename() {
 	esac
 }
 
+validate_checksum_sidecar_target() {
+	file=$1
+	target=$2
+	label=$3
+	actual_target=
+
+	grep -Eq '^[0-9a-f]{64} [ *].+$' "$file" ||
+		die "$label checksum file must reference $target"
+	actual_target=$(sed -n '1s/^[0-9a-f]\{64\} [ *]//p' "$file")
+	[ "$actual_target" = "$target" ] ||
+		die "$label checksum file must reference $target"
+	[ -z "$(sed -n '2p' "$file")" ] ||
+		die "$label checksum file must reference $target"
+}
+
 [ "${1:-}" != "-h" ] || {
 	usage
 	exit 0
@@ -192,6 +207,8 @@ validate_release_dir() {
 			die "$manifest_name registration sidecar mismatch"
 	done
 
+	validate_checksum_sidecar_target "$release_dir/install.sh.sha256" install.sh installer
+	validate_checksum_sidecar_target "$release_dir/nix-termux-runtime.tar.gz.sha256" nix-termux-runtime.tar.gz runtime
 	(cd "$release_dir" && sha256sum -c install.sh.sha256 >/dev/null) ||
 		die "installer checksum verification failed"
 	(cd "$release_dir" && sha256sum -c nix-termux-runtime.tar.gz.sha256 >/dev/null) ||
