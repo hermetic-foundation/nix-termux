@@ -88,12 +88,6 @@ validate_home
 validate_state_dir
 validate_prefix
 
-cleanup_temp() {
-	rm -f "$runtime_archive" "$bootstrap_archive"
-	rm -rf "$runtime_source" "$bootstrap_stage"
-}
-trap cleanup_temp EXIT INT TERM
-
 [ -n "$prefix" ] || die "PREFIX is not set; run this from stock Termux"
 [ -d "$prefix/bin" ] || die "Termux prefix bin directory not found: $prefix/bin"
 
@@ -107,6 +101,22 @@ done
 if ! have proot; then
 	die "proot is required; install it with: pkg install proot"
 fi
+
+remove_tree() {
+	tree=$1
+
+	if [ -e "$tree" ] || [ -L "$tree" ]; then
+		chmod -R u+w "$tree" 2>/dev/null || true
+		rm -rf "$tree"
+	fi
+}
+
+cleanup_temp() {
+	rm -f "$runtime_archive" "$bootstrap_archive"
+	remove_tree "$runtime_source"
+	remove_tree "$bootstrap_stage"
+}
+trap cleanup_temp EXIT INT TERM
 
 fetch_url() {
 	url=$1
@@ -436,7 +446,7 @@ else
 		[ -z "$runtime_archive_sha256" ] ||
 			validate_sha256 "NIX_TERMUX_RUNTIME_ARCHIVE_SHA256" "$runtime_archive_sha256"
 
-		rm -rf "$runtime_source"
+		remove_tree "$runtime_source"
 		mkdir -p "$runtime_source"
 		fetch_url "$runtime_archive_url" "$runtime_archive"
 
@@ -547,7 +557,7 @@ if [ -n "$bootstrap_url" ]; then
 	fi
 
 	validate_tar_paths "$bootstrap_archive" bootstrap
-	rm -rf "$bootstrap_stage"
+	remove_tree "$bootstrap_stage"
 	mkdir -p "$bootstrap_stage"
 	tar -xzf "$bootstrap_archive" -C "$bootstrap_stage"
 	validate_bootstrap_stage "$bootstrap_stage"
