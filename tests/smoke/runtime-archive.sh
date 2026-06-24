@@ -15,6 +15,10 @@ checksum=$artifact/nix-termux-runtime.tar.gz.sha256
 	printf '%s\n' "missing runtime archive checksum" >&2
 	exit 1
 }
+grep -Eq '^[0-9a-f]{64} [ *]nix-termux-runtime.tar.gz$' "$checksum" || {
+	printf '%s\n' "runtime archive checksum must reference nix-termux-runtime.tar.gz" >&2
+	exit 1
+}
 
 listing=${TMPDIR:-/tmp}/nix-termux-runtime-listing.$$
 extract_dir=${TMPDIR:-/tmp}/nix-termux-runtime-extract.$$

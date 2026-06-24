@@ -336,6 +336,7 @@
           } ''
             test -x "$artifact"/install.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/install.sh
+            grep -Eq '^[0-9a-f]{64} [ *]install.sh$' "$artifact"/install.sh.sha256
             (cd "$artifact" && sha256sum -c install.sh.sha256)
             touch "$out"
           '';
