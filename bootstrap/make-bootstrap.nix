@@ -33,6 +33,7 @@ let
     nix
     bashInteractive
     coreutils
+    gnugrep
     cacert
   ];
 
