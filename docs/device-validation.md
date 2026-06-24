@@ -6,7 +6,7 @@ accepted only after running the device smoke test inside stock Termux.
 Install a release build on the device:
 
 ```sh
-pkg install proot curl tar xz coreutils
+pkg install proot curl tar xz-utils coreutils
 export NIX_TERMUX_CHANNEL_BASE_URL=https://github.com/midischwarz12/nix-termux/releases/download/v0.1.0
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT INT TERM

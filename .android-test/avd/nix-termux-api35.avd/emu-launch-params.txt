@@ -1,0 +1,16 @@
+/home/midischwarz12/Projects/midischwarz12/nix-termux/nix-termux
+/nix/store/v67ydq20szcq6if1l4crx3sfr7r755gl-android-sdk-emulator-36.6.11/libexec/android-sdk/emulator/emulator
+13
+/nix/store/rxs6ib2nzrgidqf6zym8hrdmqml92i6q-androidsdk/bin/emulator
+-avd
+nix-termux-api35
+-no-window
+-no-audio
+-no-boot-anim
+-gpu
+swiftshader_indirect
+-no-snapshot-save
+-netdelay
+none
+-netspeed
+full

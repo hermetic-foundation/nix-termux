@@ -1,0 +1,20 @@
+#! /nix/store/gik3rh1vz2jlgnifb9dh6vc6sxwwz9jj-bash-5.3p9/bin/bash -e
+PATH=${PATH:+':'$PATH':'}
+PATH=${PATH/':''/nix/store/glifx04kfvxkcfbi953siw3lazpc5m51-openjdk-17.0.20+2/bin'':'/':'}
+PATH='/nix/store/glifx04kfvxkcfbi953siw3lazpc5m51-openjdk-17.0.20+2/bin'$PATH
+PATH=${PATH#':'}
+PATH=${PATH%':'}
+export PATH
+ANDROID_HOME=${ANDROID_HOME:+':'$ANDROID_HOME':'}
+ANDROID_HOME=${ANDROID_HOME/':''/nix/store/rxs6ib2nzrgidqf6zym8hrdmqml92i6q-androidsdk/libexec/android-sdk'':'/':'}
+ANDROID_HOME='/nix/store/rxs6ib2nzrgidqf6zym8hrdmqml92i6q-androidsdk/libexec/android-sdk'$ANDROID_HOME
+ANDROID_HOME=${ANDROID_HOME#':'}
+ANDROID_HOME=${ANDROID_HOME%':'}
+export ANDROID_HOME
+ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:+':'$ANDROID_SDK_ROOT':'}
+ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT/':''/nix/store/rxs6ib2nzrgidqf6zym8hrdmqml92i6q-androidsdk/libexec/android-sdk'':'/':'}
+ANDROID_SDK_ROOT='/nix/store/rxs6ib2nzrgidqf6zym8hrdmqml92i6q-androidsdk/libexec/android-sdk'$ANDROID_SDK_ROOT
+ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT#':'}
+ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT%':'}
+export ANDROID_SDK_ROOT
+exec -a "$0" "/nix/store/rxs6ib2nzrgidqf6zym8hrdmqml92i6q-androidsdk/libexec/android-sdk/cmdline-tools/20.0/bin/.avdmanager-wrapped"  "$@" 

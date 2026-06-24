@@ -1,4 +1,5 @@
 /.direnv/
+/.android-test/
 /result
 /result-*
 /.jj/
