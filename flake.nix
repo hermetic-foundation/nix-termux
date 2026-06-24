@@ -119,6 +119,7 @@
             "tests/smoke/bootstrap-artifact.sh"
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/device-smoke-options.sh"
+            "tests/smoke/docs-install.sh"
             "tests/smoke/install.sh"
             "tests/smoke/runtime-archive.sh"
             "tests/smoke/serve-release.sh"
@@ -199,6 +200,20 @@
             chmod -R u+w source
             cd source
             sh tests/smoke/device-smoke-options.sh
+            touch "$out"
+          '';
+
+          docs-install = pkgs.runCommand "nix-termux-docs-install-smoke" {
+            nativeBuildInputs = [
+              pkgs.gnugrep
+              pkgs.ripgrep
+            ];
+            src = self;
+          } ''
+            cp -R "$src" source
+            chmod -R u+w source
+            cd source
+            sh tests/smoke/docs-install.sh
             touch "$out"
           '';
 

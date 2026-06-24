@@ -24,7 +24,12 @@ Set `NIX_TERMUX_CHANNEL_BASE_URL` before running the installer:
 
 ```sh
 export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/releases/v0.1.0
-curl -L https://example.invalid/install.sh | sh
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT INT TERM
+curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"
+curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"
+(cd "$tmp_dir" && sha256sum -c install.sh.sha256)
+sh "$tmp_dir/install.sh"
 ```
 
 The installer detects the Termux architecture with `pkg --print-architecture`

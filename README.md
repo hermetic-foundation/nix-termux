@@ -86,7 +86,12 @@ The intended install flow is:
 ```sh
 pkg install proot curl tar xz coreutils
 export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/nix-termux
-curl -L https://example.invalid/nix-termux/install.sh | sh
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT INT TERM
+curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"
+curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"
+(cd "$tmp_dir" && sha256sum -c install.sh.sha256)
+sh "$tmp_dir/install.sh"
 nix-termux doctor
 ```
 
@@ -127,7 +132,8 @@ another nixpkgs source.
 For local development or mirrored artifacts, the installer also accepts
 `NIX_TERMUX_CHANNEL_URL`, `NIX_TERMUX_ARCH`, `NIX_TERMUX_BOOTSTRAP_URL`, and
 `NIX_TERMUX_BOOTSTRAP_SHA256` directly.
-When running a standalone `install.sh` with `curl | sh`, provide either
+When running a standalone `install.sh` outside a source checkout or existing
+installation, provide either
 `NIX_TERMUX_CHANNEL_BASE_URL`, `NIX_TERMUX_CHANNEL_URL`, or
 `NIX_TERMUX_RUNTIME_ARCHIVE_URL` so the installer can fetch the runtime files.
 
