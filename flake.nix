@@ -279,6 +279,7 @@
               pkgs.gnugrep
               pkgs.gnutar
               pkgs.gzip
+              pkgs.jq
             ];
             src = self;
             artifact = self.packages.${system}.bootstrap;

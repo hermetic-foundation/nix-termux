@@ -18,8 +18,24 @@ bootstrap_manifest=$(find "$artifact" -name 'nix-termux-bootstrap-*.json' | head
 	exit 1
 }
 
-jq -e '
+channel_name=$(basename "$channel")
+channel_arch=${channel_name#nix-termux-channel-}
+channel_arch=${channel_arch%.json}
+case $channel_arch in
+aarch64) expected_system=aarch64-linux ;;
+arm) expected_system=armv7l-linux ;;
+i686) expected_system=i686-linux ;;
+x86_64) expected_system=x86_64-linux ;;
+*)
+	printf 'unsupported channel architecture: %s\n' "$channel_arch" >&2
+	exit 1
+	;;
+esac
+
+jq -e --arg channel_arch "$channel_arch" --arg expected_system "$expected_system" '
   .schemaVersion == 1
+  and .platform.termuxArch == $channel_arch
+  and .platform.nixSystem == $expected_system
   and (.runtime.url | length > 0)
   and (.runtime.sha256 | test("^[0-9a-f]{64}$"))
   and (.bootstrapManifest.url | length > 0)
@@ -28,6 +44,12 @@ jq -e '
 bootstrap_name=$(basename "$bootstrap_manifest")
 jq -e --arg bootstrap_name "$bootstrap_name" \
 	'.bootstrapManifest.url == $bootstrap_name' "$channel" >/dev/null
+bootstrap_arch=${bootstrap_name#nix-termux-bootstrap-}
+bootstrap_arch=${bootstrap_arch%.json}
+[ "$bootstrap_arch" = "$channel_arch" ] || {
+	printf 'channel references bootstrap architecture mismatch: expected %s got %s\n' "$channel_arch" "$bootstrap_arch" >&2
+	exit 1
+}
 
 if [ -n "$runtime_artifact" ]; then
 	runtime_archive=$runtime_artifact/nix-termux-runtime.tar.gz

@@ -22,13 +22,35 @@ registration=$(find "$artifact" -name 'nix-termux-bootstrap-*.registration' | he
 	exit 1
 }
 
+manifest_name=$(basename "$manifest")
+manifest_arch=${manifest_name#nix-termux-bootstrap-}
+manifest_arch=${manifest_arch%.json}
+case $manifest_arch in
+aarch64) expected_system=aarch64-linux ;;
+arm) expected_system=armv7l-linux ;;
+i686) expected_system=i686-linux ;;
+x86_64) expected_system=x86_64-linux ;;
+*)
+	printf 'unsupported bootstrap architecture: %s\n' "$manifest_arch" >&2
+	exit 1
+	;;
+esac
+
 sha=$(sha256sum "$archive" | awk '{print $1}')
-grep -q "\"sha256\": \"$sha\"" "$manifest"
-grep -q '"schemaVersion": 1' "$manifest"
-grep -q '"storeDir": "nix"' "$manifest"
-grep -q '"rootDir": "root"' "$manifest"
-grep -q '"nixBin": "nix/var/nix/profiles/default/bin/nix"' "$manifest"
-grep -q '"registration": "nix-termux/bootstrap.registration"' "$manifest"
+jq -e \
+	--arg sha "$sha" \
+	--arg manifest_arch "$manifest_arch" \
+	--arg expected_system "$expected_system" \
+	'
+  .schemaVersion == 1
+  and .platform.termuxArch == $manifest_arch
+  and .platform.nixSystem == $expected_system
+  and .archive.sha256 == $sha
+  and .layout.storeDir == "nix"
+  and .layout.rootDir == "root"
+  and .layout.nixBin == "nix/var/nix/profiles/default/bin/nix"
+  and .layout.registration == "nix-termux/bootstrap.registration"
+' "$manifest" >/dev/null
 
 listing=${TMPDIR:-/tmp}/nix-termux-bootstrap-listing.$$
 trap 'rm -f "$listing"' EXIT INT TERM
