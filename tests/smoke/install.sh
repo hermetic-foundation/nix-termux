@@ -526,6 +526,19 @@ grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/no-jq-home/.nix-termux/etc
 grep -q "^bootstrap_sha256=$sha$" "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/no-jq-prefix/bin/nix"
 
+mkdir -p "$tmp/trailing-base-prefix/bin" "$tmp/trailing-base-prefix/etc"
+cp "$host_sh" "$tmp/trailing-base-prefix/bin/sh"
+printf '%s\n' "nameserver 192.0.2.54" >"$tmp/trailing-base-prefix/etc/resolv.conf"
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/trailing-base-home" \
+	PREFIX="$tmp/trailing-base-prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/trailing-base-home/.nix-termux" \
+	NIX_TERMUX_CHANNEL_BASE_URL="file://$tmp/" \
+	sh "$tmp/standalone/install.sh" >"$tmp/trailing-base-install.out"
+grep -qx "channel_base_url=file://$tmp/" "$tmp/trailing-base-home/.nix-termux/etc/nix-termux.conf"
+grep -qx "channel_url=file://$tmp/nix-termux-channel-x86_64.json" "$tmp/trailing-base-home/.nix-termux/etc/nix-termux.conf"
+grep -qx "bootstrap_manifest_url=file://$tmp/bootstrap-manifest.json" "$tmp/trailing-base-home/.nix-termux/etc/nix-termux.conf"
+
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/no-channel-home" \
 	PREFIX="$tmp/prefix" \

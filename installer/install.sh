@@ -307,7 +307,11 @@ mkdir -p "$state_dir/tmp"
 
 if [ -z "$channel_url" ] && [ -n "$channel_base_url" ]; then
 	termux_arch=$(detect_arch)
-	channel_url=$(resolve_manifest_url "$channel_base_url/" "nix-termux-channel-$termux_arch.json")
+	case $channel_base_url in
+	*/) channel_base_manifest_url=$channel_base_url ;;
+	*) channel_base_manifest_url=$channel_base_url/ ;;
+	esac
+	channel_url=$(resolve_manifest_url "$channel_base_manifest_url" "nix-termux-channel-$termux_arch.json")
 fi
 
 if [ -n "$channel_url" ]; then
