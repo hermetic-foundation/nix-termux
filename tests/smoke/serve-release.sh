@@ -114,9 +114,9 @@ PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.
 # shellcheck disable=SC2016
 grep -q '^tmp_dir=$(mktemp -d)$' "$tmp/serve.out"
 # shellcheck disable=SC2016
-grep -q 'curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"' "$tmp/serve.out"
+grep -q 'curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"' "$tmp/serve.out"
 # shellcheck disable=SC2016
-grep -q 'curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"' "$tmp/serve.out"
+grep -q 'curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"' "$tmp/serve.out"
 grep -q 'sha256sum -c install.sh.sha256' "$tmp/serve.out"
 # shellcheck disable=SC2016
 grep -q 'sh "$tmp_dir/install.sh"' "$tmp/serve.out"

@@ -49,9 +49,9 @@ grep -q '^serial=emulator-5554$' "$tmp/adb.log"
 grep -qx '/sdcard/Download/custom-nix-termux.sh' "$tmp/remote-path"
 grep -q "NIX_TERMUX_CHANNEL_BASE_URL='http://127.0.0.1:8000'" "$tmp/pushed.sh"
 # shellcheck disable=SC2016
-grep -q 'curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"' "$tmp/pushed.sh"
+grep -q 'curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"' "$tmp/pushed.sh"
 # shellcheck disable=SC2016
-grep -q 'curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"' "$tmp/pushed.sh"
+grep -q 'curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"' "$tmp/pushed.sh"
 grep -q 'sha256sum -c install.sh.sha256' "$tmp/pushed.sh"
 # shellcheck disable=SC2016
 grep -q 'sh "$tmp_dir/install.sh"' "$tmp/pushed.sh"

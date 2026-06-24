@@ -88,8 +88,8 @@ pkg install proot curl tar xz coreutils
 export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/nix-termux
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT INT TERM
-curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"
-curl -L "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"
+curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"
+curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"
 (cd "$tmp_dir" && sha256sum -c install.sh.sha256)
 sh "$tmp_dir/install.sh"
 nix-termux doctor

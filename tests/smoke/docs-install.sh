@@ -6,10 +6,22 @@ if rg -n 'curl[^\n|]*\|[[:space:]]*sh' README.md docs; then
 	printf '%s\n' "documentation must not recommend curl | sh install examples" >&2
 	exit 1
 fi
+if rg -n 'curl -L' README.md docs; then
+	printf '%s\n' "documentation installer downloads must use curl -fL" >&2
+	exit 1
+fi
 
 for file in README.md docs/channel.md docs/release.md docs/bootstrap.md docs/device-validation.md; do
 	grep -q 'install.sh.sha256' "$file" || {
 		printf '%s\n' "$file missing install.sh.sha256 verification example" >&2
+		exit 1
+	}
+	grep -q 'curl -fL .*install.sh"' "$file" || {
+		printf '%s\n' "$file missing fail-fast install.sh download" >&2
+		exit 1
+	}
+	grep -q 'curl -fL .*install.sh.sha256"' "$file" || {
+		printf '%s\n' "$file missing fail-fast install.sh.sha256 download" >&2
 		exit 1
 	}
 	grep -q 'sha256sum -c install.sh.sha256' "$file" || {
