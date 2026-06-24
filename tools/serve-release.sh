@@ -175,6 +175,8 @@ case $port in
 	die "port must be numeric"
 	;;
 esac
+[ "$port" -ge 1 ] && [ "$port" -le 65535 ] ||
+	die "port must be between 1 and 65535"
 
 command -v python3 >/dev/null 2>&1 || die "python3 is required to serve release files"
 

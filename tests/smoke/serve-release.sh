@@ -211,6 +211,18 @@ cp "$tmp/install-sh-sha256.good" "$tmp/release/install.sh.sha256"
 	nix-termux-bootstrap-aarch64.registration \
 	>SHA256SUMS)
 
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 0 >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted port 0" >&2
+	exit 1
+fi
+grep -q 'serve-release.sh: port must be between 1 and 65535' "$tmp/err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 65536 >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted port 65536" >&2
+	exit 1
+fi
+grep -q 'serve-release.sh: port must be between 1 and 65535' "$tmp/err"
+
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 # shellcheck disable=SC2016
 grep -q '^tmp_dir=$(mktemp -d)$' "$tmp/serve.out"
