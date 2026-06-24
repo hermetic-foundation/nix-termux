@@ -453,6 +453,10 @@ cat >"$tmp/channel-v2.json" <<EOF
   }
 }
 EOF
+sed 's/"sha256": "'"$runtime_sha"'"/"sha256": "not-a-sha256"/' \
+	"$tmp/channel.json" >"$tmp/channel-bad-runtime-sha.json"
+sed 's/"sha256": "'"$sha"'"/"sha256": "not-a-sha256"/' \
+	"$tmp/bootstrap-manifest.json" >"$tmp/bootstrap-bad-archive-sha.json"
 cat >"$tmp/fake-bin/pkg" <<EOF
 #!$host_sh
 if [ "\$1" = "--print-architecture" ]; then
@@ -576,6 +580,30 @@ fi
 grep -q 'channel manifest architecture mismatch: expected aarch64 got x86_64' "$tmp/channel-mismatch.err"
 
 if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/channel-bad-runtime-sha-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/channel-bad-runtime-sha-home/.nix-termux" \
+	NIX_TERMUX_CHANNEL_URL="file://$tmp/channel-bad-runtime-sha.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/channel-bad-runtime-sha.err"; then
+	printf '%s\n' "bad channel runtime sha unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'channel manifest runtime.sha256 must be a 64-character lowercase hex string' "$tmp/channel-bad-runtime-sha.err"
+test ! -e "$tmp/channel-bad-runtime-sha-home/.nix-termux/runtime/nix-termux.sh"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/runtime-bad-env-sha-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/runtime-bad-env-sha-home/.nix-termux" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256=not-a-sha256 \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/runtime-bad-env-sha.err"; then
+	printf '%s\n' "bad runtime env sha unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'NIX_TERMUX_RUNTIME_ARCHIVE_SHA256 must be a 64-character lowercase hex string' "$tmp/runtime-bad-env-sha.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/runtime-missing-home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/runtime-missing-home/.nix-termux" \
@@ -613,6 +641,36 @@ if PATH="$tmp/fake-bin:$PATH" \
 	exit 1
 fi
 grep -q 'bootstrap manifest architecture mismatch: expected aarch64 got x86_64' "$tmp/bootstrap-mismatch.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-bad-archive-sha-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-bad-archive-sha-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-bad-archive-sha.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-bad-archive-sha.err"; then
+	printf '%s\n' "bad bootstrap archive sha unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap manifest archive.sha256 must be a 64-character lowercase hex string' "$tmp/bootstrap-bad-archive-sha.err"
+test ! -e "$tmp/bootstrap-bad-archive-sha-home/.nix-termux/etc/bootstrap-activation.conf"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-bad-env-sha-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-bad-env-sha-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_URL="file://$tmp/bootstrap.tar.gz" \
+	NIX_TERMUX_BOOTSTRAP_SHA256=not-a-sha256 \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-bad-env-sha.err"; then
+	printf '%s\n' "bad bootstrap env sha unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'NIX_TERMUX_BOOTSTRAP_SHA256 must be a 64-character lowercase hex string' "$tmp/bootstrap-bad-env-sha.err"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/bootstrap-unsafe-home" \

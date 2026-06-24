@@ -16,6 +16,14 @@ shell_quote() {
 	printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
 }
 
+validate_sha256() {
+	label=$1
+	value=$2
+
+	printf '%s\n' "$value" | grep -Eq '^[0-9a-f]{64}$' ||
+		die "$label must be a 64-character lowercase hex string"
+}
+
 [ "$#" -eq 0 ] || die "install accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -261,6 +269,7 @@ load_manifest() {
 	manifest_termux_arch=$(json_path_string .platform.termuxArch "$manifest")
 	[ -n "$manifest_archive_url" ] || die "bootstrap manifest missing archive.url"
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
+	validate_sha256 "bootstrap manifest archive.sha256" "$manifest_sha256"
 	[ -n "$manifest_termux_arch" ] || die "bootstrap manifest missing platform.termuxArch"
 	[ "$manifest_termux_arch" = "$termux_arch" ] ||
 		die "bootstrap manifest architecture mismatch: expected $termux_arch got $manifest_termux_arch"
@@ -290,6 +299,7 @@ load_channel() {
 
 	[ -n "$channel_runtime_url" ] || die "channel manifest missing runtime.url"
 	[ -n "$channel_runtime_sha256" ] || die "channel manifest missing runtime.sha256"
+	validate_sha256 "channel manifest runtime.sha256" "$channel_runtime_sha256"
 	[ -n "$channel_bootstrap_manifest_url" ] || die "channel manifest missing bootstrapManifest.url"
 	[ -n "$channel_termux_arch" ] || die "channel manifest missing platform.termuxArch"
 	[ "$channel_termux_arch" = "$termux_arch" ] ||
@@ -335,6 +345,8 @@ else
 
 	if [ -n "$runtime_archive_url" ]; then
 		have tar || die "tar is required to unpack NIX_TERMUX_RUNTIME_ARCHIVE_URL"
+		[ -z "$runtime_archive_sha256" ] ||
+			validate_sha256 "NIX_TERMUX_RUNTIME_ARCHIVE_SHA256" "$runtime_archive_sha256"
 
 		rm -rf "$runtime_source"
 		mkdir -p "$runtime_source"
@@ -434,6 +446,8 @@ fi
 
 if [ -n "$bootstrap_url" ]; then
 	have tar || die "tar is required to unpack NIX_TERMUX_BOOTSTRAP_URL"
+	[ -z "$bootstrap_sha256" ] ||
+		validate_sha256 "NIX_TERMUX_BOOTSTRAP_SHA256" "$bootstrap_sha256"
 
 	fetch_url "$bootstrap_url" "$bootstrap_archive"
 
