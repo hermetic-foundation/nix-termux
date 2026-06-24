@@ -33,6 +33,15 @@ json_string_value_n() {
 	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
 }
 
+manifest_arch_from_name() {
+	name=$1
+
+	name=${name#nix-termux-channel-}
+	name=${name#nix-termux-bootstrap-}
+	name=${name%.json}
+	printf '%s\n' "$name"
+}
+
 is_local_filename() {
 	case $1 in
 	"" | */* | .*)
@@ -90,36 +99,49 @@ validate_release_dir() {
 	set -- "$release_dir"/nix-termux-channel-*.json
 	[ -r "$1" ] || die "release directory missing nix-termux-channel-*.json"
 	for channel in "$@"; do
+		channel_name=$(basename -- "$channel")
+		expected_arch=$(manifest_arch_from_name "$channel_name")
 		runtime_url=$(json_string_value_n url 1 "$channel")
 		runtime_sha=$(json_string_value_n sha256 1 "$channel")
 		bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
+		channel_arch=$(json_string_value_n termuxArch 1 "$channel")
+		[ "$channel_arch" = "$expected_arch" ] ||
+			die "$channel_name platform.termuxArch mismatch: expected $expected_arch got $channel_arch"
 		[ "$runtime_url" = "nix-termux-runtime.tar.gz" ] ||
-			die "$(basename -- "$channel") references unsupported runtime URL: $runtime_url"
+			die "$channel_name references unsupported runtime URL: $runtime_url"
 		is_local_filename "$bootstrap_manifest_url" ||
-			die "$(basename -- "$channel") references unsafe bootstrap manifest URL: $bootstrap_manifest_url"
+			die "$channel_name references unsafe bootstrap manifest URL: $bootstrap_manifest_url"
+		[ -r "$release_dir/$bootstrap_manifest_url" ] ||
+			die "$channel_name references missing bootstrap manifest: $bootstrap_manifest_url"
+		bootstrap_manifest_arch=$(manifest_arch_from_name "$bootstrap_manifest_url")
+		[ "$bootstrap_manifest_arch" = "$expected_arch" ] ||
+			die "$channel_name references bootstrap manifest for $bootstrap_manifest_arch"
 		actual_runtime_sha=$(sha256sum "$release_dir/nix-termux-runtime.tar.gz")
 		actual_runtime_sha=${actual_runtime_sha%% *}
 		[ "$runtime_sha" = "$actual_runtime_sha" ] ||
-			die "$(basename -- "$channel") runtime sha256 mismatch"
-		[ -r "$release_dir/$bootstrap_manifest_url" ] ||
-			die "$(basename -- "$channel") references missing bootstrap manifest: $bootstrap_manifest_url"
+			die "$channel_name runtime sha256 mismatch"
 	done
 
 	set -- "$release_dir"/nix-termux-bootstrap-*.json
 	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
 	for manifest in "$@"; do
 		base=${manifest%.json}
+		manifest_name=$(basename -- "$manifest")
+		expected_arch=$(manifest_arch_from_name "$manifest_name")
 		archive_url=$(json_string_value_n url 1 "$manifest")
 		archive_sha=$(json_string_value_n sha256 1 "$manifest")
+		manifest_arch=$(json_string_value_n termuxArch 1 "$manifest")
 		expected_archive=$(basename -- "$base.tar.gz")
+		[ "$manifest_arch" = "$expected_arch" ] ||
+			die "$manifest_name platform.termuxArch mismatch: expected $expected_arch got $manifest_arch"
 		[ "$archive_url" = "$expected_archive" ] ||
-			die "$(basename -- "$manifest") references unsupported archive URL: $archive_url"
+			die "$manifest_name references unsupported archive URL: $archive_url"
 		[ -r "$base.tar.gz" ] || die "release directory missing $(basename -- "$base.tar.gz")"
 		[ -r "$base.registration" ] || die "release directory missing $(basename -- "$base.registration")"
 		actual_archive_sha=$(sha256sum "$base.tar.gz")
 		actual_archive_sha=${actual_archive_sha%% *}
 		[ "$archive_sha" = "$actual_archive_sha" ] ||
-			die "$(basename -- "$manifest") archive sha256 mismatch"
+			die "$manifest_name archive sha256 mismatch"
 	done
 
 	(cd "$release_dir" && sha256sum -c install.sh.sha256 >/dev/null) ||

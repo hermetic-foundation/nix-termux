@@ -35,6 +35,10 @@ for arch in x86_64 aarch64; do
 	cat >"$tmp/release/nix-termux-channel-$arch.json" <<EOF
 {
   "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "$arch",
+    "nixSystem": "$arch-linux"
+  },
   "runtime": {
     "url": "nix-termux-runtime.tar.gz",
     "sha256": "$runtime_sha"
@@ -47,6 +51,10 @@ EOF
 	cat >"$tmp/release/nix-termux-bootstrap-$arch.json" <<EOF
 {
   "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "$arch",
+    "nixSystem": "$arch-linux"
+  },
   "archive": {
     "url": "nix-termux-bootstrap-$arch.tar.gz",
     "sha256": "$bootstrap_sha"
@@ -74,6 +82,26 @@ done
 sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/check.out"
 grep -qx "release directory ok: $tmp/release" "$tmp/check.out"
 
+cp "$tmp/release/nix-termux-channel-x86_64.json" "$tmp/channel-x86_64.good"
+sed 's/"termuxArch": "x86_64"/"termuxArch": "aarch64"/' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted channel architecture mismatch" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json platform.termuxArch mismatch: expected x86_64 got aarch64' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
+cp "$tmp/release/nix-termux-bootstrap-x86_64.json" "$tmp/bootstrap-x86_64.good"
+sed 's/"termuxArch": "x86_64"/"termuxArch": "aarch64"/' \
+	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted bootstrap architecture mismatch" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json platform.termuxArch mismatch: expected x86_64 got aarch64' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
+
 rm "$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
 	printf '%s\n' "serve-release unexpectedly accepted a missing bootstrap archive" >&2
@@ -82,7 +110,6 @@ fi
 grep -q 'release directory missing nix-termux-bootstrap-x86_64.tar.gz' "$tmp/err"
 printf '%s\n' nix-termux-bootstrap-x86_64.tar.gz >"$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"
 
-cp "$tmp/release/nix-termux-channel-x86_64.json" "$tmp/channel-x86_64.good"
 sed 's/nix-termux-bootstrap-x86_64.json/missing-bootstrap-x86_64.json/' \
 	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
@@ -102,7 +129,6 @@ fi
 grep -q 'nix-termux-channel-x86_64.json references unsafe bootstrap manifest URL: ../outside-bootstrap.json' "$tmp/err"
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
-cp "$tmp/release/nix-termux-bootstrap-x86_64.json" "$tmp/bootstrap-x86_64.good"
 sed 's/"sha256": "[0-9a-f]*"/"sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"/' \
 	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
