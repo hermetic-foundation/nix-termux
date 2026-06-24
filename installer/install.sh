@@ -24,6 +24,17 @@ validate_sha256() {
 		die "$label must be a 64-character lowercase hex string"
 }
 
+validate_manifest_url() {
+	label=$1
+	value=$2
+
+	case $value in
+	*[[:space:]]*)
+		die "$label must not contain whitespace"
+		;;
+	esac
+}
+
 validate_state_dir() {
 	case $state_dir in
 	/ | . | ..)
@@ -321,6 +332,7 @@ load_manifest() {
 	manifest_nix_bin=$(json_path_string .layout.nixBin "$manifest")
 	manifest_registration=$(json_path_string .layout.registration "$manifest")
 	[ -n "$manifest_archive_url" ] || die "bootstrap manifest missing archive.url"
+	validate_manifest_url "bootstrap manifest archive.url" "$manifest_archive_url"
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
 	validate_sha256 "bootstrap manifest archive.sha256" "$manifest_sha256"
 	[ -n "$manifest_termux_arch" ] || die "bootstrap manifest missing platform.termuxArch"
@@ -368,9 +380,11 @@ load_channel() {
 	channel_nix_system=$(json_path_string .platform.nixSystem "$channel")
 
 	[ -n "$channel_runtime_url" ] || die "channel manifest missing runtime.url"
+	validate_manifest_url "channel manifest runtime.url" "$channel_runtime_url"
 	[ -n "$channel_runtime_sha256" ] || die "channel manifest missing runtime.sha256"
 	validate_sha256 "channel manifest runtime.sha256" "$channel_runtime_sha256"
 	[ -n "$channel_bootstrap_manifest_url" ] || die "channel manifest missing bootstrapManifest.url"
+	validate_manifest_url "channel manifest bootstrapManifest.url" "$channel_bootstrap_manifest_url"
 	[ -n "$channel_termux_arch" ] || die "channel manifest missing platform.termuxArch"
 	[ -n "$channel_nix_system" ] || die "channel manifest missing platform.nixSystem"
 	[ "$channel_termux_arch" = "$termux_arch" ] ||
