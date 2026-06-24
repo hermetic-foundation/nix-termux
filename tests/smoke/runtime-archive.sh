@@ -17,7 +17,10 @@ checksum=$artifact/nix-termux-runtime.tar.gz.sha256
 }
 
 listing=${TMPDIR:-/tmp}/nix-termux-runtime-listing.$$
-trap 'rm -f "$listing"' EXIT INT TERM
+extract_dir=${TMPDIR:-/tmp}/nix-termux-runtime-extract.$$
+rm -rf "$extract_dir"
+mkdir -p "$extract_dir"
+trap 'rm -f "$listing"; rm -rf "$extract_dir"' EXIT INT TERM
 
 tar -tzf "$archive" >"$listing"
 
@@ -39,5 +42,8 @@ grep -qx './docs/release.md' "$listing"
 grep -qx './bootstrap/example-manifest.json' "$listing"
 grep -qx './bootstrap/manifest.schema.json' "$listing"
 grep -qx './channel/schema.json' "$listing"
+
+tar -xzf "$archive" -C "$extract_dir" ./LICENSE
+grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$extract_dir/LICENSE"
 
 (cd "$artifact" && sha256sum -c nix-termux-runtime.tar.gz.sha256)
