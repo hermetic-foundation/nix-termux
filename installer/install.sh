@@ -120,6 +120,10 @@ validate_bootstrap_stage() {
 		die "bootstrap archive missing root/etc/group"
 	[ -r "$stage/root/etc/nsswitch.conf" ] ||
 		die "bootstrap archive missing root/etc/nsswitch.conf"
+	[ -r "$stage/root/etc/hosts" ] ||
+		die "bootstrap archive missing root/etc/hosts"
+	[ -r "$stage/root/etc/hostname" ] ||
+		die "bootstrap archive missing root/etc/hostname"
 	grep -q '^termux:' "$stage/root/etc/passwd" ||
 		die "bootstrap archive root/etc/passwd missing termux user"
 	grep -q '^termux:' "$stage/root/etc/group" ||

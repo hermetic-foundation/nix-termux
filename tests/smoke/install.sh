@@ -163,6 +163,11 @@ passwd: files
 group: files
 hosts: files dns
 EOF
+cat >"$tmp/bootstrap/root/etc/hosts" <<EOF
+127.0.0.1 localhost
+::1 localhost
+EOF
+printf '%s\n' nix-termux >"$tmp/bootstrap/root/etc/hostname"
 printf '%s\n' "fake cert bundle" >"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
 mkdir -p "$tmp/bootstrap/nix-termux"
 printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registration"
@@ -183,6 +188,14 @@ cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-shell"
 rm -f "$tmp/bootstrap-missing-shell/root/bin/sh"
 (cd "$tmp/bootstrap-missing-shell" && tar -czf "$tmp/bootstrap-missing-shell.tar.gz" .)
 missing_shell_sha=$(sha256sum "$tmp/bootstrap-missing-shell.tar.gz" | awk '{print $1}')
+cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-hosts"
+rm -f "$tmp/bootstrap-missing-hosts/root/etc/hosts"
+(cd "$tmp/bootstrap-missing-hosts" && tar -czf "$tmp/bootstrap-missing-hosts.tar.gz" .)
+missing_hosts_sha=$(sha256sum "$tmp/bootstrap-missing-hosts.tar.gz" | awk '{print $1}')
+cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-hostname"
+rm -f "$tmp/bootstrap-missing-hostname/root/etc/hostname"
+(cd "$tmp/bootstrap-missing-hostname" && tar -czf "$tmp/bootstrap-missing-hostname.tar.gz" .)
+missing_hostname_sha=$(sha256sum "$tmp/bootstrap-missing-hostname.tar.gz" | awk '{print $1}')
 cp -R "$tmp/bootstrap" "$tmp/bootstrap-load-db-fail"
 printf '%s\n' "failed bootstrap marker" >"$tmp/bootstrap-load-db-fail/nix/store/bootstrap-load-db-fail-marker"
 cat >"$tmp/bootstrap-load-db-fail/nix/var/nix/profiles/default/bin/nix-store" <<EOF
@@ -300,6 +313,44 @@ cat >"$tmp/bootstrap-missing-shell-manifest.json" <<EOF
   "archive": {
     "url": "bootstrap-missing-shell.tar.gz",
     "sha256": "$missing_shell_sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-missing-hosts-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-missing-hosts.tar.gz",
+    "sha256": "$missing_hosts_sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-missing-hostname-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-missing-hostname.tar.gz",
+    "sha256": "$missing_hostname_sha"
   },
   "layout": {
     "storeDir": "nix",
@@ -564,6 +615,38 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'bootstrap archive missing root/bin/sh' "$tmp/bootstrap-missing-shell.err"
 test ! -e "$tmp/bootstrap-missing-shell-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-missing-hosts-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-missing-hosts-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-missing-hosts-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-missing-hosts.err"; then
+	printf '%s\n' "bootstrap missing hosts unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap archive missing root/etc/hosts' "$tmp/bootstrap-missing-hosts.err"
+test ! -e "$tmp/bootstrap-missing-hosts-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-missing-hostname-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-missing-hostname-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-missing-hostname-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-missing-hostname.err"; then
+	printf '%s\n' "bootstrap missing hostname unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap archive missing root/etc/hostname' "$tmp/bootstrap-missing-hostname.err"
+test ! -e "$tmp/bootstrap-missing-hostname-home/.nix-termux/etc/bootstrap-activation.conf"
 test ! -e "$tmp/prefix/bin/nix"
 
 if PATH="$tmp/fake-bin:$PATH" \
