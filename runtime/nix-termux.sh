@@ -108,6 +108,17 @@ validate_home() {
 	esac
 }
 
+validate_url_arg() {
+	label=$1
+	value=$2
+
+	case $value in
+	*[[:space:]]*)
+		die "$label must not contain whitespace"
+		;;
+	esac
+}
+
 is_termux() {
 	[ -n "${PREFIX:-}" ] && [ -d "$termux_prefix" ] && [ -d "$termux_home" ]
 }
@@ -551,11 +562,15 @@ upgrade() {
 		die "upgrade channel URL must not be empty"
 	fi
 	[ -x "$install_script" ] || die "install script not found at $install_script"
+	if [ -n "$channel" ]; then
+		validate_url_arg "upgrade channel URL" "$channel"
+	fi
 
 	if [ -z "$channel" ]; then
 		channel=$(config_value channel_url "$config_file")
 	fi
 	[ -n "$channel" ] || die "no channel URL supplied and none saved in $config_file"
+	validate_url_arg "upgrade channel URL" "$channel"
 
 	NIX_TERMUX_CHANNEL_URL=$channel \
 		NIX_TERMUX_STATE_DIR=$state_dir \
@@ -580,11 +595,15 @@ upgrade_bootstrap() {
 		die "upgrade-bootstrap manifest URL must not be empty"
 	fi
 	[ -x "$install_script" ] || die "install script not found at $install_script"
+	if [ -n "$manifest_url" ]; then
+		validate_url_arg "upgrade-bootstrap manifest URL" "$manifest_url"
+	fi
 
 	if [ -z "$manifest_url" ]; then
 		manifest_url=$(config_value bootstrap_manifest_url "$config_file")
 	fi
 	[ -n "$manifest_url" ] || die "no manifest URL supplied and none saved in $config_file"
+	validate_url_arg "upgrade-bootstrap manifest URL" "$manifest_url"
 
 	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL=$manifest_url \
 		NIX_TERMUX_STATE_DIR=$state_dir \

@@ -1584,11 +1584,31 @@ if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade "file://$tmp/channel bad.json" >"$tmp/upgrade-space.out" 2>"$tmp/upgrade-space.err"; then
+	printf '%s\n' "upgrade with whitespace in channel URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade channel URL must not contain whitespace$' "$tmp/upgrade-space.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap "" >"$tmp/upgrade-bootstrap-empty.out" 2>"$tmp/upgrade-bootstrap-empty.err"; then
 	printf '%s\n' "upgrade-bootstrap with empty manifest URL unexpectedly succeeded" >&2
 	exit 1
 fi
 grep -q '^nix-termux: upgrade-bootstrap manifest URL must not be empty$' "$tmp/upgrade-bootstrap-empty.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap "file://$tmp/bootstrap manifest.json" >"$tmp/upgrade-bootstrap-space.out" 2>"$tmp/upgrade-bootstrap-space.err"; then
+	printf '%s\n' "upgrade-bootstrap with whitespace in manifest URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade-bootstrap manifest URL must not contain whitespace$' "$tmp/upgrade-bootstrap-space.err"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
