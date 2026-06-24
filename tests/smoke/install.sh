@@ -1147,6 +1147,21 @@ test ! -e "$tmp/home/.nix-termux/tmp/runtime.tar.gz"
 test ! -e "$tmp/home/.nix-termux/tmp/runtime-source"
 test ! -e "$tmp/home/.nix-termux/tmp/bootstrap.tar.gz"
 test ! -e "$tmp/home/.nix-termux/tmp/bootstrap-stage"
+
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_CHANNEL_BASE_URL="file://$tmp" \
+	sh "$tmp/standalone/install.sh"
+
+grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
+grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
+test -x "$tmp/home/.nix-termux/nix/var/nix/profiles/default/bin/nix"
+test -x "$tmp/home/.nix-termux/root/bin/sh"
+test -r "$tmp/home/.nix-termux/root/etc/nix/nix.conf"
+test -x "$tmp/home/.nix-termux/root/usr/bin/env"
+
 cat >"$tmp/home/.nix-termux/share/tests/device-smoke.sh" <<'EOF'
 #!/usr/bin/env sh
 printf 'stub device smoke'

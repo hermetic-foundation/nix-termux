@@ -585,10 +585,16 @@ if [ -n "$bootstrap_url" ]; then
 		NIX_TERMUX_RESOLV_CONF=$bootstrap_stage/root/etc/resolv.conf \
 		NIX_TERMUX_MANAGE_HOME_PROFILE=no \
 		sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
-	registration_loaded=yes
 
-	(cd "$bootstrap_stage" && tar -cf - .) | tar -xf - -C "$state_dir"
+	remove_tree "$state_dir/nix/var/nix/profiles/default"
+	remove_tree "$state_dir/root/bin"
+	remove_tree "$state_dir/root/etc"
+	remove_tree "$state_dir/root/usr"
+	remove_tree "$state_dir/nix-termux"
+	(cd "$bootstrap_stage" && tar -cf - .) | tar --skip-old-files -xf - -C "$state_dir"
 	registration=$state_dir/nix-termux/bootstrap.registration
+	NIX_TERMUX_MANAGE_HOME_PROFILE=no sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
+	registration_loaded=yes
 
 	{
 		printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"
