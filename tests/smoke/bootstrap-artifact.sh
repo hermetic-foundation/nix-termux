@@ -93,6 +93,7 @@ rm -rf "$extract_dir"
 mkdir -p "$extract_dir"
 trap 'rm -f "$listing"; rm -rf "$extract_dir"' EXIT INT TERM
 tar -xzf "$archive" -C "$extract_dir" \
+	./nix-termux/bootstrap.registration \
 	./root/etc/passwd \
 	./root/etc/group \
 	./root/etc/nsswitch.conf \
@@ -103,3 +104,9 @@ grep -qx 'termux:x:1000:' "$extract_dir/root/etc/group"
 grep -qx 'hosts: files dns' "$extract_dir/root/etc/nsswitch.conf"
 grep -qx '127.0.0.1 localhost' "$extract_dir/root/etc/hosts"
 grep -qx 'nix-termux' "$extract_dir/root/etc/hostname"
+archive_registration_sha=$(sha256sum "$extract_dir/nix-termux/bootstrap.registration" | awk '{print $1}')
+sidecar_registration_sha=$(sha256sum "$registration" | awk '{print $1}')
+[ "$archive_registration_sha" = "$sidecar_registration_sha" ] || {
+	printf '%s\n' "bootstrap registration sidecar does not match archive registration" >&2
+	exit 1
+}
