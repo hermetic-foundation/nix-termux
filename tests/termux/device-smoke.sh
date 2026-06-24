@@ -190,6 +190,8 @@ for name in nix-shell nix-env nix-build nix-channel nix-collect-garbage nix-copy
 	check "$name wrapper runs" "$name" --version
 done
 check "nix-termux exec runs nix" nix-termux exec nix --version
+# shellcheck disable=SC2016
+check "nix-termux exec preserves arguments" nix-termux exec sh -c 'test "$1" = "arg with spaces" && test "$2" = "quote'\''value" && test "$3" = "semi;colon"' sh "arg with spaces" "quote'value" "semi;colon"
 check "proot resolves termux user" nix-termux exec sh -c 'grep -q "^termux:" /etc/passwd && grep -q "^termux:" /etc/group'
 check "proot has resolver config" nix-termux exec sh -c 'test -s /etc/resolv.conf && grep -q "^nameserver " /etc/resolv.conf'
 # shellcheck disable=SC2016
