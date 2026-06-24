@@ -14,6 +14,11 @@ extract_runtime_version() {
 	sed -n 's/^version=${NIX_TERMUX_VERSION:-\([^}]*\)}$/\1/p' "$file" | head -n 1
 }
 
+extract_wrapper_names() {
+	file=$1
+	sed -n 's/^wrapper_names="\([^"]*\)"$/\1/p' "$file" | head -n 1
+}
+
 check_version() {
 	name=$1
 	actual=$2
@@ -29,6 +34,21 @@ check_version() {
 	fi
 }
 
+check_wrappers() {
+	name=$1
+	actual=$2
+
+	if [ -z "$actual" ]; then
+		printf 'missing wrapper_names declaration: %s\n' "$name" >&2
+		exit 1
+	fi
+
+	if [ "$actual" != "$expected_wrappers" ]; then
+		printf 'wrapper_names mismatch: %s\nexpected: %s\nactual:   %s\n' "$name" "$expected_wrappers" "$actual" >&2
+		exit 1
+	fi
+}
+
 expected=$(extract_nix_version flake.nix)
 check_version flake.nix "$expected"
 
@@ -37,3 +57,8 @@ check_version channel/make-channel.nix "$(extract_nix_version channel/make-chann
 check_version installer/make-installer.nix "$(extract_nix_version installer/make-installer.nix)"
 check_version runtime/make-runtime-archive.nix "$(extract_nix_version runtime/make-runtime-archive.nix)"
 check_version runtime/nix-termux.sh "$(extract_runtime_version runtime/nix-termux.sh)"
+
+expected_wrappers=$(extract_wrapper_names runtime/nix-termux.sh)
+check_wrappers runtime/nix-termux.sh "$expected_wrappers"
+check_wrappers installer/install.sh "$(extract_wrapper_names installer/install.sh)"
+check_wrappers installer/uninstall.sh "$(extract_wrapper_names installer/uninstall.sh)"
