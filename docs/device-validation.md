@@ -60,7 +60,8 @@ tools/serve-release.sh result 192.0.2.10 8000
 
 Use a host address that the Android device can reach over the local network.
 The helper validates the release directory, prints the Termux install commands,
-checks `SHA256SUMS`, and serves the files until interrupted.
+checks `install.sh.sha256` and `SHA256SUMS`, and serves the files until
+interrupted.
 
 With USB debugging enabled, you can also stage the Termux-side validation
 script over `adb`:

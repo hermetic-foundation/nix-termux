@@ -33,6 +33,9 @@ The individual `.#installer`, `.#runtime-archive`, `.#bootstrap`, and
 `.#channel` packages remain available when a release pipeline wants separate
 artifacts.
 
+Release validation checks both the standalone `install.sh.sha256` file used by
+the install snippets and the aggregate `SHA256SUMS` manifest.
+
 ## Publish
 
 Push a version tag:

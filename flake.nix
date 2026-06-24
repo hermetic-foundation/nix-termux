@@ -365,6 +365,7 @@
             test "$(find "$artifact" -name 'nix-termux-bootstrap-*.registration' | wc -l)" -eq 1
             grep -q 'nix-termux-runtime.tar.gz' "$artifact"/SHA256SUMS
             grep -q 'install.sh' "$artifact"/SHA256SUMS
+            (cd "$artifact" && sha256sum -c install.sh.sha256)
             (cd "$artifact" && sha256sum -c SHA256SUMS)
             touch "$out"
           '';
