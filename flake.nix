@@ -347,6 +347,12 @@
             test -x "$artifact"/share/nix-termux/tools/adb-validate.sh
             test -x "$artifact"/share/nix-termux/tools/serve-release.sh
             test -x "$artifact"/share/nix-termux/tests/device-smoke.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/bin/nix-termux
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/installer/install.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/installer/uninstall.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/adb-validate.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/serve-release.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tests/device-smoke.sh
             test -r "$artifact"/share/doc/nix-termux/device-validation.md
             test -r "$artifact"/share/licenses/nix-termux/LICENSE
             grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$artifact"/share/licenses/nix-termux/LICENSE
