@@ -485,6 +485,18 @@ cp "$tmp/fake-bin/pkg" "$tmp/no-jq-bin/pkg"
 cp "$tmp/fake-bin/proot" "$tmp/missing-cat-bin/proot"
 cp "$tmp/fake-bin/pkg" "$tmp/missing-cat-bin/pkg"
 
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/install-extra-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/install-extra-home/.nix-termux" \
+	sh "$tmp/standalone/install.sh" extra >"$tmp/install-extra.out" 2>"$tmp/install-extra.err"; then
+	printf '%s\n' "install with extra arguments unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^install.sh: install accepts no arguments$' "$tmp/install-extra.err"
+test ! -e "$tmp/install-extra-home/.nix-termux/etc/nix-termux.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
 if PATH="$tmp/missing-cat-bin" \
 	HOME="$tmp/missing-cat-home" \
 	PREFIX="$tmp/prefix" \

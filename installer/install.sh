@@ -12,6 +12,8 @@ have() {
 	command -v "$1" >/dev/null 2>&1
 }
 
+[ "$#" -eq 0 ] || die "install accepts no arguments"
+
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 runtime_version=${NIX_TERMUX_VERSION:-}
 prefix=${PREFIX:-}
