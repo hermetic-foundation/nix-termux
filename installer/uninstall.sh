@@ -26,6 +26,9 @@ validate_prefix() {
 
 validate_home() {
 	case ${HOME:-} in
+	"")
+		die "HOME must not be empty"
+		;;
 	/ | . | ..)
 		die "HOME must not be ${HOME:-}"
 		;;

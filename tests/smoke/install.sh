@@ -616,6 +616,30 @@ fi
 grep -q '^uninstall.sh: HOME must not be /$' "$tmp/uninstall-home-root.err"
 test ! -e "$tmp/prefix/bin/nix"
 
+if env \
+	PATH="$tmp/fake-bin:$PATH" \
+	HOME= \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home-empty-state" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/install-home-empty.err"; then
+	printf '%s\n' "install with empty home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^install.sh: HOME must not be empty$' "$tmp/install-home-empty.err"
+test ! -e "$tmp/home-empty-state/etc/nix-termux.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if env \
+	HOME= \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home-empty-state" \
+	sh "$repo_root/installer/uninstall.sh" >"$tmp/uninstall-home-empty.out" 2>"$tmp/uninstall-home-empty.err"; then
+	printf '%s\n' "uninstall with empty home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^uninstall.sh: HOME must not be empty$' "$tmp/uninstall-home-empty.err"
+test ! -e "$tmp/prefix/bin/nix"
+
 if PATH="$tmp/missing-cat-bin" \
 	HOME="$tmp/missing-cat-home" \
 	PREFIX="$tmp/prefix" \
