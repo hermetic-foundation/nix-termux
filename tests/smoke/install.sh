@@ -577,6 +577,15 @@ if PREFIX=/ \
 fi
 grep -q '^nix-termux: PREFIX must not be /$' "$tmp/runtime-prefix-root.err"
 
+if env \
+	PREFIX= \
+	NIX_TERMUX_STATE_DIR="$tmp/prefix-empty-state" \
+	sh "$repo_root/runtime/nix-termux.sh" version >"$tmp/runtime-prefix-empty.out" 2>"$tmp/runtime-prefix-empty.err"; then
+	printf '%s\n' "runtime with empty prefix unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: PREFIX must not be empty$' "$tmp/runtime-prefix-empty.err"
+
 if HOME="$tmp/prefix-root-home" \
 	PREFIX=/ \
 	NIX_TERMUX_STATE_DIR="$tmp/prefix-root-home/.nix-termux" \
@@ -585,6 +594,16 @@ if HOME="$tmp/prefix-root-home" \
 	exit 1
 fi
 grep -q '^uninstall.sh: PREFIX must not be /$' "$tmp/uninstall-prefix-root.err"
+
+if env \
+	HOME="$tmp/prefix-empty-home" \
+	PREFIX= \
+	NIX_TERMUX_STATE_DIR="$tmp/prefix-empty-home/.nix-termux" \
+	sh "$repo_root/installer/uninstall.sh" >"$tmp/uninstall-prefix-empty.out" 2>"$tmp/uninstall-prefix-empty.err"; then
+	printf '%s\n' "uninstall with empty prefix unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^uninstall.sh: PREFIX must not be empty$' "$tmp/uninstall-prefix-empty.err"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME=/ \

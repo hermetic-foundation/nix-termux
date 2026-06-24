@@ -87,6 +87,9 @@ validate_state_dir() {
 }
 
 validate_prefix() {
+	if [ "${PREFIX+x}" = x ] && [ -z "$PREFIX" ]; then
+		die "PREFIX must not be empty"
+	fi
 	case $termux_prefix in
 	/ | . | ..)
 		die "PREFIX must not be $termux_prefix"
