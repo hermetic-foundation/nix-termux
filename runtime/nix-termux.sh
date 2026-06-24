@@ -87,6 +87,17 @@ validate_state_dir() {
 	esac
 }
 
+validate_runtime_dir() {
+	label=$1
+	value=$2
+
+	case $value in
+	/ | . | ..)
+		die "$label must not be $value"
+		;;
+	esac
+}
+
 validate_prefix() {
 	if [ "${PREFIX+x}" = x ] && [ -z "$PREFIX" ]; then
 		die "PREFIX must not be empty"
@@ -619,6 +630,9 @@ if [ "$#" -gt 0 ]; then
 fi
 
 validate_state_dir
+validate_runtime_dir NIX_TERMUX_STORE_DIR "$store_dir"
+validate_runtime_dir NIX_TERMUX_ROOT_DIR "$root_dir"
+validate_runtime_dir NIX_TERMUX_TMP_DIR "$tmp_dir"
 validate_prefix
 validate_home
 

@@ -557,6 +557,27 @@ if NIX_TERMUX_STATE_DIR=/ \
 fi
 grep -q '^nix-termux: NIX_TERMUX_STATE_DIR must not be /$' "$tmp/runtime-state-root.err"
 
+if NIX_TERMUX_STORE_DIR=/ \
+	sh "$repo_root/runtime/nix-termux.sh" version >"$tmp/runtime-store-root.out" 2>"$tmp/runtime-store-root.err"; then
+	printf '%s\n' "runtime with root store dir unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: NIX_TERMUX_STORE_DIR must not be /$' "$tmp/runtime-store-root.err"
+
+if NIX_TERMUX_ROOT_DIR=/ \
+	sh "$repo_root/runtime/nix-termux.sh" version >"$tmp/runtime-root-root.out" 2>"$tmp/runtime-root-root.err"; then
+	printf '%s\n' "runtime with root root dir unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: NIX_TERMUX_ROOT_DIR must not be /$' "$tmp/runtime-root-root.err"
+
+if NIX_TERMUX_TMP_DIR=/ \
+	sh "$repo_root/runtime/nix-termux.sh" version >"$tmp/runtime-tmp-root.out" 2>"$tmp/runtime-tmp-root.err"; then
+	printf '%s\n' "runtime with root tmp dir unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: NIX_TERMUX_TMP_DIR must not be /$' "$tmp/runtime-tmp-root.err"
+
 if HOME="$tmp/state-root-home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR=/ \
