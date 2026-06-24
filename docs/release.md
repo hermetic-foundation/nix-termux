@@ -33,8 +33,9 @@ The individual `.#installer`, `.#runtime-archive`, `.#bootstrap`, and
 `.#channel` packages remain available when a release pipeline wants separate
 artifacts.
 
-Release validation checks both the standalone `install.sh.sha256` file used by
-the install snippets and the aggregate `SHA256SUMS` manifest.
+Release validation checks the standalone `install.sh.sha256` file used by the
+install snippets, the standalone `nix-termux-runtime.tar.gz.sha256` file used by
+mirrors, and the aggregate `SHA256SUMS` manifest.
 
 ## Publish
 

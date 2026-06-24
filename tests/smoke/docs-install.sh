@@ -36,3 +36,12 @@ for path in root/etc/hosts root/etc/hostname root/etc/nsswitch.conf; do
 		exit 1
 	}
 done
+
+grep -q 'nix-termux-runtime.tar.gz.sha256' docs/release.md || {
+	printf '%s\n' "docs/release.md missing runtime sidecar checksum validation" >&2
+	exit 1
+}
+grep -q 'SHA256SUMS' docs/release.md || {
+	printf '%s\n' "docs/release.md missing aggregate release checksum validation" >&2
+	exit 1
+}
