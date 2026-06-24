@@ -110,6 +110,7 @@ mkdir -p \
 	"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs" \
 	"$tmp/bootstrap/root/etc/nix" \
 	"$tmp/bootstrap/root/usr/bin"
+mkdir -p "$tmp/android-storage/sdcard" "$tmp/android-storage/storage"
 
 cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix" <<EOF
 #!$host_sh
@@ -850,6 +851,19 @@ path_output=$(
 	exit 1
 }
 
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_ANDROID_BIND_DIRS="$tmp/android-storage/sdcard $tmp/android-storage/storage $tmp/android-storage/missing" \
+	"$tmp/prefix/bin/nix-termux" exec nix --version >/dev/null
+grep -qx -- "$tmp/android-storage/sdcard:$tmp/android-storage/sdcard" "$tmp/home/.nix-termux/proot.args"
+grep -qx -- "$tmp/android-storage/storage:$tmp/android-storage/storage" "$tmp/home/.nix-termux/proot.args"
+if grep -qx -- "$tmp/android-storage/missing:$tmp/android-storage/missing" "$tmp/home/.nix-termux/proot.args"; then
+	printf '%s\n' "missing Android bind path was passed to proot" >&2
+	exit 1
+fi
+
 env_output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
@@ -859,6 +873,7 @@ env_output=$(
 		"$tmp/prefix/bin/nix-termux" env
 )
 printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.1$'
+printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_ANDROID_BIND_DIRS=/sdcard /storage$'
 printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"
 printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"

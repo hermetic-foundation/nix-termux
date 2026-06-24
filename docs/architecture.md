@@ -32,6 +32,10 @@ $HOME              -> /home/termux
 $PREFIX           -> /termux
 ```
 
+If `/sdcard` or `/storage` exist, the runtime binds them at the same absolute
+paths so scripts that use Android shared storage continue to work. Set
+`NIX_TERMUX_ANDROID_BIND_DIRS` to override that optional bind list.
+
 Inside proot, the runtime exports stable XDG directories under
 `/home/termux`: `.config`, `.cache`, `.local/share`, and `.local/state`.
 It also exports `NIX_REMOTE=local`, `NIX_SSL_CERT_FILE`/`SSL_CERT_FILE`,

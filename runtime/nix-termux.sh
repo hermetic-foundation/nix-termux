@@ -26,6 +26,7 @@ config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.conf"}
 proot=${NIX_TERMUX_PROOT:-proot}
 resolv_conf_file=${NIX_TERMUX_RESOLV_CONF:-"$root_dir/etc/resolv.conf"}
+android_bind_dirs=${NIX_TERMUX_ANDROID_BIND_DIRS:-"/sdcard /storage"}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
@@ -331,6 +332,7 @@ NIX_TERMUX_CONFIG=$config_file
 NIX_TERMUX_ACTIVATION=$activation_file
 NIX_TERMUX_PROOT=$proot
 NIX_TERMUX_RESOLV_CONF=$resolv_conf_file
+NIX_TERMUX_ANDROID_BIND_DIRS=$android_bind_dirs
 PREFIX=$termux_prefix
 HOME=$termux_home
 XDG_CACHE_HOME=$termux_home/.cache
@@ -390,6 +392,13 @@ write_resolv_conf() {
 	fi
 }
 
+optional_android_binds() {
+	for bind_dir in $android_bind_dirs; do
+		[ -e "$bind_dir" ] || continue
+		printf '%s\n%s\n' -b "$bind_dir:$bind_dir"
+	done
+}
+
 enter() {
 	[ -d "$store_dir" ] || die "state not initialized at $state_dir; run installer first"
 	have "$proot" || die "proot is required; install it with: pkg install proot"
@@ -411,6 +420,7 @@ enter() {
 		set -- "$shell" -l
 	fi
 
+	# shellcheck disable=SC2046
 	exec "$proot" \
 		--link2symlink \
 		-0 \
@@ -422,6 +432,7 @@ enter() {
 		-b /dev \
 		-b /proc \
 		-b /sys \
+		$(optional_android_binds) \
 		-w /home/termux \
 		/usr/bin/env \
 		HOME=/home/termux \
