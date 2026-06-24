@@ -108,7 +108,7 @@ sandbox = false
 build-users-group =
 max-jobs = auto
 substituters = https://cache.nixos.org/
-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWw6OAkD9K2xYc0Y7M2e5mB3BfW7Q=
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
 EOF
     cat > bootstrap/root/etc/passwd <<'EOF'
 root:x:0:0:root:/root:/bin/sh

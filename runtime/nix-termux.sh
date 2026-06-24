@@ -515,7 +515,6 @@ enter() {
 
 	# shellcheck disable=SC2046
 	exec "$proot" \
-		--link2symlink \
 		-0 \
 		-r "$root_dir" \
 		-b "$store_dir:/nix" \
