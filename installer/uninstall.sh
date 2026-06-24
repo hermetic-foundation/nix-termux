@@ -3,6 +3,13 @@
 
 set -eu
 
+die() {
+	printf 'uninstall.sh: %s\n' "$*" >&2
+	exit 1
+}
+
+[ "$#" -eq 0 ] || die "uninstall accepts no arguments"
+
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"

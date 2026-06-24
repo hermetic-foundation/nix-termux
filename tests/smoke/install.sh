@@ -1115,6 +1115,17 @@ grep -q '^nix-termux: uninstall accepts no arguments$' "$tmp/uninstall-extra.err
 test -d "$tmp/home/.nix-termux"
 test -x "$tmp/prefix/bin/nix-termux"
 
+if HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	sh "$tmp/home/.nix-termux/share/installer/uninstall.sh" extra >"$tmp/uninstall-script-extra.out" 2>"$tmp/uninstall-script-extra.err"; then
+	printf '%s\n' "direct uninstall script with extra arguments unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^uninstall.sh: uninstall accepts no arguments$' "$tmp/uninstall-script-extra.err"
+test -d "$tmp/home/.nix-termux"
+test -x "$tmp/prefix/bin/nix-termux"
+
 cat >"$tmp/prefix/bin/nix-env" <<EOF
 #!$host_sh
 printf '%s\n' user modified nix-env
