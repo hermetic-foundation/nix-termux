@@ -35,6 +35,10 @@ for arch in x86_64 aarch64; do
 	cat >"$tmp/release/nix-termux-channel-$arch.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-runtime.tar.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "termuxArch": "wrong-arch",
+  "nixSystem": "wrong-system",
   "platform": {
     "termuxArch": "$arch",
     "nixSystem": "$arch-linux"
@@ -51,6 +55,10 @@ EOF
 	cat >"$tmp/release/nix-termux-bootstrap-$arch.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-bootstrap.tar.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "termuxArch": "wrong-arch",
+  "nixSystem": "wrong-system",
   "platform": {
     "termuxArch": "$arch",
     "nixSystem": "$arch-linux"

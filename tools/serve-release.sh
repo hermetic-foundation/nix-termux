@@ -29,12 +29,14 @@ shell_quote() {
 	printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
 }
 
-json_string_value_n() {
-	key=$1
-	index=$2
+json_object_string_value() {
+	object=$1
+	key=$2
 	file=$3
 
-	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
+	sed -n '/"'"$object"'"[[:space:]]*:/,/}/p' "$file" |
+		sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+		head -n 1
 }
 
 manifest_arch_from_name() {
@@ -118,11 +120,11 @@ validate_release_dir() {
 		expected_system=$(expected_nix_system "$expected_arch")
 		grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$channel" ||
 			die "$channel_name has unsupported schemaVersion"
-		runtime_url=$(json_string_value_n url 1 "$channel")
-		runtime_sha=$(json_string_value_n sha256 1 "$channel")
-		bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
-		channel_arch=$(json_string_value_n termuxArch 1 "$channel")
-		channel_system=$(json_string_value_n nixSystem 1 "$channel")
+		runtime_url=$(json_object_string_value runtime url "$channel")
+		runtime_sha=$(json_object_string_value runtime sha256 "$channel")
+		bootstrap_manifest_url=$(json_object_string_value bootstrapManifest url "$channel")
+		channel_arch=$(json_object_string_value platform termuxArch "$channel")
+		channel_system=$(json_object_string_value platform nixSystem "$channel")
 		[ -n "$channel_arch" ] ||
 			die "$channel_name missing platform.termuxArch"
 		[ -n "$channel_system" ] ||
@@ -155,10 +157,10 @@ validate_release_dir() {
 		expected_system=$(expected_nix_system "$expected_arch")
 		grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
 			die "$manifest_name has unsupported schemaVersion"
-		archive_url=$(json_string_value_n url 1 "$manifest")
-		archive_sha=$(json_string_value_n sha256 1 "$manifest")
-		manifest_arch=$(json_string_value_n termuxArch 1 "$manifest")
-		manifest_system=$(json_string_value_n nixSystem 1 "$manifest")
+		archive_url=$(json_object_string_value archive url "$manifest")
+		archive_sha=$(json_object_string_value archive sha256 "$manifest")
+		manifest_arch=$(json_object_string_value platform termuxArch "$manifest")
+		manifest_system=$(json_object_string_value platform nixSystem "$manifest")
 		expected_archive=$(basename -- "$base.tar.gz")
 		[ -n "$manifest_arch" ] ||
 			die "$manifest_name missing platform.termuxArch"
