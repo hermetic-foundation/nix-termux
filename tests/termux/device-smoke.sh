@@ -203,6 +203,8 @@ check "proot uses local Nix store" sh -c 'NIX_REMOTE=daemon nix-termux exec sh -
 # shellcheck disable=SC2016
 check "proot provides legacy NIX_PATH" nix-termux exec sh -c 'test "$NIX_PATH" = nixpkgs=flake:nixpkgs'
 # shellcheck disable=SC2016
+check "proot provides shell and Nix config env" nix-termux exec sh -c 'test "$SHELL" = /nix/var/nix/profiles/default/bin/bash && test "$NIX_CONF_DIR" = /etc/nix'
+# shellcheck disable=SC2016
 check "proot provides certificate bundle env" nix-termux exec sh -c 'test "$NIX_SSL_CERT_FILE" = /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt && test "$SSL_CERT_FILE" = "$NIX_SSL_CERT_FILE" && test -r "$SSL_CERT_FILE"'
 # shellcheck disable=SC2016
 check "proot provides Nix profile env" nix-termux exec sh -c 'test "$NIX_PROFILES" = "/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" && test -L "$HOME/.nix-profile"'
