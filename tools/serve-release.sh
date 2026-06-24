@@ -199,8 +199,8 @@ fi
 }
 
 case $host in
-*[[:space:]/]*)
-	die "host must be a hostname or IP address without whitespace or slashes"
+*[[:space:]/]* | -*)
+	die "host must be a hostname or IP address without whitespace, slashes, or leading dash"
 	;;
 esac
 

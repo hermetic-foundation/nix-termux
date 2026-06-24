@@ -271,13 +271,19 @@ if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" "
 	printf '%s\n' "serve-release unexpectedly accepted host with whitespace" >&2
 	exit 1
 fi
-grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace or slashes' "$tmp/err"
+grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace, slashes, or leading dash' "$tmp/err"
 
 if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" "bad/host" 8766 >"$tmp/out" 2>"$tmp/err"; then
 	printf '%s\n' "serve-release unexpectedly accepted host with slash" >&2
 	exit 1
 fi
-grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace or slashes' "$tmp/err"
+grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace, slashes, or leading dash' "$tmp/err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" "-bad-host" 8766 >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted host with leading dash" >&2
+	exit 1
+fi
+grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace, slashes, or leading dash' "$tmp/err"
 
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 grep -q "^export NIX_TERMUX_CHANNEL_BASE_URL='http://127.0.0.1:8765'$" "$tmp/serve.out"
