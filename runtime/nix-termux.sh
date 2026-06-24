@@ -420,6 +420,13 @@ write_resolv_conf() {
 
 optional_android_binds() {
 	for bind_dir in $android_bind_dirs; do
+		case $bind_dir in
+		/*)
+			;;
+		*)
+			continue
+			;;
+		esac
 		[ -e "$bind_dir" ] || continue
 		printf '%s\n%s\n' -b "$bind_dir:$bind_dir"
 	done
