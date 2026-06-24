@@ -1173,6 +1173,26 @@ if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade "" >"$tmp/upgrade-empty.out" 2>"$tmp/upgrade-empty.err"; then
+	printf '%s\n' "upgrade with empty channel URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade channel URL must not be empty$' "$tmp/upgrade-empty.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" upgrade-bootstrap "" >"$tmp/upgrade-bootstrap-empty.out" 2>"$tmp/upgrade-bootstrap-empty.err"; then
+	printf '%s\n' "upgrade-bootstrap with empty manifest URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: upgrade-bootstrap manifest URL must not be empty$' "$tmp/upgrade-bootstrap-empty.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 	"$tmp/prefix/bin/nix-termux" uninstall extra >"$tmp/uninstall-extra.out" 2>"$tmp/uninstall-extra.err"; then
 	printf '%s\n' "uninstall with extra arguments unexpectedly succeeded" >&2
 	exit 1

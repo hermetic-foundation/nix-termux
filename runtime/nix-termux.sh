@@ -517,6 +517,9 @@ upgrade() {
 	install_script=${NIX_TERMUX_INSTALL:-"$state_dir/share/installer/install.sh"}
 
 	[ "$#" -le 1 ] || die "upgrade accepts at most one channel URL"
+	if [ "$#" -eq 1 ] && [ -z "$1" ]; then
+		die "upgrade channel URL must not be empty"
+	fi
 	[ -x "$install_script" ] || die "install script not found at $install_script"
 
 	if [ -z "$channel" ]; then
@@ -543,6 +546,9 @@ upgrade_bootstrap() {
 	install_script=${NIX_TERMUX_INSTALL:-"$state_dir/share/installer/install.sh"}
 
 	[ "$#" -le 1 ] || die "upgrade-bootstrap accepts at most one manifest URL"
+	if [ "$#" -eq 1 ] && [ -z "$1" ]; then
+		die "upgrade-bootstrap manifest URL must not be empty"
+	fi
 	[ -x "$install_script" ] || die "install script not found at $install_script"
 
 	if [ -z "$manifest_url" ]; then
