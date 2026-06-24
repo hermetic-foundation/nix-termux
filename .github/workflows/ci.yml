@@ -101,6 +101,7 @@ jobs:
             nix-termux-bootstrap-*.registration \
             > SHA256SUMS)
           (cd dist && sha256sum -c SHA256SUMS)
+          (cd dist && sha256sum -c install.sh.sha256)
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3
