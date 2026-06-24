@@ -261,6 +261,8 @@
             nativeBuildInputs = [
               pkgs.coreutils
               pkgs.gnugrep
+              pkgs.gnutar
+              pkgs.gzip
               pkgs.python3
             ];
             src = self;
@@ -367,6 +369,8 @@
               pkgs.coreutils
               pkgs.findutils
               pkgs.gnugrep
+              pkgs.gnutar
+              pkgs.gzip
               pkgs.gnused
             ];
             src = self;

@@ -29,7 +29,9 @@ runtime_sha=$(sha256sum "$tmp/release/nix-termux-runtime.tar.gz")
 runtime_sha=${runtime_sha%% *}
 
 for arch in x86_64 aarch64; do
-	printf '%s\n' "nix-termux-bootstrap-$arch.tar.gz" >"$tmp/release/nix-termux-bootstrap-$arch.tar.gz"
+	mkdir -p "$tmp/bootstrap-$arch/nix-termux"
+	printf '%s\n' "nix-termux-bootstrap-$arch.registration" >"$tmp/bootstrap-$arch/nix-termux/bootstrap.registration"
+	tar -czf "$tmp/release/nix-termux-bootstrap-$arch.tar.gz" -C "$tmp/bootstrap-$arch" .
 	bootstrap_sha=$(sha256sum "$tmp/release/nix-termux-bootstrap-$arch.tar.gz")
 	bootstrap_sha=${bootstrap_sha%% *}
 	cat >"$tmp/release/nix-termux-channel-$arch.json" <<EOF
@@ -69,7 +71,7 @@ EOF
   }
 }
 EOF
-	printf '%s\n' "nix-termux-bootstrap-$arch.registration" >"$tmp/release/nix-termux-bootstrap-$arch.registration"
+	cp "$tmp/bootstrap-$arch/nix-termux/bootstrap.registration" "$tmp/release/nix-termux-bootstrap-$arch.registration"
 done
 
 (cd "$tmp/release" && sha256sum \
@@ -137,6 +139,7 @@ grep -q 'nix-termux-channel-x86_64.json platform.nixSystem mismatch: expected x8
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
 cp "$tmp/release/nix-termux-bootstrap-x86_64.json" "$tmp/bootstrap-x86_64.good"
+cp "$tmp/release/nix-termux-bootstrap-x86_64.tar.gz" "$tmp/bootstrap-x86_64.tar.gz.good"
 sed 's/"schemaVersion": 1/"schemaVersion": 2/' \
 	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
@@ -188,7 +191,7 @@ if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"
 	exit 1
 fi
 grep -q 'release directory missing nix-termux-bootstrap-x86_64.tar.gz' "$tmp/err"
-printf '%s\n' nix-termux-bootstrap-x86_64.tar.gz >"$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"
+cp "$tmp/bootstrap-x86_64.tar.gz.good" "$tmp/release/nix-termux-bootstrap-x86_64.tar.gz"
 
 sed 's/nix-termux-bootstrap-x86_64.json/missing-bootstrap-x86_64.json/' \
 	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
@@ -226,6 +229,43 @@ if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"
 fi
 grep -q 'nix-termux-bootstrap-x86_64.json archive sha256 mismatch' "$tmp/err"
 cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
+
+cp "$tmp/release/nix-termux-bootstrap-x86_64.registration" "$tmp/bootstrap-x86_64.registration.good"
+printf '%s\n' "wrong registration" >"$tmp/release/nix-termux-bootstrap-x86_64.registration"
+(cd "$tmp/release" && sha256sum \
+	install.sh \
+	install.sh.sha256 \
+	nix-termux-runtime.tar.gz \
+	nix-termux-runtime.tar.gz.sha256 \
+	nix-termux-channel-x86_64.json \
+	nix-termux-bootstrap-x86_64.json \
+	nix-termux-bootstrap-x86_64.tar.gz \
+	nix-termux-bootstrap-x86_64.registration \
+	nix-termux-channel-aarch64.json \
+	nix-termux-bootstrap-aarch64.json \
+	nix-termux-bootstrap-aarch64.tar.gz \
+	nix-termux-bootstrap-aarch64.registration \
+	>SHA256SUMS)
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted a mismatched registration sidecar" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json registration sidecar mismatch' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.registration.good" "$tmp/release/nix-termux-bootstrap-x86_64.registration"
+(cd "$tmp/release" && sha256sum \
+	install.sh \
+	install.sh.sha256 \
+	nix-termux-runtime.tar.gz \
+	nix-termux-runtime.tar.gz.sha256 \
+	nix-termux-channel-x86_64.json \
+	nix-termux-bootstrap-x86_64.json \
+	nix-termux-bootstrap-x86_64.tar.gz \
+	nix-termux-bootstrap-x86_64.registration \
+	nix-termux-channel-aarch64.json \
+	nix-termux-bootstrap-aarch64.json \
+	nix-termux-bootstrap-aarch64.tar.gz \
+	nix-termux-bootstrap-aarch64.registration \
+	>SHA256SUMS)
 
 cp "$tmp/release/install.sh.sha256" "$tmp/install-sh-sha256.good"
 printf '%s  install.sh\n' "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" >"$tmp/release/install.sh.sha256"

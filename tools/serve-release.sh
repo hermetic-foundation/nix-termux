@@ -102,6 +102,7 @@ validate_release_dir() {
 	[ -d "$release_dir" ] || die "release directory not found: $release_dir"
 	command -v sha256sum >/dev/null 2>&1 || die "sha256sum is required to verify release files"
 	command -v sed >/dev/null 2>&1 || die "sed is required to verify release manifests"
+	command -v tar >/dev/null 2>&1 || die "tar is required to verify bootstrap archives"
 
 	for file in \
 		install.sh \
@@ -178,6 +179,17 @@ validate_release_dir() {
 		actual_archive_sha=${actual_archive_sha%% *}
 		[ "$archive_sha" = "$actual_archive_sha" ] ||
 			die "$manifest_name archive sha256 mismatch"
+		extracted_registration=${TMPDIR:-/tmp}/nix-termux-registration.$$.${expected_arch}
+		rm -f "$extracted_registration"
+		tar -xOf "$base.tar.gz" ./nix-termux/bootstrap.registration >"$extracted_registration" ||
+			die "$manifest_name archive missing nix-termux/bootstrap.registration"
+		archive_registration_sha=$(sha256sum "$extracted_registration")
+		archive_registration_sha=${archive_registration_sha%% *}
+		sidecar_registration_sha=$(sha256sum "$base.registration")
+		sidecar_registration_sha=${sidecar_registration_sha%% *}
+		rm -f "$extracted_registration"
+		[ "$archive_registration_sha" = "$sidecar_registration_sha" ] ||
+			die "$manifest_name registration sidecar mismatch"
 	done
 
 	(cd "$release_dir" && sha256sum -c install.sh.sha256 >/dev/null) ||
