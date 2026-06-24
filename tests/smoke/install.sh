@@ -461,12 +461,16 @@ sed 's/"sha256": "'"$runtime_sha"'"/"sha256": "not-a-sha256"/' \
 	"$tmp/channel.json" >"$tmp/channel-bad-runtime-sha.json"
 sed '0,/"url": "runtime.tar.gz"/s//"url": "runtime bad.tar.gz"/' \
 	"$tmp/channel.json" >"$tmp/channel-bad-runtime-url.json"
+sed '0,/"url": "runtime.tar.gz"/s//"url": true/' \
+	"$tmp/channel.json" >"$tmp/channel-non-string-runtime-url.json"
 sed '0,/"url": "bootstrap-manifest.json"/s//"url": "bootstrap manifest.json"/' \
 	"$tmp/channel.json" >"$tmp/channel-bad-bootstrap-manifest-url.json"
 sed 's/"sha256": "'"$sha"'"/"sha256": "not-a-sha256"/' \
 	"$tmp/bootstrap-manifest.json" >"$tmp/bootstrap-bad-archive-sha.json"
 sed '0,/"url": "bootstrap.tar.gz"/s//"url": "bootstrap bad.tar.gz"/' \
 	"$tmp/bootstrap-manifest.json" >"$tmp/bootstrap-bad-archive-url.json"
+sed '0,/"url": "bootstrap.tar.gz"/s//"url": true/' \
+	"$tmp/bootstrap-manifest.json" >"$tmp/bootstrap-non-string-archive-url.json"
 sed 's/"nixSystem": "x86_64-linux"/"nixSystem": "aarch64-linux"/' \
 	"$tmp/channel.json" >"$tmp/channel-bad-nix-system.json"
 sed 's/"nixSystem": "x86_64-linux"/"nixSystem": "aarch64-linux"/' \
@@ -777,6 +781,18 @@ grep -q 'channel manifest runtime.url must not contain whitespace' "$tmp/channel
 test ! -e "$tmp/channel-bad-runtime-url-home/.nix-termux/runtime/nix-termux.sh"
 
 if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/channel-non-string-runtime-url-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/channel-non-string-runtime-url-home/.nix-termux" \
+	NIX_TERMUX_CHANNEL_URL="file://$tmp/channel-non-string-runtime-url.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/channel-non-string-runtime-url.err"; then
+	printf '%s\n' "non-string channel runtime url unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'channel manifest missing runtime.url' "$tmp/channel-non-string-runtime-url.err"
+test ! -e "$tmp/channel-non-string-runtime-url-home/.nix-termux/runtime/nix-termux.sh"
+
+if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/channel-bad-bootstrap-manifest-url-home" \
 	PREFIX="$tmp/prefix" \
 	NIX_TERMUX_STATE_DIR="$tmp/channel-bad-bootstrap-manifest-url-home/.nix-termux" \
@@ -880,6 +896,21 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'bootstrap manifest archive.url must not contain whitespace' "$tmp/bootstrap-bad-archive-url.err"
 test ! -e "$tmp/bootstrap-bad-archive-url-home/.nix-termux/etc/bootstrap-activation.conf"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-non-string-archive-url-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-non-string-archive-url-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-non-string-archive-url.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-non-string-archive-url.err"; then
+	printf '%s\n' "non-string bootstrap archive url unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap manifest missing archive.url' "$tmp/bootstrap-non-string-archive-url.err"
+test ! -e "$tmp/bootstrap-non-string-archive-url-home/.nix-termux/etc/bootstrap-activation.conf"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/bootstrap-bad-nix-system-home" \

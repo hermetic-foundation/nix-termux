@@ -203,7 +203,7 @@ json_path_string() {
 	file=$2
 
 	if have jq; then
-		jq -er "$path // empty" "$file" 2>/dev/null || true
+		jq -er "$path // empty | strings" "$file" 2>/dev/null || true
 		return
 	fi
 
