@@ -25,6 +25,10 @@ die() {
 	exit 1
 }
 
+shell_quote() {
+	printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
 json_string_value_n() {
 	key=$1
 	index=$2
@@ -181,12 +185,13 @@ esac
 command -v python3 >/dev/null 2>&1 || die "python3 is required to serve release files"
 
 base_url=http://$host:$port
+base_url_quoted=$(shell_quote "$base_url")
 
 cat <<EOF
 Run this inside stock Termux on the Android device:
 
 pkg install proot curl tar xz coreutils
-export NIX_TERMUX_CHANNEL_BASE_URL=$base_url
+export NIX_TERMUX_CHANNEL_BASE_URL=$base_url_quoted
 tmp_dir=\$(mktemp -d)
 trap 'rm -rf "\$tmp_dir"' EXIT INT TERM
 curl -fL "\$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "\$tmp_dir/install.sh"
