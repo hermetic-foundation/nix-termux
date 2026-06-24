@@ -416,10 +416,6 @@ mkdir -p \
 	"$state_dir/nix/var/nix/profiles/per-user/termux" \
 	"$state_dir/nix/var/nix/temproots"
 
-if [ ! -e "$HOME/.nix-profile" ] && [ ! -L "$HOME/.nix-profile" ]; then
-	ln -s "$managed_profile_target" "$HOME/.nix-profile"
-fi
-
 if [ -n "$bootstrap_manifest_url" ]; then
 	manifest=$state_dir/bootstrap-manifest.json
 	fetch_url "$bootstrap_manifest_url" "$manifest"
@@ -465,6 +461,7 @@ if [ -n "$bootstrap_url" ]; then
 		NIX_TERMUX_SSL_CERT_FILE=$bootstrap_stage/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
 		NIX_TERMUX_NIX_CONF=$bootstrap_stage/root/etc/nix/nix.conf \
 		NIX_TERMUX_RESOLV_CONF=$bootstrap_stage/root/etc/resolv.conf \
+		NIX_TERMUX_MANAGE_HOME_PROFILE=no \
 		sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
 	registration_loaded=yes
 
@@ -478,6 +475,10 @@ if [ -n "$bootstrap_url" ]; then
 		printf 'registration=%s\n' "$registration"
 		printf 'registration_loaded=%s\n' "$registration_loaded"
 	} | write_file "$state_dir/etc/bootstrap-activation.conf"
+fi
+
+if [ ! -e "$HOME/.nix-profile" ] && [ ! -L "$HOME/.nix-profile" ]; then
+	ln -s "$managed_profile_target" "$HOME/.nix-profile"
 fi
 
 for name in $wrapper_names; do

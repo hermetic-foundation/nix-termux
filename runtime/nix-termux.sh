@@ -27,6 +27,7 @@ activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.co
 proot=${NIX_TERMUX_PROOT:-proot}
 resolv_conf_file=${NIX_TERMUX_RESOLV_CONF:-"$root_dir/etc/resolv.conf"}
 android_bind_dirs=${NIX_TERMUX_ANDROID_BIND_DIRS:-"/sdcard /storage"}
+manage_home_profile=${NIX_TERMUX_MANAGE_HOME_PROFILE:-yes}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
 termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
@@ -409,7 +410,7 @@ enter() {
 	have "$proot" || die "proot is required; install it with: pkg install proot"
 	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/root" "$root_dir/tmp" "$store_dir/var/nix/profiles/per-user/root" "$store_dir/var/nix/profiles/per-user/termux"
 	mkdir -p "$termux_home/.cache" "$termux_home/.config" "$termux_home/.local/share" "$termux_home/.local/state"
-	if [ ! -e "$termux_home/.nix-profile" ] && [ ! -L "$termux_home/.nix-profile" ]; then
+	if [ "$manage_home_profile" = yes ] && [ ! -e "$termux_home/.nix-profile" ] && [ ! -L "$termux_home/.nix-profile" ]; then
 		ln -s /nix/var/nix/profiles/per-user/termux/profile "$termux_home/.nix-profile"
 	fi
 	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"

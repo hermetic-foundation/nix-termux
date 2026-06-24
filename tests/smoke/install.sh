@@ -699,6 +699,7 @@ fi
 grep -q 'load db failed' "$tmp/bootstrap-load-db-fail.err"
 test ! -e "$tmp/bootstrap-load-db-fail-home/.nix-termux/etc/bootstrap-activation.conf"
 test ! -e "$tmp/bootstrap-load-db-fail-home/.nix-termux/etc/nix-termux.conf"
+test ! -e "$tmp/bootstrap-load-db-fail-home/.nix-profile"
 test ! -e "$tmp/prefix/bin/nix"
 
 PATH="$tmp/fake-bin:$PATH" \
