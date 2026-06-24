@@ -139,6 +139,10 @@ json_escape() {
 	printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
+path_or_symlink_exists() {
+	[ -e "$1" ] || [ -L "$1" ]
+}
+
 doctor_status() {
 	doctor_termux=false
 	doctor_proot=false
@@ -175,7 +179,7 @@ doctor_status() {
 	else
 		doctor_status=1
 	fi
-	if [ -x "$profile_dir/bin/nix" ]; then
+	if path_or_symlink_exists "$profile_dir/bin/nix"; then
 		doctor_nix=true
 	else
 		doctor_status=1
@@ -199,7 +203,7 @@ doctor_status() {
 	else
 		doctor_status=1
 	fi
-	if [ -r "$cert_file" ]; then
+	if path_or_symlink_exists "$cert_file"; then
 		doctor_certs=true
 	else
 		doctor_status=1
