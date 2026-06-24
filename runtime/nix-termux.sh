@@ -500,6 +500,7 @@ upgrade() {
 
 uninstall() {
 	uninstall_script=${NIX_TERMUX_UNINSTALL:-"$state_dir/share/installer/uninstall.sh"}
+	[ "$#" -eq 0 ] || die "uninstall accepts no arguments"
 	[ -x "$uninstall_script" ] || die "uninstall script not found at $uninstall_script"
 	exec sh "$uninstall_script"
 }

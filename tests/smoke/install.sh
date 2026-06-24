@@ -1078,6 +1078,18 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q '^nix-termux: upgrade-bootstrap accepts at most one manifest URL$' "$tmp/upgrade-bootstrap-extra.err"
 
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" uninstall extra >"$tmp/uninstall-extra.out" 2>"$tmp/uninstall-extra.err"; then
+	printf '%s\n' "uninstall with extra arguments unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: uninstall accepts no arguments$' "$tmp/uninstall-extra.err"
+test -d "$tmp/home/.nix-termux"
+test -x "$tmp/prefix/bin/nix-termux"
+
 cat >"$tmp/prefix/bin/nix-env" <<EOF
 #!$host_sh
 printf '%s\n' user modified nix-env
