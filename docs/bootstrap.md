@@ -20,6 +20,9 @@ nix/var/nix/profiles/per-user/root/
 nix/var/nix/profiles/per-user/termux/
 nix/var/nix/temproots/
 root/etc/nix/nix.conf
+root/etc/passwd
+root/etc/group
+root/etc/nsswitch.conf
 root/root/
 root/usr/bin/env
 nix-termux/bootstrap.registration
@@ -27,6 +30,8 @@ nix-termux/bootstrap.registration
 
 `root/` is the `proot` root filesystem. The runtime bind-mounts `nix/` to
 `/nix`, Termux home to `/home/termux`, and the Termux prefix to `/termux`.
+The root filesystem must define a `termux` user and group in `root/etc/passwd`
+and `root/etc/group` so tools that inspect user identity work inside proot.
 
 ## Manifest
 

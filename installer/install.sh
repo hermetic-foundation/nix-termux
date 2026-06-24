@@ -111,6 +111,16 @@ validate_bootstrap_stage() {
 		die "bootstrap archive missing root/etc/nix/nix.conf"
 	path_exists "$stage/root/usr/bin/env" ||
 		die "bootstrap archive missing root/usr/bin/env"
+	[ -r "$stage/root/etc/passwd" ] ||
+		die "bootstrap archive missing root/etc/passwd"
+	[ -r "$stage/root/etc/group" ] ||
+		die "bootstrap archive missing root/etc/group"
+	[ -r "$stage/root/etc/nsswitch.conf" ] ||
+		die "bootstrap archive missing root/etc/nsswitch.conf"
+	grep -q '^termux:' "$stage/root/etc/passwd" ||
+		die "bootstrap archive root/etc/passwd missing termux user"
+	grep -q '^termux:' "$stage/root/etc/group" ||
+		die "bootstrap archive root/etc/group missing termux group"
 	[ -r "$stage/nix-termux/bootstrap.registration" ] ||
 		die "bootstrap archive missing nix-termux/bootstrap.registration"
 }

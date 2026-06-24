@@ -147,6 +147,19 @@ EOF
 done
 cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
 printf '%s\n' "experimental-features = nix-command flakes" >"$tmp/bootstrap/root/etc/nix/nix.conf"
+cat >"$tmp/bootstrap/root/etc/passwd" <<EOF
+root:x:0:0:root:/root:/bin/sh
+termux:x:1000:1000:termux:/home/termux:/bin/sh
+EOF
+cat >"$tmp/bootstrap/root/etc/group" <<EOF
+root:x:0:
+termux:x:1000:
+EOF
+cat >"$tmp/bootstrap/root/etc/nsswitch.conf" <<EOF
+passwd: files
+group: files
+hosts: files dns
+EOF
 printf '%s\n' "fake cert bundle" >"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
 mkdir -p "$tmp/bootstrap/nix-termux"
 printf '%s\n' "fake registration" >"$tmp/bootstrap/nix-termux/bootstrap.registration"
@@ -159,6 +172,10 @@ cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-registration"
 rm -f "$tmp/bootstrap-missing-registration/nix-termux/bootstrap.registration"
 (cd "$tmp/bootstrap-missing-registration" && tar -czf "$tmp/bootstrap-missing-registration.tar.gz" .)
 missing_registration_sha=$(sha256sum "$tmp/bootstrap-missing-registration.tar.gz" | awk '{print $1}')
+cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-identity"
+rm -f "$tmp/bootstrap-missing-identity/root/etc/passwd"
+(cd "$tmp/bootstrap-missing-identity" && tar -czf "$tmp/bootstrap-missing-identity.tar.gz" .)
+missing_identity_sha=$(sha256sum "$tmp/bootstrap-missing-identity.tar.gz" | awk '{print $1}')
 cp -R "$tmp/bootstrap" "$tmp/bootstrap-load-db-fail"
 printf '%s\n' "failed bootstrap marker" >"$tmp/bootstrap-load-db-fail/nix/store/bootstrap-load-db-fail-marker"
 cat >"$tmp/bootstrap-load-db-fail/nix/var/nix/profiles/default/bin/nix-store" <<EOF
@@ -238,6 +255,25 @@ cat >"$tmp/bootstrap-load-db-fail-manifest.json" <<EOF
   "archive": {
     "url": "bootstrap-load-db-fail.tar.gz",
     "sha256": "$load_db_fail_sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-missing-identity-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-missing-identity.tar.gz",
+    "sha256": "$missing_identity_sha"
   },
   "layout": {
     "storeDir": "nix",
@@ -438,6 +474,22 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'bootstrap archive missing nix-termux/bootstrap.registration' "$tmp/bootstrap-missing-registration.err"
 test ! -e "$tmp/bootstrap-missing-registration-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-missing-identity-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-missing-identity-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-missing-identity-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-missing-identity.err"; then
+	printf '%s\n' "bootstrap missing identity unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap archive missing root/etc/passwd' "$tmp/bootstrap-missing-identity.err"
+test ! -e "$tmp/bootstrap-missing-identity-home/.nix-termux/etc/bootstrap-activation.conf"
 test ! -e "$tmp/prefix/bin/nix"
 
 if PATH="$tmp/fake-bin:$PATH" \
