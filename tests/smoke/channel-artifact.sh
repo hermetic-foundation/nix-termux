@@ -36,7 +36,7 @@ jq -e --arg channel_arch "$channel_arch" --arg expected_system "$expected_system
   .schemaVersion == 1
   and .platform.termuxArch == $channel_arch
   and .platform.nixSystem == $expected_system
-  and (.runtime.url | length > 0)
+  and .runtime.url == "nix-termux-runtime.tar.gz"
   and (.runtime.sha256 | test("^[0-9a-f]{64}$"))
   and (.bootstrapManifest.url | length > 0)
 ' "$channel" >/dev/null
