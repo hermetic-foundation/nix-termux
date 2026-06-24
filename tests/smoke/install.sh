@@ -108,6 +108,7 @@ mkdir -p \
 	"$tmp/bootstrap/nix/store" \
 	"$tmp/bootstrap/nix/var/nix/profiles/default/bin" \
 	"$tmp/bootstrap/nix/var/nix/profiles/default/etc/ssl/certs" \
+	"$tmp/bootstrap/root/bin" \
 	"$tmp/bootstrap/root/etc/nix" \
 	"$tmp/bootstrap/root/usr/bin"
 mkdir -p "$tmp/android-storage/sdcard" "$tmp/android-storage/storage"
@@ -147,6 +148,7 @@ EOF
 	chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/$name"
 done
 cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
+cp "$host_sh" "$tmp/bootstrap/root/bin/sh"
 printf '%s\n' "experimental-features = nix-command flakes" >"$tmp/bootstrap/root/etc/nix/nix.conf"
 cat >"$tmp/bootstrap/root/etc/passwd" <<EOF
 root:x:0:0:root:/root:/bin/sh
@@ -177,6 +179,10 @@ cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-identity"
 rm -f "$tmp/bootstrap-missing-identity/root/etc/passwd"
 (cd "$tmp/bootstrap-missing-identity" && tar -czf "$tmp/bootstrap-missing-identity.tar.gz" .)
 missing_identity_sha=$(sha256sum "$tmp/bootstrap-missing-identity.tar.gz" | awk '{print $1}')
+cp -R "$tmp/bootstrap" "$tmp/bootstrap-missing-shell"
+rm -f "$tmp/bootstrap-missing-shell/root/bin/sh"
+(cd "$tmp/bootstrap-missing-shell" && tar -czf "$tmp/bootstrap-missing-shell.tar.gz" .)
+missing_shell_sha=$(sha256sum "$tmp/bootstrap-missing-shell.tar.gz" | awk '{print $1}')
 cp -R "$tmp/bootstrap" "$tmp/bootstrap-load-db-fail"
 printf '%s\n' "failed bootstrap marker" >"$tmp/bootstrap-load-db-fail/nix/store/bootstrap-load-db-fail-marker"
 cat >"$tmp/bootstrap-load-db-fail/nix/var/nix/profiles/default/bin/nix-store" <<EOF
@@ -275,6 +281,25 @@ cat >"$tmp/bootstrap-missing-identity-manifest.json" <<EOF
   "archive": {
     "url": "bootstrap-missing-identity.tar.gz",
     "sha256": "$missing_identity_sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/bootstrap-missing-shell-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap-missing-shell.tar.gz",
+    "sha256": "$missing_shell_sha"
   },
   "layout": {
     "storeDir": "nix",
@@ -523,6 +548,22 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'bootstrap archive missing root/etc/passwd' "$tmp/bootstrap-missing-identity.err"
 test ! -e "$tmp/bootstrap-missing-identity-home/.nix-termux/etc/bootstrap-activation.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-missing-shell-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-missing-shell-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-missing-shell-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-missing-shell.err"; then
+	printf '%s\n' "bootstrap missing shell unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap archive missing root/bin/sh' "$tmp/bootstrap-missing-shell.err"
+test ! -e "$tmp/bootstrap-missing-shell-home/.nix-termux/etc/bootstrap-activation.conf"
 test ! -e "$tmp/prefix/bin/nix"
 
 if PATH="$tmp/fake-bin:$PATH" \

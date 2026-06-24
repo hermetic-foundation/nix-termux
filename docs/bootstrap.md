@@ -24,6 +24,7 @@ root/etc/passwd
 root/etc/group
 root/etc/nsswitch.conf
 root/root/
+root/bin/sh
 root/usr/bin/env
 nix-termux/bootstrap.registration
 ```

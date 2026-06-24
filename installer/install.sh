@@ -112,6 +112,8 @@ validate_bootstrap_stage() {
 		die "bootstrap archive missing root/etc/nix/nix.conf"
 	path_exists "$stage/root/usr/bin/env" ||
 		die "bootstrap archive missing root/usr/bin/env"
+	path_exists "$stage/root/bin/sh" ||
+		die "bootstrap archive missing root/bin/sh"
 	[ -r "$stage/root/etc/passwd" ] ||
 		die "bootstrap archive missing root/etc/passwd"
 	[ -r "$stage/root/etc/group" ] ||
