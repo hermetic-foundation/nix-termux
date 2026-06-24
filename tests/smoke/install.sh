@@ -11,9 +11,12 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
+mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/no-jq-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
 host_sh=$(command -v sh)
 host_cat=$(command -v cat)
+for command in sh basename cat chmod cp dirname grep gzip head ln mkdir mv rm sed sha256sum tar uname; do
+	ln -s "$(command -v "$command")" "$tmp/no-jq-bin/$command"
+done
 cp "$host_sh" "$tmp/prefix/bin/sh"
 cat >"$tmp/prefix/bin/nix-hash" <<EOF
 #!$host_sh
@@ -261,6 +264,41 @@ cat >"$tmp/channel.json" <<EOF
 }
 EOF
 cp "$tmp/channel.json" "$tmp/nix-termux-channel-x86_64.json"
+cat >"$tmp/bootstrap-manifest-no-jq.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap.tar.gz",
+    "sha256": "$sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix",
+    "registration": "nix-termux/bootstrap.registration"
+  }
+}
+EOF
+cat >"$tmp/channel-no-jq.json" <<EOF
+{
+  "schemaVersion": 1,
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "runtime": {
+    "url": "runtime.tar.gz",
+    "sha256": "$runtime_sha"
+  },
+  "bootstrapManifest": {
+    "url": "bootstrap-manifest-no-jq.json"
+  }
+}
+EOF
 cat >"$tmp/channel-v2.json" <<EOF
 {
   "schemaVersion": 1,
@@ -288,6 +326,25 @@ fi
 exit 1
 EOF
 chmod 755 "$tmp/fake-bin/pkg"
+cp "$tmp/fake-bin/proot" "$tmp/no-jq-bin/proot"
+cp "$tmp/fake-bin/pkg" "$tmp/no-jq-bin/pkg"
+
+mkdir -p "$tmp/no-jq-prefix/bin" "$tmp/no-jq-prefix/etc"
+cp "$host_sh" "$tmp/no-jq-prefix/bin/sh"
+printf '%s\n' "nameserver 192.0.2.54" >"$tmp/no-jq-prefix/etc/resolv.conf"
+PATH="$tmp/no-jq-bin" \
+	HOME="$tmp/no-jq-home" \
+	PREFIX="$tmp/no-jq-prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/no-jq-home/.nix-termux" \
+	NIX_TERMUX_CHANNEL_URL="file://$tmp/channel-no-jq.json" \
+	sh "$tmp/standalone/install.sh" >"$tmp/no-jq-install.out"
+grep -q '^loaded db$' "$tmp/no-jq-install.out"
+grep -q '^runtime_version=0.1.0$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
+grep -q '^channel_url=file://.*/channel-no-jq.json$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
+grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest-no-jq.json$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
+grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
+grep -q "^bootstrap_sha256=$sha$" "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
+test -x "$tmp/no-jq-prefix/bin/nix"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/no-channel-home" \
