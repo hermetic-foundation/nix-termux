@@ -59,6 +59,11 @@ Commands:
 EOF
 }
 
+help_command() {
+	[ "$#" -eq 0 ] || die "help accepts no arguments"
+	usage
+}
+
 have() {
 	command -v "$1" >/dev/null 2>&1
 }
@@ -561,6 +566,6 @@ upgrade) upgrade "$@" ;;
 upgrade-bootstrap) upgrade_bootstrap "$@" ;;
 uninstall) uninstall "$@" ;;
 version | -V | --version) version "$@" ;;
-help | -h | --help) usage ;;
+help | -h | --help) help_command "$@" ;;
 *) die "unknown command: $cmd" ;;
 esac

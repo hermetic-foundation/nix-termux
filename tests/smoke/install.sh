@@ -795,6 +795,25 @@ version_output=$(
 	exit 1
 }
 
+help_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" help
+)
+printf '%s\n' "$help_output" | grep -q '^Usage: nix-termux <command> \[args\]$'
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	"$tmp/prefix/bin/nix-termux" help extra >"$tmp/help-extra.out" 2>"$tmp/help-extra.err"; then
+	printf '%s\n' "help with extra arguments unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: help accepts no arguments$' "$tmp/help-extra.err"
+
 smoke_output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
