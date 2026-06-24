@@ -472,6 +472,7 @@ if [ -n "$bootstrap_url" ]; then
 	registration=$state_dir/nix-termux/bootstrap.registration
 
 	{
+		printf 'bootstrap_manifest_url=%s\n' "$bootstrap_manifest_url"
 		printf 'bootstrap_url=%s\n' "$bootstrap_url"
 		printf 'bootstrap_sha256=%s\n' "$bootstrap_sha256"
 		printf 'registration=%s\n' "$registration"

@@ -710,6 +710,7 @@ PATH="$tmp/fake-bin:$PATH" \
 
 grep -q '^fake registration$' "$tmp/home/.nix-termux/load-db.input"
 grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
+grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q '^termux_arch=x86_64$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
@@ -865,6 +866,7 @@ if PATH="$tmp/fake-bin:$PATH" \
 fi
 grep -q 'load db failed' "$tmp/bootstrap-upgrade-load-db-fail.err"
 grep -qx 'live bootstrap marker' "$tmp/home/.nix-termux/nix/store/live-marker"
+grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 test ! -e "$tmp/home/.nix-termux/nix/store/bootstrap-load-db-fail-marker"
 
