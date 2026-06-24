@@ -8,12 +8,22 @@ die() {
 	exit 1
 }
 
+validate_state_dir() {
+	case $state_dir in
+	/ | . | ..)
+		die "NIX_TERMUX_STATE_DIR must not be $state_dir"
+		;;
+	esac
+}
+
 [ "$#" -eq 0 ] || die "uninstall accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
 prefix=${PREFIX:-}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
+
+validate_state_dir
 
 is_managed_wrapper() {
 	target=$1

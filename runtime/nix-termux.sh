@@ -78,6 +78,14 @@ validate_manage_home_profile() {
 	esac
 }
 
+validate_state_dir() {
+	case $state_dir in
+	/ | . | ..)
+		die "NIX_TERMUX_STATE_DIR must not be $state_dir"
+		;;
+	esac
+}
+
 is_termux() {
 	[ -n "${PREFIX:-}" ] && [ -d "$termux_prefix" ] && [ -d "$termux_home" ]
 }
@@ -567,6 +575,8 @@ cmd=${1:-help}
 if [ "$#" -gt 0 ]; then
 	shift
 fi
+
+validate_state_dir
 
 case "$cmd" in
 doctor) doctor "$@" ;;

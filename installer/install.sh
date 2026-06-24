@@ -24,6 +24,14 @@ validate_sha256() {
 		die "$label must be a 64-character lowercase hex string"
 }
 
+validate_state_dir() {
+	case $state_dir in
+	/ | . | ..)
+		die "NIX_TERMUX_STATE_DIR must not be $state_dir"
+		;;
+	esac
+}
+
 [ "$#" -eq 0 ] || die "install accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -44,6 +52,8 @@ runtime_archive=$state_dir/tmp/runtime.tar.gz
 runtime_source=$state_dir/tmp/runtime-source
 bootstrap_archive=$state_dir/tmp/bootstrap.tar.gz
 bootstrap_stage=$state_dir/tmp/bootstrap-stage
+
+validate_state_dir
 
 cleanup_temp() {
 	rm -f "$runtime_archive" "$bootstrap_archive"
