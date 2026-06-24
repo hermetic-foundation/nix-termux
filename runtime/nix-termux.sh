@@ -344,6 +344,8 @@ PATH=$proot_path
 NIX_REMOTE=local
 NIX_PATH=$nix_path
 NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile
+SHELL=$proot_default_shell
+NIX_SSL_CERT_FILE=$cert_file
 SSL_CERT_FILE=$cert_file
 EOF
 }
