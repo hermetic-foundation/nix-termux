@@ -360,7 +360,9 @@
               pkgs.coreutils
               pkgs.findutils
               pkgs.gnugrep
+              pkgs.gnused
             ];
+            src = self;
             artifact = self.packages.${system}.release;
           } ''
             test -x "$artifact"/install.sh
@@ -375,6 +377,7 @@
             grep -q 'install.sh' "$artifact"/SHA256SUMS
             (cd "$artifact" && sha256sum -c install.sh.sha256)
             (cd "$artifact" && sha256sum -c SHA256SUMS)
+            sh "$src"/tools/serve-release.sh --check "$artifact"
             touch "$out"
           '';
         });
