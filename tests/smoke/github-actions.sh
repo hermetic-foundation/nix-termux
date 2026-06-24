@@ -30,3 +30,8 @@ grep -q 'sha256sum -c install.sh.sha256' "$workflow" || {
 	printf '%s\n' "release workflow does not verify installer checksum file" >&2
 	exit 1
 }
+
+grep -q 'tools/serve-release.sh --check dist' "$workflow" || {
+	printf '%s\n' "release workflow does not run release directory validation" >&2
+	exit 1
+}
