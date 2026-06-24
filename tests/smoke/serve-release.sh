@@ -209,6 +209,15 @@ fi
 grep -q 'nix-termux-channel-x86_64.json references unsafe bootstrap manifest URL: ../outside-bootstrap.json' "$tmp/err"
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
+sed 's/nix-termux-bootstrap-x86_64.json/bad manifest.json/' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted channel bootstrap reference with whitespace" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json references unsafe bootstrap manifest URL: bad manifest.json' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
 sed 's/"sha256": "[0-9a-f]*"/"sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"/' \
 	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then

@@ -60,7 +60,7 @@ expected_nix_system() {
 
 is_local_filename() {
 	case $1 in
-	"" | */* | .*)
+	"" | *[[:space:]]* | */* | .*)
 		return 1
 		;;
 	*)
