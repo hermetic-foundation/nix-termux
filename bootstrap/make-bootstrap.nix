@@ -93,6 +93,7 @@ stdenvNoCC.mkDerivation {
     ln -s ${nix}/bin/nix-instantiate bootstrap/nix/var/nix/profiles/default/bin/nix-instantiate
     ln -s ${nix}/bin/nix-prefetch-url bootstrap/nix/var/nix/profiles/default/bin/nix-prefetch-url
     ln -s ${bashInteractive}/bin/bash bootstrap/nix/var/nix/profiles/default/bin/bash
+    ln -s ${gnugrep}/bin/grep bootstrap/nix/var/nix/profiles/default/bin/grep
     ln -s ${cacert}/etc/ssl/certs/ca-bundle.crt bootstrap/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 
     ln -s ${coreutils}/bin/env bootstrap/root/usr/bin/env
