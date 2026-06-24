@@ -403,6 +403,8 @@ cp "$tmp/channel.json" "$tmp/nix-termux-channel-x86_64.json"
 cat >"$tmp/bootstrap-manifest-no-jq.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-bootstrap-no-jq.tar.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "platform": {
     "termuxArch": "x86_64",
     "nixSystem": "x86_64-linux"
@@ -422,6 +424,8 @@ EOF
 cat >"$tmp/channel-no-jq.json" <<EOF
 {
   "schemaVersion": 1,
+  "url": "wrong-runtime-no-jq.tar.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "platform": {
     "termuxArch": "x86_64",
     "nixSystem": "x86_64-linux"

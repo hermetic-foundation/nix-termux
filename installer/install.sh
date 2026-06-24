@@ -146,19 +146,14 @@ validate_bootstrap_stage() {
 		die "bootstrap archive missing nix-termux/bootstrap.registration"
 }
 
-json_string_value() {
-	key=$1
-	file=$2
-
-	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n 1
-}
-
-json_string_value_n() {
-	key=$1
-	index=$2
+json_object_string_value() {
+	object=$1
+	key=$2
 	file=$3
 
-	sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | sed -n "${index}p"
+	sed -n '/"'"$object"'"[[:space:]]*:/,/}/p' "$file" |
+		sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+		head -n 1
 }
 
 json_path_string() {
@@ -171,17 +166,23 @@ json_path_string() {
 	fi
 
 	case $path in
-	.archive.url | .runtime.url)
-		json_string_value_n url 1 "$file"
+	.archive.url)
+		json_object_string_value archive url "$file"
+		;;
+	.runtime.url)
+		json_object_string_value runtime url "$file"
 		;;
 	.bootstrapManifest.url)
-		json_string_value_n url 2 "$file"
+		json_object_string_value bootstrapManifest url "$file"
 		;;
-	.archive.sha256 | .runtime.sha256)
-		json_string_value sha256 "$file"
+	.archive.sha256)
+		json_object_string_value archive sha256 "$file"
+		;;
+	.runtime.sha256)
+		json_object_string_value runtime sha256 "$file"
 		;;
 	.platform.termuxArch)
-		json_string_value termuxArch "$file"
+		json_object_string_value platform termuxArch "$file"
 		;;
 	*)
 		return 1
