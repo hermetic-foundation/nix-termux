@@ -77,6 +77,12 @@ if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --serial "" http:
 fi
 grep -q '^adb-validate.sh: --serial requires a non-empty value$' "$tmp/serial-empty.err"
 
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --serial "bad serial" http://127.0.0.1:8000 >"$tmp/serial-space.out" 2>"$tmp/serial-space.err"; then
+	printf '%s\n' "adb-validate with whitespace in serial unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^adb-validate.sh: --serial must not contain whitespace$' "$tmp/serial-space.err"
+
 if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --remote-path "" http://127.0.0.1:8000 >"$tmp/remote-path-empty.out" 2>"$tmp/remote-path-empty.err"; then
 	printf '%s\n' "adb-validate with empty remote path unexpectedly succeeded" >&2
 	exit 1

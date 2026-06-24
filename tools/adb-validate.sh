@@ -41,6 +41,11 @@ while [ "$#" -gt 0 ]; do
 	--serial)
 		[ "$#" -ge 2 ] || die "--serial requires a value"
 		[ -n "$2" ] || die "--serial requires a non-empty value"
+		case $2 in
+		*[[:space:]]*)
+			die "--serial must not contain whitespace"
+			;;
+		esac
 		serial=$2
 		shift 2
 		;;
