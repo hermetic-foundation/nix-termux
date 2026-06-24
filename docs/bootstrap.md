@@ -23,6 +23,8 @@ root/etc/nix/nix.conf
 root/etc/passwd
 root/etc/group
 root/etc/nsswitch.conf
+root/etc/hosts
+root/etc/hostname
 root/root/
 root/bin/sh
 root/usr/bin/env
@@ -33,6 +35,9 @@ nix-termux/bootstrap.registration
 `/nix`, Termux home to `/home/termux`, and the Termux prefix to `/termux`.
 The root filesystem must define a `termux` user and group in `root/etc/passwd`
 and `root/etc/group` so tools that inspect user identity work inside proot.
+It must also include `root/etc/hosts`, `root/etc/hostname`, and
+`root/etc/nsswitch.conf` so basic hostname and resolver lookups behave
+predictably before networked Nix commands run.
 
 ## Manifest
 

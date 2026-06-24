@@ -113,6 +113,8 @@ Bootstrap artifacts are fetched when `NIX_TERMUX_BOOTSTRAP_MANIFEST_URL` or
 ```text
 nix/store
 nix/var/nix/profiles/default/bin/nix
+root/etc/hosts
+root/etc/hostname
 root/usr/bin/env
 ```
 

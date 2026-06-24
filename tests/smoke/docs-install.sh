@@ -29,3 +29,10 @@ for file in README.md docs/channel.md docs/release.md docs/bootstrap.md docs/dev
 		exit 1
 	}
 done
+
+for path in root/etc/hosts root/etc/hostname root/etc/nsswitch.conf; do
+	grep -q "$path" docs/bootstrap.md || {
+		printf '%s\n' "docs/bootstrap.md missing bootstrap contract path: $path" >&2
+		exit 1
+	}
+done
