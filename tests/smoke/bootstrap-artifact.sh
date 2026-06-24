@@ -5,22 +5,20 @@ set -eu
 
 artifact=${1:?usage: bootstrap-artifact.sh <artifact-dir>}
 
-manifest=$(find "$artifact" -name 'nix-termux-bootstrap-*.json' | head -n 1)
-archive=$(find "$artifact" -name 'nix-termux-bootstrap-*.tar.gz' | head -n 1)
-registration=$(find "$artifact" -name 'nix-termux-bootstrap-*.registration' | head -n 1)
+exactly_one() {
+	pattern=$1
+	label=$2
+	count=$(find "$artifact" -name "$pattern" | wc -l)
+	[ "$count" -eq 1 ] || {
+		printf 'expected exactly one %s, found %s\n' "$label" "$count" >&2
+		exit 1
+	}
+	find "$artifact" -name "$pattern" | head -n 1
+}
 
-[ -n "$manifest" ] || {
-	printf '%s\n' "missing bootstrap manifest" >&2
-	exit 1
-}
-[ -n "$archive" ] || {
-	printf '%s\n' "missing bootstrap archive" >&2
-	exit 1
-}
-[ -n "$registration" ] || {
-	printf '%s\n' "missing bootstrap registration" >&2
-	exit 1
-}
+manifest=$(exactly_one 'nix-termux-bootstrap-*.json' 'bootstrap manifest')
+archive=$(exactly_one 'nix-termux-bootstrap-*.tar.gz' 'bootstrap archive')
+registration=$(exactly_one 'nix-termux-bootstrap-*.registration' 'bootstrap registration')
 
 manifest_name=$(basename "$manifest")
 manifest_arch=${manifest_name#nix-termux-bootstrap-}

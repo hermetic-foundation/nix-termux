@@ -6,17 +6,19 @@ set -eu
 artifact=${1:?usage: channel-artifact.sh <artifact-dir> [runtime-artifact-dir]}
 runtime_artifact=${2:-}
 
-channel=$(find "$artifact" -name 'nix-termux-channel-*.json' | head -n 1)
-bootstrap_manifest=$(find "$artifact" -name 'nix-termux-bootstrap-*.json' | head -n 1)
+exactly_one() {
+	pattern=$1
+	label=$2
+	count=$(find "$artifact" -name "$pattern" | wc -l)
+	[ "$count" -eq 1 ] || {
+		printf 'expected exactly one %s, found %s\n' "$label" "$count" >&2
+		exit 1
+	}
+	find "$artifact" -name "$pattern" | head -n 1
+}
 
-[ -n "$channel" ] || {
-	printf '%s\n' "missing channel manifest" >&2
-	exit 1
-}
-[ -n "$bootstrap_manifest" ] || {
-	printf '%s\n' "missing bootstrap manifest beside channel" >&2
-	exit 1
-}
+channel=$(exactly_one 'nix-termux-channel-*.json' 'channel manifest')
+bootstrap_manifest=$(exactly_one 'nix-termux-bootstrap-*.json' 'bootstrap manifest beside channel')
 
 channel_name=$(basename "$channel")
 channel_arch=${channel_name#nix-termux-channel-}
