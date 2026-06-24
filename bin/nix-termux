@@ -8,10 +8,18 @@ if [ -n "${NIX_TERMUX_LIBEXEC:-}" ]; then
 else
 	script=$0
 	case $script in
-	*/*) script_dir=${script%/*} ;;
-	*) script_dir=. ;;
+	*/*)
+		;;
+	*)
+		script=$(command -v "$script" 2>/dev/null || printf '%s\n' "$script")
+		;;
 	esac
-	libexec=$script_dir/../runtime
+	script_dir=$(CDPATH='' cd -- "$(dirname -- "$script")" && pwd)
+	if [ -r "$script_dir/../share/nix-termux/runtime/nix-termux.sh" ]; then
+		libexec=$script_dir/../share/nix-termux/runtime
+	else
+		libexec=$script_dir/../runtime
+	fi
 fi
 
 main=$libexec/nix-termux.sh

@@ -351,6 +351,7 @@
             grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$artifact"/share/licenses/nix-termux/LICENSE
             test -r "$artifact"/share/nix-termux/bootstrap/manifest.schema.json
             test -r "$artifact"/share/nix-termux/channel/schema.json
+            test "$(PATH="$artifact/bin:$PATH" nix-termux version)" = "0.1.0"
             touch "$out"
           '';
 
