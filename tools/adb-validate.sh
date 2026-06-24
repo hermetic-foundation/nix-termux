@@ -79,6 +79,11 @@ done
 
 base_url=$1
 [ -n "$base_url" ] || die "base-url must not be empty"
+case $base_url in
+*[[:space:]]*)
+	die "base-url must not contain whitespace"
+	;;
+esac
 command -v adb >/dev/null 2>&1 || die "adb is required"
 
 adb_cmd() {

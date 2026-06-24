@@ -88,3 +88,9 @@ if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" "" >"$tmp/base-ur
 	exit 1
 fi
 grep -q '^adb-validate.sh: base-url must not be empty$' "$tmp/base-url-empty.err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" "http://127.0.0.1:8000/bad url" >"$tmp/base-url-space.out" 2>"$tmp/base-url-space.err"; then
+	printf '%s\n' "adb-validate with whitespace in base URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^adb-validate.sh: base-url must not contain whitespace$' "$tmp/base-url-space.err"
