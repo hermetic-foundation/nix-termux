@@ -64,7 +64,8 @@ fetch_url() {
 		;;
 	*)
 		have curl || die "curl is required to fetch $url"
-		curl -L "$url" -o "$output"
+		curl -fL "$url" -o "$output" ||
+			die "failed to fetch $url"
 		;;
 	esac
 }

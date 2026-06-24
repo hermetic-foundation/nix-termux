@@ -355,15 +355,33 @@ cat >"$tmp/channel-v2.json" <<EOF
   }
 }
 EOF
-cat >"$tmp/fake-bin/pkg" <<'EOF'
-#!/usr/bin/env sh
-if [ "$1" = "--print-architecture" ]; then
+cat >"$tmp/fake-bin/pkg" <<EOF
+#!$host_sh
+if [ "\$1" = "--print-architecture" ]; then
 	printf '%s\n' x86_64
 	exit 0
 fi
 exit 1
 EOF
 chmod 755 "$tmp/fake-bin/pkg"
+cat >"$tmp/fake-bin/curl" <<EOF
+#!$host_sh
+case " \$* " in
+*" https://example.invalid/missing-channel.json "*)
+	printf '%s\n' "curl: (22) The requested URL returned error: 404" >&2
+	exit 22
+	;;
+*)
+	printf 'unexpected curl invocation:' >&2
+	for arg in "\$@"; do
+		printf ' %s' "\$arg" >&2
+	done
+	printf '\n' >&2
+	exit 2
+	;;
+esac
+EOF
+chmod 755 "$tmp/fake-bin/curl"
 cp "$tmp/fake-bin/proot" "$tmp/no-jq-bin/proot"
 cp "$tmp/fake-bin/pkg" "$tmp/no-jq-bin/pkg"
 
@@ -393,6 +411,20 @@ if PATH="$tmp/fake-bin:$PATH" \
 	exit 1
 fi
 grep -q 'runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL' "$tmp/no-channel.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/fetch-fail-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/fetch-fail-home/.nix-termux" \
+	NIX_TERMUX_CHANNEL_URL=https://example.invalid/missing-channel.json \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/fetch-fail.err"; then
+	printf '%s\n' "failed fetch unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'curl: (22) The requested URL returned error: 404' "$tmp/fetch-fail.err"
+grep -q 'install.sh: failed to fetch https://example.invalid/missing-channel.json' "$tmp/fetch-fail.err"
+test ! -e "$tmp/fetch-fail-home/.nix-termux/etc/nix-termux.conf"
+test ! -e "$tmp/prefix/bin/nix"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/mismatch-home" \
