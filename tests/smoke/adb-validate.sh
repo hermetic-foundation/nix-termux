@@ -83,6 +83,12 @@ if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --remote-path "" 
 fi
 grep -q '^adb-validate.sh: --remote-path requires a non-empty value$' "$tmp/remote-path-empty.err"
 
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --remote-path relative/script.sh http://127.0.0.1:8000 >"$tmp/remote-path-relative.out" 2>"$tmp/remote-path-relative.err"; then
+	printf '%s\n' "adb-validate with relative remote path unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^adb-validate.sh: --remote-path must be an absolute device path$' "$tmp/remote-path-relative.err"
+
 if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" "" >"$tmp/base-url-empty.out" 2>"$tmp/base-url-empty.err"; then
 	printf '%s\n' "adb-validate with empty base URL unexpectedly succeeded" >&2
 	exit 1

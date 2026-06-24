@@ -47,6 +47,13 @@ while [ "$#" -gt 0 ]; do
 	--remote-path)
 		[ "$#" -ge 2 ] || die "--remote-path requires a value"
 		[ -n "$2" ] || die "--remote-path requires a non-empty value"
+		case $2 in
+		/*)
+			;;
+		*)
+			die "--remote-path must be an absolute device path"
+			;;
+		esac
 		remote_path=$2
 		shift 2
 		;;
