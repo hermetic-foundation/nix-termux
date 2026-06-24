@@ -586,6 +586,36 @@ if HOME="$tmp/prefix-root-home" \
 fi
 grep -q '^uninstall.sh: PREFIX must not be /$' "$tmp/uninstall-prefix-root.err"
 
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME=/ \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home-root-state" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/install-home-root.err"; then
+	printf '%s\n' "install with root home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^install.sh: HOME must not be /$' "$tmp/install-home-root.err"
+test ! -e "$tmp/home-root-state/etc/nix-termux.conf"
+test ! -e "$tmp/prefix/bin/nix"
+
+if HOME=/ \
+	NIX_TERMUX_STATE_DIR="$tmp/home-root-state" \
+	sh "$repo_root/runtime/nix-termux.sh" version >"$tmp/runtime-home-root.out" 2>"$tmp/runtime-home-root.err"; then
+	printf '%s\n' "runtime with root home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: HOME must not be /$' "$tmp/runtime-home-root.err"
+
+if HOME=/ \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home-root-state" \
+	sh "$repo_root/installer/uninstall.sh" >"$tmp/uninstall-home-root.out" 2>"$tmp/uninstall-home-root.err"; then
+	printf '%s\n' "uninstall with root home unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^uninstall.sh: HOME must not be /$' "$tmp/uninstall-home-root.err"
+test ! -e "$tmp/prefix/bin/nix"
+
 if PATH="$tmp/missing-cat-bin" \
 	HOME="$tmp/missing-cat-home" \
 	PREFIX="$tmp/prefix" \

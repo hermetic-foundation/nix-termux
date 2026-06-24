@@ -24,6 +24,14 @@ validate_prefix() {
 	esac
 }
 
+validate_home() {
+	case ${HOME:-} in
+	/ | . | ..)
+		die "HOME must not be ${HOME:-}"
+		;;
+	esac
+}
+
 [ "$#" -eq 0 ] || die "uninstall accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -33,6 +41,7 @@ managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 
 validate_state_dir
 validate_prefix
+validate_home
 
 is_managed_wrapper() {
 	target=$1

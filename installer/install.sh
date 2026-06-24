@@ -40,6 +40,14 @@ validate_prefix() {
 	esac
 }
 
+validate_home() {
+	case ${HOME:-} in
+	/ | . | ..)
+		die "HOME must not be ${HOME:-}"
+		;;
+	esac
+}
+
 [ "$#" -eq 0 ] || die "install accepts no arguments"
 
 state_dir=${NIX_TERMUX_STATE_DIR:-"$HOME/.nix-termux"}
@@ -63,6 +71,7 @@ bootstrap_stage=$state_dir/tmp/bootstrap-stage
 
 validate_state_dir
 validate_prefix
+validate_home
 
 cleanup_temp() {
 	rm -f "$runtime_archive" "$bootstrap_archive"
