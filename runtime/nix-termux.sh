@@ -35,7 +35,7 @@ managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 
 nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
-proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin
+proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/bin:/bin
 proot_default_shell=/nix/var/nix/profiles/default/bin/bash
 proot_cert_file=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 
@@ -501,7 +501,7 @@ enter() {
 	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"
 
 	shell=${NIX_TERMUX_SHELL:-$proot_default_shell}
-	if [ "$shell" = "$proot_default_shell" ] && [ ! -x "$profile_dir/bin/bash" ]; then
+	if [ "$shell" = "$proot_default_shell" ] && ! path_or_symlink_exists "$profile_dir/bin/bash"; then
 		shell=/bin/sh
 	fi
 

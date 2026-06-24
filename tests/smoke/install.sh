@@ -1550,7 +1550,7 @@ path_output=$(
 		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$PATH"'
 )
-[ "$path_output" = "/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin" ] || {
+[ "$path_output" = "/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/bin:/bin" ] || {
 	printf 'unexpected PATH output: %s\n' "$path_output" >&2
 	exit 1
 }
@@ -1617,7 +1617,7 @@ printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"
 printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
 printf '%s\n' "$env_output" | grep -q "^XDG_STATE_HOME=$tmp/home/.local/state$"
-printf '%s\n' "$env_output" | grep -q '^PATH=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin$'
+printf '%s\n' "$env_output" | grep -q '^PATH=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/bin:/bin$'
 printf '%s\n' "$env_output" | grep -q '^NIX_CONF_DIR=/etc/nix$'
 printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
