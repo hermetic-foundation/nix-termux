@@ -381,10 +381,11 @@
             test -r "$artifact"/nix-termux-runtime.tar.gz
             test -r "$artifact"/nix-termux-runtime.tar.gz.sha256
             test -r "$artifact"/SHA256SUMS
-            test "$(find "$artifact" -name 'nix-termux-channel-*.json' | wc -l)" -eq 1
-            test "$(find "$artifact" -name 'nix-termux-bootstrap-*.json' | wc -l)" -eq 1
-            test "$(find "$artifact" -name 'nix-termux-bootstrap-*.tar.gz' | wc -l)" -eq 1
-            test "$(find "$artifact" -name 'nix-termux-bootstrap-*.registration' | wc -l)" -eq 1
+            test -f "$artifact"/install.sh.sha256
+            test "$(find "$artifact" -type f -name 'nix-termux-channel-*.json' | wc -l)" -eq 1
+            test "$(find "$artifact" -type f -name 'nix-termux-bootstrap-*.json' | wc -l)" -eq 1
+            test "$(find "$artifact" -type f -name 'nix-termux-bootstrap-*.tar.gz' | wc -l)" -eq 1
+            test "$(find "$artifact" -type f -name 'nix-termux-bootstrap-*.registration' | wc -l)" -eq 1
             grep -q 'nix-termux-runtime.tar.gz' "$artifact"/SHA256SUMS
             grep -q 'install.sh' "$artifact"/SHA256SUMS
             (cd "$artifact" && sha256sum -c install.sh.sha256)

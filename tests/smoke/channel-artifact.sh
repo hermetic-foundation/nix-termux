@@ -9,12 +9,12 @@ runtime_artifact=${2:-}
 exactly_one() {
 	pattern=$1
 	label=$2
-	count=$(find "$artifact" -name "$pattern" | wc -l)
+	count=$(find "$artifact" -type f -name "$pattern" | wc -l)
 	[ "$count" -eq 1 ] || {
 		printf 'expected exactly one %s, found %s\n' "$label" "$count" >&2
 		exit 1
 	}
-	find "$artifact" -name "$pattern" | head -n 1
+	find "$artifact" -type f -name "$pattern" | head -n 1
 }
 
 channel=$(exactly_one 'nix-termux-channel-*.json' 'channel manifest')
