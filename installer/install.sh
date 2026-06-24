@@ -184,6 +184,9 @@ json_path_string() {
 	.platform.termuxArch)
 		json_object_string_value platform termuxArch "$file"
 		;;
+	.platform.nixSystem)
+		json_object_string_value platform nixSystem "$file"
+		;;
 	.layout.storeDir)
 		json_object_string_value layout storeDir "$file"
 		;;
@@ -257,12 +260,23 @@ detect_arch() {
 	esac
 }
 
+expected_nix_system() {
+	case $1 in
+	aarch64) printf '%s\n' aarch64-linux ;;
+	arm) printf '%s\n' armv7l-linux ;;
+	i686) printf '%s\n' i686-linux ;;
+	x86_64) printf '%s\n' x86_64-linux ;;
+	*) die "unsupported Termux architecture: $1" ;;
+	esac
+}
+
 load_manifest() {
 	manifest=$1
 
 	if [ -z "$termux_arch" ]; then
 		termux_arch=$(detect_arch)
 	fi
+	expected_system=$(expected_nix_system "$termux_arch")
 
 	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
 		die "unsupported bootstrap manifest schemaVersion"
@@ -270,6 +284,7 @@ load_manifest() {
 	manifest_archive_url=$(json_path_string .archive.url "$manifest")
 	manifest_sha256=$(json_path_string .archive.sha256 "$manifest")
 	manifest_termux_arch=$(json_path_string .platform.termuxArch "$manifest")
+	manifest_nix_system=$(json_path_string .platform.nixSystem "$manifest")
 	manifest_store_dir=$(json_path_string .layout.storeDir "$manifest")
 	manifest_root_dir=$(json_path_string .layout.rootDir "$manifest")
 	manifest_nix_bin=$(json_path_string .layout.nixBin "$manifest")
@@ -278,12 +293,15 @@ load_manifest() {
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
 	validate_sha256 "bootstrap manifest archive.sha256" "$manifest_sha256"
 	[ -n "$manifest_termux_arch" ] || die "bootstrap manifest missing platform.termuxArch"
+	[ -n "$manifest_nix_system" ] || die "bootstrap manifest missing platform.nixSystem"
 	[ -n "$manifest_store_dir" ] || die "bootstrap manifest missing layout.storeDir"
 	[ -n "$manifest_root_dir" ] || die "bootstrap manifest missing layout.rootDir"
 	[ -n "$manifest_nix_bin" ] || die "bootstrap manifest missing layout.nixBin"
 	[ -n "$manifest_registration" ] || die "bootstrap manifest missing layout.registration"
 	[ "$manifest_termux_arch" = "$termux_arch" ] ||
 		die "bootstrap manifest architecture mismatch: expected $termux_arch got $manifest_termux_arch"
+	[ "$manifest_nix_system" = "$expected_system" ] ||
+		die "bootstrap manifest nix system mismatch: expected $expected_system got $manifest_nix_system"
 	[ "$manifest_store_dir" = nix ] ||
 		die "unsupported bootstrap manifest storeDir"
 	[ "$manifest_root_dir" = root ] ||
@@ -303,6 +321,7 @@ load_channel() {
 	if [ -z "$termux_arch" ]; then
 		termux_arch=$(detect_arch)
 	fi
+	expected_system=$(expected_nix_system "$termux_arch")
 
 	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$channel" ||
 		die "unsupported channel manifest schemaVersion"
@@ -315,14 +334,18 @@ load_channel() {
 	channel_bootstrap_manifest_url=$(json_path_string .bootstrapManifest.url "$channel")
 	channel_runtime_sha256=$(json_path_string .runtime.sha256 "$channel")
 	channel_termux_arch=$(json_path_string .platform.termuxArch "$channel")
+	channel_nix_system=$(json_path_string .platform.nixSystem "$channel")
 
 	[ -n "$channel_runtime_url" ] || die "channel manifest missing runtime.url"
 	[ -n "$channel_runtime_sha256" ] || die "channel manifest missing runtime.sha256"
 	validate_sha256 "channel manifest runtime.sha256" "$channel_runtime_sha256"
 	[ -n "$channel_bootstrap_manifest_url" ] || die "channel manifest missing bootstrapManifest.url"
 	[ -n "$channel_termux_arch" ] || die "channel manifest missing platform.termuxArch"
+	[ -n "$channel_nix_system" ] || die "channel manifest missing platform.nixSystem"
 	[ "$channel_termux_arch" = "$termux_arch" ] ||
 		die "channel manifest architecture mismatch: expected $termux_arch got $channel_termux_arch"
+	[ "$channel_nix_system" = "$expected_system" ] ||
+		die "channel manifest nix system mismatch: expected $expected_system got $channel_nix_system"
 
 	runtime_archive_url=${runtime_archive_url:-"$(resolve_manifest_url "$channel_url" "$channel_runtime_url")"}
 	runtime_archive_sha256=${runtime_archive_sha256:-"$channel_runtime_sha256"}
