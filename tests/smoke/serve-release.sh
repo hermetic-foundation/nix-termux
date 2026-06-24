@@ -264,6 +264,43 @@ cp "$tmp/install-sh-sha256.good" "$tmp/release/install.sh.sha256"
 	nix-termux-bootstrap-aarch64.registration \
 	>SHA256SUMS)
 
+cp "$tmp/release/nix-termux-runtime.tar.gz.sha256" "$tmp/runtime-sha256.good"
+printf '%s  nix-termux-runtime.tar.gz\n' "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" >"$tmp/release/nix-termux-runtime.tar.gz.sha256"
+(cd "$tmp/release" && sha256sum \
+	install.sh \
+	install.sh.sha256 \
+	nix-termux-runtime.tar.gz \
+	nix-termux-runtime.tar.gz.sha256 \
+	nix-termux-channel-x86_64.json \
+	nix-termux-bootstrap-x86_64.json \
+	nix-termux-bootstrap-x86_64.tar.gz \
+	nix-termux-bootstrap-x86_64.registration \
+	nix-termux-channel-aarch64.json \
+	nix-termux-bootstrap-aarch64.json \
+	nix-termux-bootstrap-aarch64.tar.gz \
+	nix-termux-bootstrap-aarch64.registration \
+	>SHA256SUMS)
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted a bad runtime checksum file" >&2
+	exit 1
+fi
+grep -q 'runtime checksum verification failed' "$tmp/err"
+cp "$tmp/runtime-sha256.good" "$tmp/release/nix-termux-runtime.tar.gz.sha256"
+(cd "$tmp/release" && sha256sum \
+	install.sh \
+	install.sh.sha256 \
+	nix-termux-runtime.tar.gz \
+	nix-termux-runtime.tar.gz.sha256 \
+	nix-termux-channel-x86_64.json \
+	nix-termux-bootstrap-x86_64.json \
+	nix-termux-bootstrap-x86_64.tar.gz \
+	nix-termux-bootstrap-x86_64.registration \
+	nix-termux-channel-aarch64.json \
+	nix-termux-bootstrap-aarch64.json \
+	nix-termux-bootstrap-aarch64.tar.gz \
+	nix-termux-bootstrap-aarch64.registration \
+	>SHA256SUMS)
+
 if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 0 >"$tmp/out" 2>"$tmp/err"; then
 	printf '%s\n' "serve-release unexpectedly accepted port 0" >&2
 	exit 1

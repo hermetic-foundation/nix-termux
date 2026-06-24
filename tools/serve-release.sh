@@ -182,6 +182,8 @@ validate_release_dir() {
 
 	(cd "$release_dir" && sha256sum -c install.sh.sha256 >/dev/null) ||
 		die "installer checksum verification failed"
+	(cd "$release_dir" && sha256sum -c nix-termux-runtime.tar.gz.sha256 >/dev/null) ||
+		die "runtime checksum verification failed"
 	(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
 		die "release checksum verification failed"
 }
