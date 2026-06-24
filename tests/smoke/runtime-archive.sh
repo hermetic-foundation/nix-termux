@@ -43,7 +43,37 @@ grep -qx './bootstrap/example-manifest.json' "$listing"
 grep -qx './bootstrap/manifest.schema.json' "$listing"
 grep -qx './channel/schema.json' "$listing"
 
-tar -xzf "$archive" -C "$extract_dir" ./LICENSE
+tar -tvzf "$archive" >"$listing.modes"
+for executable in \
+	./bin/nix-termux \
+	./installer/install.sh \
+	./installer/uninstall.sh \
+	./runtime/nix-termux.sh \
+	./tools/adb-validate.sh \
+	./tools/serve-release.sh \
+	./tests/termux/device-smoke.sh; do
+	grep -Eq '^-rwxr-xr-x .* '"$executable"'$' "$listing.modes"
+done
+
+tar -xzf "$archive" -C "$extract_dir" \
+	./LICENSE \
+	./bin/nix-termux \
+	./installer/install.sh \
+	./installer/uninstall.sh \
+	./runtime/nix-termux.sh \
+	./tools/adb-validate.sh \
+	./tools/serve-release.sh \
+	./tests/termux/device-smoke.sh
 grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$extract_dir/LICENSE"
+for script in \
+	bin/nix-termux \
+	installer/install.sh \
+	installer/uninstall.sh \
+	runtime/nix-termux.sh \
+	tools/adb-validate.sh \
+	tools/serve-release.sh \
+	tests/termux/device-smoke.sh; do
+	grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$extract_dir/$script"
+done
 
 (cd "$artifact" && sha256sum -c nix-termux-runtime.tar.gz.sha256)
