@@ -1058,6 +1058,26 @@ path_output=$(
 	exit 1
 }
 
+rm "$tmp/home/.nix-profile"
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_MANAGE_HOME_PROFILE=no \
+	"$tmp/prefix/bin/nix-termux" exec nix --version >/dev/null
+test ! -e "$tmp/home/.nix-profile"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_MANAGE_HOME_PROFILE=maybe \
+	"$tmp/prefix/bin/nix-termux" exec nix --version >"$tmp/manage-home-profile-invalid.out" 2>"$tmp/manage-home-profile-invalid.err"; then
+	printf '%s\n' "invalid NIX_TERMUX_MANAGE_HOME_PROFILE unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^nix-termux: NIX_TERMUX_MANAGE_HOME_PROFILE must be yes or no$' "$tmp/manage-home-profile-invalid.err"
+ln -s /nix/var/nix/profiles/per-user/termux/profile "$tmp/home/.nix-profile"
+
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
 	PREFIX="$tmp/prefix" \

@@ -63,6 +63,16 @@ have() {
 	command -v "$1" >/dev/null 2>&1
 }
 
+validate_manage_home_profile() {
+	case $manage_home_profile in
+	yes | no)
+		;;
+	*)
+		die "NIX_TERMUX_MANAGE_HOME_PROFILE must be yes or no"
+		;;
+	esac
+}
+
 is_termux() {
 	[ -n "${PREFIX:-}" ] && [ -d "$termux_prefix" ] && [ -d "$termux_home" ]
 }
@@ -413,6 +423,7 @@ optional_android_binds() {
 enter() {
 	[ -d "$store_dir" ] || die "state not initialized at $state_dir; run installer first"
 	have "$proot" || die "proot is required; install it with: pkg install proot"
+	validate_manage_home_profile
 	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/root" "$root_dir/tmp" "$store_dir/var/nix/profiles/per-user/root" "$store_dir/var/nix/profiles/per-user/termux"
 	mkdir -p "$termux_home/.cache" "$termux_home/.config" "$termux_home/.local/share" "$termux_home/.local/state"
 	if [ "$manage_home_profile" = yes ] && [ ! -e "$termux_home/.nix-profile" ] && [ ! -L "$termux_home/.nix-profile" ]; then
