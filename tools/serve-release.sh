@@ -109,8 +109,17 @@ validate_release_dir() {
 	[ -r "$1" ] || die "release directory missing nix-termux-bootstrap-*.json"
 	for manifest in "$@"; do
 		base=${manifest%.json}
+		archive_url=$(json_string_value_n url 1 "$manifest")
+		archive_sha=$(json_string_value_n sha256 1 "$manifest")
+		expected_archive=$(basename -- "$base.tar.gz")
+		[ "$archive_url" = "$expected_archive" ] ||
+			die "$(basename -- "$manifest") references unsupported archive URL: $archive_url"
 		[ -r "$base.tar.gz" ] || die "release directory missing $(basename -- "$base.tar.gz")"
 		[ -r "$base.registration" ] || die "release directory missing $(basename -- "$base.registration")"
+		actual_archive_sha=$(sha256sum "$base.tar.gz")
+		actual_archive_sha=${actual_archive_sha%% *}
+		[ "$archive_sha" = "$actual_archive_sha" ] ||
+			die "$(basename -- "$manifest") archive sha256 mismatch"
 	done
 
 	(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||

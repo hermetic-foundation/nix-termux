@@ -27,6 +27,9 @@ runtime_sha=$(sha256sum "$tmp/release/nix-termux-runtime.tar.gz")
 runtime_sha=${runtime_sha%% *}
 
 for arch in x86_64 aarch64; do
+	printf '%s\n' "nix-termux-bootstrap-$arch.tar.gz" >"$tmp/release/nix-termux-bootstrap-$arch.tar.gz"
+	bootstrap_sha=$(sha256sum "$tmp/release/nix-termux-bootstrap-$arch.tar.gz")
+	bootstrap_sha=${bootstrap_sha%% *}
 	cat >"$tmp/release/nix-termux-channel-$arch.json" <<EOF
 {
   "schemaVersion": 1,
@@ -44,11 +47,10 @@ EOF
   "schemaVersion": 1,
   "archive": {
     "url": "nix-termux-bootstrap-$arch.tar.gz",
-    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    "sha256": "$bootstrap_sha"
   }
 }
 EOF
-	printf '%s\n' "nix-termux-bootstrap-$arch.tar.gz" >"$tmp/release/nix-termux-bootstrap-$arch.tar.gz"
 	printf '%s\n' "nix-termux-bootstrap-$arch.registration" >"$tmp/release/nix-termux-bootstrap-$arch.registration"
 done
 
@@ -97,6 +99,16 @@ if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"
 fi
 grep -q 'nix-termux-channel-x86_64.json references unsafe bootstrap manifest URL: ../outside-bootstrap.json' "$tmp/err"
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
+cp "$tmp/release/nix-termux-bootstrap-x86_64.json" "$tmp/bootstrap-x86_64.good"
+sed 's/"sha256": "[0-9a-f]*"/"sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"/' \
+	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted a bad bootstrap archive hash" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json archive sha256 mismatch' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
 
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 # shellcheck disable=SC2016
