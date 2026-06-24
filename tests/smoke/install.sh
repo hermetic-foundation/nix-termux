@@ -461,6 +461,25 @@ sed 's/"sha256": "'"$runtime_sha"'"/"sha256": "not-a-sha256"/' \
 	"$tmp/channel.json" >"$tmp/channel-bad-runtime-sha.json"
 sed 's/"sha256": "'"$sha"'"/"sha256": "not-a-sha256"/' \
 	"$tmp/bootstrap-manifest.json" >"$tmp/bootstrap-bad-archive-sha.json"
+cat >"$tmp/bootstrap-missing-layout-registration-manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "registration": "nix-termux/bootstrap.registration",
+  "platform": {
+    "termuxArch": "x86_64",
+    "nixSystem": "x86_64-linux"
+  },
+  "archive": {
+    "url": "bootstrap.tar.gz",
+    "sha256": "$sha"
+  },
+  "layout": {
+    "storeDir": "nix",
+    "rootDir": "root",
+    "nixBin": "nix/var/nix/profiles/default/bin/nix"
+  }
+}
+EOF
 cat >"$tmp/fake-bin/pkg" <<EOF
 #!$host_sh
 if [ "\$1" = "--print-architecture" ]; then
@@ -675,6 +694,21 @@ if PATH="$tmp/fake-bin:$PATH" \
 	exit 1
 fi
 grep -q 'NIX_TERMUX_BOOTSTRAP_SHA256 must be a 64-character lowercase hex string' "$tmp/bootstrap-bad-env-sha.err"
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/bootstrap-missing-layout-registration-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/bootstrap-missing-layout-registration-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_RUNTIME_ARCHIVE_URL="file://$tmp/runtime.tar.gz" \
+	NIX_TERMUX_RUNTIME_ARCHIVE_SHA256="$runtime_sha" \
+	NIX_TERMUX_BOOTSTRAP_MANIFEST_URL="file://$tmp/bootstrap-missing-layout-registration-manifest.json" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/bootstrap-missing-layout-registration.err"; then
+	printf '%s\n' "bootstrap missing layout registration unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'bootstrap manifest missing layout.registration' "$tmp/bootstrap-missing-layout-registration.err"
+test ! -e "$tmp/bootstrap-missing-layout-registration-home/.nix-termux/etc/bootstrap-activation.conf"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/bootstrap-unsafe-home" \

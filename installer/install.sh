@@ -184,6 +184,18 @@ json_path_string() {
 	.platform.termuxArch)
 		json_object_string_value platform termuxArch "$file"
 		;;
+	.layout.storeDir)
+		json_object_string_value layout storeDir "$file"
+		;;
+	.layout.rootDir)
+		json_object_string_value layout rootDir "$file"
+		;;
+	.layout.nixBin)
+		json_object_string_value layout nixBin "$file"
+		;;
+	.layout.registration)
+		json_object_string_value layout registration "$file"
+		;;
 	*)
 		return 1
 		;;
@@ -254,26 +266,32 @@ load_manifest() {
 
 	grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
 		die "unsupported bootstrap manifest schemaVersion"
-	grep -Eq '"storeDir"[[:space:]]*:[[:space:]]*"nix"' "$manifest" ||
-		die "unsupported bootstrap manifest storeDir"
-	grep -Eq '"rootDir"[[:space:]]*:[[:space:]]*"root"' "$manifest" ||
-		die "unsupported bootstrap manifest rootDir"
-	grep -Eq '"nixBin"[[:space:]]*:[[:space:]]*"nix/var/nix/profiles/default/bin/nix"' "$manifest" ||
-		die "unsupported bootstrap manifest nixBin"
-	if grep -Eq '"registration"' "$manifest"; then
-		grep -Eq '"registration"[[:space:]]*:[[:space:]]*"nix-termux/bootstrap.registration"' "$manifest" ||
-			die "unsupported bootstrap manifest registration"
-	fi
 
 	manifest_archive_url=$(json_path_string .archive.url "$manifest")
 	manifest_sha256=$(json_path_string .archive.sha256 "$manifest")
 	manifest_termux_arch=$(json_path_string .platform.termuxArch "$manifest")
+	manifest_store_dir=$(json_path_string .layout.storeDir "$manifest")
+	manifest_root_dir=$(json_path_string .layout.rootDir "$manifest")
+	manifest_nix_bin=$(json_path_string .layout.nixBin "$manifest")
+	manifest_registration=$(json_path_string .layout.registration "$manifest")
 	[ -n "$manifest_archive_url" ] || die "bootstrap manifest missing archive.url"
 	[ -n "$manifest_sha256" ] || die "bootstrap manifest missing archive.sha256"
 	validate_sha256 "bootstrap manifest archive.sha256" "$manifest_sha256"
 	[ -n "$manifest_termux_arch" ] || die "bootstrap manifest missing platform.termuxArch"
+	[ -n "$manifest_store_dir" ] || die "bootstrap manifest missing layout.storeDir"
+	[ -n "$manifest_root_dir" ] || die "bootstrap manifest missing layout.rootDir"
+	[ -n "$manifest_nix_bin" ] || die "bootstrap manifest missing layout.nixBin"
+	[ -n "$manifest_registration" ] || die "bootstrap manifest missing layout.registration"
 	[ "$manifest_termux_arch" = "$termux_arch" ] ||
 		die "bootstrap manifest architecture mismatch: expected $termux_arch got $manifest_termux_arch"
+	[ "$manifest_store_dir" = nix ] ||
+		die "unsupported bootstrap manifest storeDir"
+	[ "$manifest_root_dir" = root ] ||
+		die "unsupported bootstrap manifest rootDir"
+	[ "$manifest_nix_bin" = nix/var/nix/profiles/default/bin/nix ] ||
+		die "unsupported bootstrap manifest nixBin"
+	[ "$manifest_registration" = nix-termux/bootstrap.registration ] ||
+		die "unsupported bootstrap manifest registration"
 
 	bootstrap_url=${bootstrap_url:-"$(resolve_manifest_url "$bootstrap_manifest_url" "$manifest_archive_url")"}
 	bootstrap_sha256=${bootstrap_sha256:-"$manifest_sha256"}
