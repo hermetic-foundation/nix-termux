@@ -33,6 +33,7 @@ termux_prefix=${PREFIX:-/data/data/com.termux/files/usr}
 termux_home=${HOME:-/data/data/com.termux/files/home}
 nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
 proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin
+proot_default_shell=/nix/var/nix/profiles/default/bin/bash
 
 usage() {
 	cat <<'EOF'
@@ -409,8 +410,10 @@ enter() {
 	fi
 	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"
 
-	shell=${NIX_TERMUX_SHELL:-"$profile_dir/bin/bash"}
-	[ -x "$shell" ] || shell=/bin/sh
+	shell=${NIX_TERMUX_SHELL:-$proot_default_shell}
+	if [ "$shell" = "$proot_default_shell" ] && [ ! -x "$profile_dir/bin/bash" ]; then
+		shell=/bin/sh
+	fi
 
 	if [ "$#" -gt 0 ] && [ "$1" = "--" ]; then
 		shift
@@ -440,6 +443,7 @@ enter() {
 		TMPDIR=/tmp \
 		USER=termux \
 		LOGNAME=termux \
+		SHELL="$shell" \
 		XDG_CACHE_HOME=/home/termux/.cache \
 		XDG_CONFIG_HOME=/home/termux/.config \
 		XDG_DATA_HOME=/home/termux/.local/share \

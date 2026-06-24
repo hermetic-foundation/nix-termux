@@ -103,6 +103,15 @@ if [ -x "\$profile_bin/\$1" ]; then
 	shift
 	exec "\$profile_bin/\$command" "\$@"
 fi
+case "\$1" in
+	/nix/var/nix/profiles/default/bin/*)
+		command=\${1##*/}
+		if [ -x "\$profile_bin/\$command" ]; then
+			shift
+			exec "\$profile_bin/\$command" "\$@"
+		fi
+		;;
+esac
 exec "\$@"
 EOF
 chmod 755 "$tmp/fake-bin/proot"
@@ -150,6 +159,15 @@ printf '\n'
 EOF
 	chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/$name"
 done
+cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/bash" <<EOF
+#!$host_sh
+printf 'fake bash shell=%s' "\$SHELL"
+for arg in "\$@"; do
+	printf ' %s' "\$arg"
+done
+printf '\n'
+EOF
+chmod 755 "$tmp/bootstrap/nix/var/nix/profiles/default/bin/bash"
 cp "$(command -v env)" "$tmp/bootstrap/root/usr/bin/env"
 cp "$host_sh" "$tmp/bootstrap/root/bin/sh"
 printf '%s\n' "experimental-features = nix-command flakes" >"$tmp/bootstrap/root/etc/nix/nix.conf"
@@ -775,8 +793,22 @@ smoke_output=$(
 	exit 1
 }
 
+enter_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" enter
+)
+[ "$enter_output" = "fake bash shell=/nix/var/nix/profiles/default/bin/bash -l" ] || {
+	printf 'unexpected enter output: %s\n' "$enter_output" >&2
+	exit 1
+}
+
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
+grep -qx -- "SHELL=/nix/var/nix/profiles/default/bin/bash" "$tmp/home/.nix-termux/proot.args"
+grep -qx -- "/nix/var/nix/profiles/default/bin/bash" "$tmp/home/.nix-termux/proot.args"
 grep -qx 'nameserver 192.0.2.53' "$tmp/home/.nix-termux/root/etc/resolv.conf"
 test -d "$tmp/home/.cache"
 test -d "$tmp/home/.config"
