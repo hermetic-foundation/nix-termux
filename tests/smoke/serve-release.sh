@@ -83,6 +83,24 @@ sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/check.out"
 grep -qx "release directory ok: $tmp/release" "$tmp/check.out"
 
 cp "$tmp/release/nix-termux-channel-x86_64.json" "$tmp/channel-x86_64.good"
+sed 's/"schemaVersion": 1/"schemaVersion": 2/' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted unsupported channel schema" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json has unsupported schemaVersion' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
+sed '/"termuxArch": "x86_64"/d' \
+	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted channel without termuxArch" >&2
+	exit 1
+fi
+grep -q 'nix-termux-channel-x86_64.json missing platform.termuxArch' "$tmp/err"
+cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
+
 sed 's/"termuxArch": "x86_64"/"termuxArch": "aarch64"/' \
 	"$tmp/channel-x86_64.good" >"$tmp/release/nix-termux-channel-x86_64.json"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
@@ -93,6 +111,24 @@ grep -q 'nix-termux-channel-x86_64.json platform.termuxArch mismatch: expected x
 cp "$tmp/channel-x86_64.good" "$tmp/release/nix-termux-channel-x86_64.json"
 
 cp "$tmp/release/nix-termux-bootstrap-x86_64.json" "$tmp/bootstrap-x86_64.good"
+sed 's/"schemaVersion": 1/"schemaVersion": 2/' \
+	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted unsupported bootstrap schema" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json has unsupported schemaVersion' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
+
+sed '/"termuxArch": "x86_64"/d' \
+	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted bootstrap without termuxArch" >&2
+	exit 1
+fi
+grep -q 'nix-termux-bootstrap-x86_64.json missing platform.termuxArch' "$tmp/err"
+cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
+
 sed 's/"termuxArch": "x86_64"/"termuxArch": "aarch64"/' \
 	"$tmp/bootstrap-x86_64.good" >"$tmp/release/nix-termux-bootstrap-x86_64.json"
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then

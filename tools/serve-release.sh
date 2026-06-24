@@ -101,10 +101,14 @@ validate_release_dir() {
 	for channel in "$@"; do
 		channel_name=$(basename -- "$channel")
 		expected_arch=$(manifest_arch_from_name "$channel_name")
+		grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$channel" ||
+			die "$channel_name has unsupported schemaVersion"
 		runtime_url=$(json_string_value_n url 1 "$channel")
 		runtime_sha=$(json_string_value_n sha256 1 "$channel")
 		bootstrap_manifest_url=$(json_string_value_n url 2 "$channel")
 		channel_arch=$(json_string_value_n termuxArch 1 "$channel")
+		[ -n "$channel_arch" ] ||
+			die "$channel_name missing platform.termuxArch"
 		[ "$channel_arch" = "$expected_arch" ] ||
 			die "$channel_name platform.termuxArch mismatch: expected $expected_arch got $channel_arch"
 		[ "$runtime_url" = "nix-termux-runtime.tar.gz" ] ||
@@ -128,10 +132,14 @@ validate_release_dir() {
 		base=${manifest%.json}
 		manifest_name=$(basename -- "$manifest")
 		expected_arch=$(manifest_arch_from_name "$manifest_name")
+		grep -Eq '"schemaVersion"[[:space:]]*:[[:space:]]*1([,[:space:]}]|$)' "$manifest" ||
+			die "$manifest_name has unsupported schemaVersion"
 		archive_url=$(json_string_value_n url 1 "$manifest")
 		archive_sha=$(json_string_value_n sha256 1 "$manifest")
 		manifest_arch=$(json_string_value_n termuxArch 1 "$manifest")
 		expected_archive=$(basename -- "$base.tar.gz")
+		[ -n "$manifest_arch" ] ||
+			die "$manifest_name missing platform.termuxArch"
 		[ "$manifest_arch" = "$expected_arch" ] ||
 			die "$manifest_name platform.termuxArch mismatch: expected $expected_arch got $manifest_arch"
 		[ "$archive_url" = "$expected_archive" ] ||
