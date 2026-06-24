@@ -342,6 +342,7 @@ XDG_CONFIG_HOME=$termux_home/.config
 XDG_DATA_HOME=$termux_home/.local/share
 XDG_STATE_HOME=$termux_home/.local/state
 PATH=$proot_path
+NIX_CONF_DIR=/etc/nix
 NIX_REMOTE=local
 NIX_PATH=$nix_path
 NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile

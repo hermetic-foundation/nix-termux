@@ -1052,6 +1052,7 @@ printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
 printf '%s\n' "$env_output" | grep -q "^XDG_STATE_HOME=$tmp/home/.local/state$"
 printf '%s\n' "$env_output" | grep -q '^PATH=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin$'
+printf '%s\n' "$env_output" | grep -q '^NIX_CONF_DIR=/etc/nix$'
 printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile$'
