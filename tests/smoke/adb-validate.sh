@@ -63,3 +63,21 @@ if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" >"$tmp/usage.out"
 	exit 1
 fi
 grep -q '^Usage: adb-validate.sh' "$tmp/usage.err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --serial "" http://127.0.0.1:8000 >"$tmp/serial-empty.out" 2>"$tmp/serial-empty.err"; then
+	printf '%s\n' "adb-validate with empty serial unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^adb-validate.sh: --serial requires a non-empty value$' "$tmp/serial-empty.err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" --remote-path "" http://127.0.0.1:8000 >"$tmp/remote-path-empty.out" 2>"$tmp/remote-path-empty.err"; then
+	printf '%s\n' "adb-validate with empty remote path unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^adb-validate.sh: --remote-path requires a non-empty value$' "$tmp/remote-path-empty.err"
+
+if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" "" >"$tmp/base-url-empty.out" 2>"$tmp/base-url-empty.err"; then
+	printf '%s\n' "adb-validate with empty base URL unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^adb-validate.sh: base-url must not be empty$' "$tmp/base-url-empty.err"

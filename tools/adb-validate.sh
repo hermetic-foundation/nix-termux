@@ -40,11 +40,13 @@ while [ "$#" -gt 0 ]; do
 	case $1 in
 	--serial)
 		[ "$#" -ge 2 ] || die "--serial requires a value"
+		[ -n "$2" ] || die "--serial requires a non-empty value"
 		serial=$2
 		shift 2
 		;;
 	--remote-path)
 		[ "$#" -ge 2 ] || die "--remote-path requires a value"
+		[ -n "$2" ] || die "--remote-path requires a non-empty value"
 		remote_path=$2
 		shift 2
 		;;
@@ -76,6 +78,7 @@ done
 }
 
 base_url=$1
+[ -n "$base_url" ] || die "base-url must not be empty"
 command -v adb >/dev/null 2>&1 || die "adb is required"
 
 adb_cmd() {
