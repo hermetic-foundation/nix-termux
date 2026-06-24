@@ -120,6 +120,7 @@
             "tests/smoke/channel-artifact.sh"
             "tests/smoke/device-smoke-options.sh"
             "tests/smoke/docs-install.sh"
+            "tests/smoke/github-actions.sh"
             "tests/smoke/install.sh"
             "tests/smoke/runtime-archive.sh"
             "tests/smoke/serve-release.sh"
@@ -165,13 +166,17 @@
           '';
 
           github-actions = pkgs.runCommand "nix-termux-github-actions" {
-            nativeBuildInputs = [ pkgs.actionlint ];
+            nativeBuildInputs = [
+              pkgs.actionlint
+              pkgs.gnugrep
+            ];
             src = self;
           } ''
             cp -R "$src" source
             chmod -R u+w source
             cd source
             actionlint .github/workflows/ci.yml
+            sh tests/smoke/github-actions.sh
             touch "$out"
           '';
 
