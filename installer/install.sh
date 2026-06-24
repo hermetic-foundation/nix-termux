@@ -40,7 +40,7 @@ trap cleanup_temp EXIT INT TERM
 [ -n "$prefix" ] || die "PREFIX is not set; run this from stock Termux"
 [ -d "$prefix/bin" ] || die "Termux prefix bin directory not found: $prefix/bin"
 
-for command in mkdir chmod cp ln mv rm; do
+for command in mkdir chmod cp ln mv rm cat; do
 	have "$command" || die "required command missing: $command"
 done
 for command in basename dirname grep head sed uname; do

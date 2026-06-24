@@ -11,11 +11,14 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/no-jq-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
+mkdir -p "$tmp/home" "$tmp/prefix/bin" "$tmp/prefix/etc" "$tmp/fake-bin" "$tmp/no-jq-bin" "$tmp/missing-cat-bin" "$tmp/bootstrap" "$tmp/runtime-source" "$tmp/standalone"
 host_sh=$(command -v sh)
 host_cat=$(command -v cat)
 for command in sh basename cat chmod cp dirname grep gzip head ln mkdir mv rm sed sha256sum tar uname; do
 	ln -s "$(command -v "$command")" "$tmp/no-jq-bin/$command"
+done
+for command in sh basename chmod cp dirname grep head ln mkdir mv rm sed uname; do
+	ln -s "$(command -v "$command")" "$tmp/missing-cat-bin/$command"
 done
 cp "$host_sh" "$tmp/prefix/bin/sh"
 cat >"$tmp/prefix/bin/nix-hash" <<EOF
@@ -461,6 +464,20 @@ EOF
 chmod 755 "$tmp/fake-bin/curl"
 cp "$tmp/fake-bin/proot" "$tmp/no-jq-bin/proot"
 cp "$tmp/fake-bin/pkg" "$tmp/no-jq-bin/pkg"
+cp "$tmp/fake-bin/proot" "$tmp/missing-cat-bin/proot"
+cp "$tmp/fake-bin/pkg" "$tmp/missing-cat-bin/pkg"
+
+if PATH="$tmp/missing-cat-bin" \
+	HOME="$tmp/missing-cat-home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/missing-cat-home/.nix-termux" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/missing-cat.err"; then
+	printf '%s\n' "install without cat unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'install.sh: required command missing: cat' "$tmp/missing-cat.err"
+test ! -e "$tmp/missing-cat-home/.nix-termux/etc/nix-termux.conf"
+test ! -e "$tmp/prefix/bin/nix"
 
 mkdir -p "$tmp/no-jq-prefix/bin" "$tmp/no-jq-prefix/etc"
 cp "$host_sh" "$tmp/no-jq-prefix/bin/sh"
