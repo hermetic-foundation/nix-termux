@@ -124,7 +124,7 @@ EOF
 EOF
     printf '%s\n' nix-termux > bootstrap/root/etc/hostname
 
-    tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf bootstrap.tar -C bootstrap .
+    tar --hard-dereference --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf bootstrap.tar -C bootstrap .
     gzip -n bootstrap.tar
 
     sha256=$(sha256sum bootstrap.tar.gz | awk '{print $1}')

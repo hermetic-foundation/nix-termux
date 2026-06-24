@@ -51,8 +51,13 @@ jq -e \
 ' "$manifest" >/dev/null
 
 listing=${TMPDIR:-/tmp}/nix-termux-bootstrap-listing.$$
-trap 'rm -f "$listing"' EXIT INT TERM
+trap 'rm -f "$listing" "$listing.modes"' EXIT INT TERM
 tar -tzf "$archive" >"$listing"
+tar -tvzf "$archive" >"$listing.modes"
+if grep -q ' link to ' "$listing.modes"; then
+	printf '%s\n' "bootstrap archive must not contain hard links" >&2
+	exit 1
+fi
 
 grep -qx './nix/var/nix/profiles/default/bin/nix' "$listing"
 grep -qx './nix/var/nix/profiles/default/bin/bash' "$listing"
@@ -89,7 +94,7 @@ grep -qx './nix-termux/bootstrap.registration' "$listing"
 extract_dir=${TMPDIR:-/tmp}/nix-termux-bootstrap-extract.$$
 rm -rf "$extract_dir"
 mkdir -p "$extract_dir"
-trap 'rm -f "$listing"; rm -rf "$extract_dir"' EXIT INT TERM
+trap 'rm -f "$listing" "$listing.modes"; rm -rf "$extract_dir"' EXIT INT TERM
 tar -xzf "$archive" -C "$extract_dir" \
 	./nix-termux/bootstrap.registration \
 	./root/etc/passwd \
