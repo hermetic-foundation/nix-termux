@@ -122,6 +122,8 @@ validate_release_dir() {
 			die "$(basename -- "$manifest") archive sha256 mismatch"
 	done
 
+	(cd "$release_dir" && sha256sum -c install.sh.sha256 >/dev/null) ||
+		die "installer checksum verification failed"
 	(cd "$release_dir" && sha256sum -c SHA256SUMS >/dev/null) ||
 		die "release checksum verification failed"
 }

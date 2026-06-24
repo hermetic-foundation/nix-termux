@@ -23,6 +23,8 @@ chmod 755 "$tmp/bin/python3"
 for file in install.sh install.sh.sha256 nix-termux-runtime.tar.gz nix-termux-runtime.tar.gz.sha256; do
 	printf '%s\n' "$file" >"$tmp/release/$file"
 done
+(cd "$tmp/release" && sha256sum install.sh >install.sh.sha256)
+(cd "$tmp/release" && sha256sum nix-termux-runtime.tar.gz >nix-termux-runtime.tar.gz.sha256)
 runtime_sha=$(sha256sum "$tmp/release/nix-termux-runtime.tar.gz")
 runtime_sha=${runtime_sha%% *}
 
@@ -110,6 +112,43 @@ fi
 grep -q 'nix-termux-bootstrap-x86_64.json archive sha256 mismatch' "$tmp/err"
 cp "$tmp/bootstrap-x86_64.good" "$tmp/release/nix-termux-bootstrap-x86_64.json"
 
+cp "$tmp/release/install.sh.sha256" "$tmp/install-sh-sha256.good"
+printf '%s  install.sh\n' "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" >"$tmp/release/install.sh.sha256"
+(cd "$tmp/release" && sha256sum \
+	install.sh \
+	install.sh.sha256 \
+	nix-termux-runtime.tar.gz \
+	nix-termux-runtime.tar.gz.sha256 \
+	nix-termux-channel-x86_64.json \
+	nix-termux-bootstrap-x86_64.json \
+	nix-termux-bootstrap-x86_64.tar.gz \
+	nix-termux-bootstrap-x86_64.registration \
+	nix-termux-channel-aarch64.json \
+	nix-termux-bootstrap-aarch64.json \
+	nix-termux-bootstrap-aarch64.tar.gz \
+	nix-termux-bootstrap-aarch64.registration \
+	>SHA256SUMS)
+if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
+	printf '%s\n' "serve-release unexpectedly accepted a bad installer checksum file" >&2
+	exit 1
+fi
+grep -q 'installer checksum verification failed' "$tmp/err"
+cp "$tmp/install-sh-sha256.good" "$tmp/release/install.sh.sha256"
+(cd "$tmp/release" && sha256sum \
+	install.sh \
+	install.sh.sha256 \
+	nix-termux-runtime.tar.gz \
+	nix-termux-runtime.tar.gz.sha256 \
+	nix-termux-channel-x86_64.json \
+	nix-termux-bootstrap-x86_64.json \
+	nix-termux-bootstrap-x86_64.tar.gz \
+	nix-termux-bootstrap-x86_64.registration \
+	nix-termux-channel-aarch64.json \
+	nix-termux-bootstrap-aarch64.json \
+	nix-termux-bootstrap-aarch64.tar.gz \
+	nix-termux-bootstrap-aarch64.registration \
+	>SHA256SUMS)
+
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
 # shellcheck disable=SC2016
 grep -q '^tmp_dir=$(mktemp -d)$' "$tmp/serve.out"
@@ -122,7 +161,9 @@ grep -q 'sha256sum -c install.sh.sha256' "$tmp/serve.out"
 grep -q 'sh "$tmp_dir/install.sh"' "$tmp/serve.out"
 grep -qx -- "-m http.server 8765 --bind 127.0.0.1" "$tmp/python3.args"
 
-printf '%s\n' tampered >>"$tmp/release/install.sh"
+cp "$tmp/release/SHA256SUMS" "$tmp/sha256sums.good"
+sed '1s/^[0-9a-f][0-9a-f]*/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/' \
+	"$tmp/sha256sums.good" >"$tmp/release/SHA256SUMS"
 
 if sh "$repo_root/tools/serve-release.sh" --check "$tmp/release" >"$tmp/out" 2>"$tmp/err"; then
 	printf '%s\n' "serve-release unexpectedly accepted bad checksums" >&2
