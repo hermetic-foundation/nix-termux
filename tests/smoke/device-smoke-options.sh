@@ -118,6 +118,21 @@ NIX_TERMUX_DEVICE_SMOKE_NETWORK=1 run_smoke --no-network >"$tmp/no-network-overr
 grep -q 'skip - nix run nixpkgs#hello' "$tmp/no-network-override.out"
 test ! -e "$tmp/network-run"
 
+NIX_TERMUX_DEVICE_SMOKE_NETWORK=maybe run_smoke --network >"$tmp/network-override.out"
+grep -q 'device smoke passed' "$tmp/network-override.out"
+grep -qx 'nixpkgs#hello' "$tmp/network-run"
+
+rm -f "$tmp/network-run"
+NIX_TERMUX_DEVICE_SMOKE_NETWORK=maybe run_smoke --no-network >"$tmp/invalid-env-override.out"
+grep -q 'skip - nix run nixpkgs#hello' "$tmp/invalid-env-override.out"
+test ! -e "$tmp/network-run"
+
+if NIX_TERMUX_DEVICE_SMOKE_NETWORK=maybe run_smoke >"$tmp/invalid-env.out" 2>"$tmp/invalid-env.err"; then
+	printf '%s\n' "invalid device smoke network environment unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q '^device-smoke.sh: NIX_TERMUX_DEVICE_SMOKE_NETWORK must be 0 or 1$' "$tmp/invalid-env.err"
+
 if run_smoke --unknown >"$tmp/unknown.out" 2>"$tmp/unknown.err"; then
 	printf '%s\n' "unknown device smoke option unexpectedly succeeded" >&2
 	exit 1

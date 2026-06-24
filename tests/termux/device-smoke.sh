@@ -6,6 +6,11 @@ set -eu
 failures=0
 network=${NIX_TERMUX_DEVICE_SMOKE_NETWORK:-0}
 
+die() {
+	printf 'device-smoke.sh: %s\n' "$*" >&2
+	exit 1
+}
+
 usage() {
 	cat <<'EOF'
 Usage: device-smoke.sh [--network] [--no-network]
@@ -35,6 +40,14 @@ while [ "$#" -gt 0 ]; do
 	esac
 	shift
 done
+
+case $network in
+0 | 1)
+	;;
+*)
+	die "NIX_TERMUX_DEVICE_SMOKE_NETWORK must be 0 or 1"
+	;;
+esac
 
 say() {
 	printf '%s\n' "$*"
