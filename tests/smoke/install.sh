@@ -1056,8 +1056,8 @@ printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile$'
 printf '%s\n' "$env_output" | grep -q '^SHELL=/nix/var/nix/profiles/default/bin/bash$'
-printf '%s\n' "$env_output" | grep -q "^NIX_SSL_CERT_FILE=$tmp/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$"
-printf '%s\n' "$env_output" | grep -q "^SSL_CERT_FILE=$tmp/home/.nix-termux/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$"
+printf '%s\n' "$env_output" | grep -q '^NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$'
+printf '%s\n' "$env_output" | grep -q '^SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$'
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \

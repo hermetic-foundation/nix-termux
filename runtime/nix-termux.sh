@@ -34,6 +34,7 @@ termux_home=${HOME:-/data/data/com.termux/files/home}
 nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
 proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/termux/bin:/usr/bin:/bin
 proot_default_shell=/nix/var/nix/profiles/default/bin/bash
+proot_cert_file=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 
 usage() {
 	cat <<'EOF'
@@ -345,8 +346,8 @@ NIX_REMOTE=local
 NIX_PATH=$nix_path
 NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile
 SHELL=$proot_default_shell
-NIX_SSL_CERT_FILE=$cert_file
-SSL_CERT_FILE=$cert_file
+NIX_SSL_CERT_FILE=$proot_cert_file
+SSL_CERT_FILE=$proot_cert_file
 EOF
 }
 
@@ -455,8 +456,8 @@ enter() {
 		NIX_REMOTE=local \
 		NIX_PATH="$nix_path" \
 		NIX_PROFILES="/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" \
-		NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
-		SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
+		NIX_SSL_CERT_FILE="$proot_cert_file" \
+		SSL_CERT_FILE="$proot_cert_file" \
 		"$@"
 }
 
