@@ -102,6 +102,7 @@ if [ "$network" = yes ]; then
 fi
 
 base_url_quoted=$(shell_quote "$base_url")
+remote_path_quoted=$(shell_quote "$remote_path")
 
 cat >"$tmp" <<EOF
 #!/data/data/com.termux/files/usr/bin/sh
@@ -132,5 +133,5 @@ Pushed validation script to:
   $remote_path
 
 Run this inside stock Termux on the Android device:
-  sh $remote_path
+  sh $remote_path_quoted
 EOF

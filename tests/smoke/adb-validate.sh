@@ -56,7 +56,14 @@ grep -q 'sha256sum -c install.sh.sha256' "$tmp/pushed.sh"
 # shellcheck disable=SC2016
 grep -q 'sh "$tmp_dir/install.sh"' "$tmp/pushed.sh"
 grep -q 'nix-termux smoke-test --network' "$tmp/pushed.sh"
-grep -q 'sh /sdcard/Download/custom-nix-termux.sh' "$tmp/out"
+grep -q "sh '/sdcard/Download/custom-nix-termux.sh'" "$tmp/out"
+
+PATH="$tmp/bin:$PATH" \
+	sh "$repo_root/tools/adb-validate.sh" \
+	--remote-path "/sdcard/Download/nix termux validate.sh" \
+	--no-launch \
+	http://127.0.0.1:8000 >"$tmp/quoted-path.out"
+grep -q "sh '/sdcard/Download/nix termux validate.sh'" "$tmp/quoted-path.out"
 
 if PATH="$tmp/bin:$PATH" sh "$repo_root/tools/adb-validate.sh" >"$tmp/usage.out" 2>"$tmp/usage.err"; then
 	printf '%s\n' "adb-validate without base URL unexpectedly succeeded" >&2
