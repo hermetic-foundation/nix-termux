@@ -430,7 +430,6 @@
               jq
               shellcheck
               shfmt
-              jj
               python3
               android-tools
             ];
