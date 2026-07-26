@@ -14,7 +14,7 @@ permissions:
 jobs:
   check:
     name: flake check
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64","monarchic-local","nixos"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -38,7 +38,12 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-latest
+            runner:
+              - self-hosted
+              - Linux
+              - X64
+              - monarchic-local
+              - nixos
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
@@ -66,7 +71,7 @@ jobs:
 
   release:
     name: publish release artifacts
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64","monarchic-local","nixos"]') }}
     needs:
       - build-release
     if: startsWith(github.ref, 'refs/tags/v')
