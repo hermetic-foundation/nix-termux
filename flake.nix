@@ -180,8 +180,8 @@
             cp -R "$src" source
             chmod -R u+w source
             cd source
-            actionlint .github/workflows/ci.yml
-            sh tests/smoke/github-actions.sh
+            actionlint .github/workflows/*.yml
+            sh tests/smoke/github-actions.sh .github/workflows/release.yml
             touch "$out"
           '';
 

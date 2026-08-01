@@ -3,21 +3,20 @@
 
 set -eu
 
-workflow=${1:-.github/workflows/ci.yml}
+workflow=${1:-.github/workflows/release.yml}
 
 [ -r "$workflow" ] || {
 	printf 'workflow not readable: %s\n' "$workflow" >&2
 	exit 1
 }
 
-grep -q 'ubuntu-24.04-arm' "$workflow" || {
-	printf '%s\n' "release workflow missing native aarch64 runner" >&2
+if grep -Eq 'ubuntu-|macos-|windows-' "$workflow"; then
+	printf '%s\n' "release workflow must not use hosted image runners" >&2
 	exit 1
-}
+fi
 
-# shellcheck disable=SC2016
-grep -q 'cmp -s "$file" "dist/$name"' "$workflow" || {
-	printf '%s\n' "release workflow does not reject conflicting duplicate artifacts" >&2
+grep -q 'hermetic-foundation/.github/.github/workflows/release.yml@main' "$workflow" || {
+	printf '%s\n' "release workflow does not use shared release preflight" >&2
 	exit 1
 }
 
