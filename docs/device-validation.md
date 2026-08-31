@@ -3,6 +3,11 @@
 Host CI proves the installer contract and artifact layout. Android support is
 accepted only after running the device smoke test inside stock Termux.
 
+Run acceptance commands from an interactive Termux session. The command
+`adb shell run-as com.termux` uses a different SELinux domain and does not
+inherit Termux's `LD_PRELOAD`, so it is useful for inspecting files but is not
+a valid runtime substitute.
+
 Install a release build on the device:
 
 ```sh
@@ -126,5 +131,6 @@ The command runs the installed script at
 `aarch64` Termux. Other architectures can use the same smoke test once matching
 channel and bootstrap artifacts exist.
 
-The aarch64 flow has been validated with the Termux 0.118.3 GitHub build on an
-Android 16 physical device, including a networked `nix run nixpkgs#hello`.
+The aarch64 flow has been validated inside the interactive Termux 0.118.3
+GitHub build on an Android 16 physical device, including a networked
+`nix run nixpkgs#hello`.

@@ -513,6 +513,9 @@ enter() {
 		set -- "$shell" -l
 	fi
 
+	# termux-exec rewrites guest paths such as /usr/bin/env before proot sees them.
+	unset LD_PRELOAD
+
 	# shellcheck disable=SC2046
 	exec "$proot" \
 		-0 \

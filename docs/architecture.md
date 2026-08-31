@@ -52,6 +52,9 @@ then Termux and bootstrap system paths.
 Before entering proot, the runtime writes `root/etc/resolv.conf` from
 `$PREFIX/etc/resolv.conf`, host `/etc/resolv.conf`, or Android `getprop` DNS
 values so Nix can resolve substituter and flake hosts.
+It also removes Termux's inherited `LD_PRELOAD` before starting `proot` so
+`termux-exec` does not rewrite guest paths such as `/usr/bin/env` back into the
+Termux prefix.
 
 ## Wrapper Model
 

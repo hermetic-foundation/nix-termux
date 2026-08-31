@@ -69,6 +69,10 @@ runtime_v2_sha=$(sha256sum "$tmp/runtime-v2.tar.gz" | awk '{print $1}')
 
 cat >"$tmp/fake-bin/proot" <<EOF
 #!$host_sh
+if [ "\${NIX_TERMUX_TEST_REQUIRE_CLEAN_LD_PRELOAD:-}" = 1 ] && [ "\${LD_PRELOAD+x}" = x ]; then
+	printf '%s\n' "LD_PRELOAD reached proot" >&2
+	exit 97
+fi
 printf '%s\n' "\$@" >"\$NIX_TERMUX_STATE_DIR/proot.args"
 while [ "\$#" -gt 0 ]; do
 	case "\$1" in
@@ -1243,6 +1247,20 @@ for name in nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-ga
 		exit 1
 	}
 done
+
+clean_ld_preload_output=$(
+	LD_PRELOAD='' \
+		NIX_TERMUX_TEST_REQUIRE_CLEAN_LD_PRELOAD=1 \
+		PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix" --version
+)
+[ "$clean_ld_preload_output" = "fake nix --version" ] || {
+	printf 'unexpected clean LD_PRELOAD output: %s\n' "$clean_ld_preload_output" >&2
+	exit 1
+}
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
