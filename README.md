@@ -19,11 +19,12 @@ This repository provides:
   `smoke-test`, `upgrade`, `upgrade-bootstrap`, `version`, and `uninstall`.
 - A versioned bootstrap manifest contract and host smoke test for the
   installer/wrapper path.
-- A Nix-built bootstrap artifact package and GitHub release workflow for
-  x86_64 and aarch64 bootstrap archives.
+- Nix-built native artifacts plus a host-buildable aarch64 bootstrap and
+  release output for physical Android devices.
 - A packaged real-device smoke test for validating releases inside Termux.
 
-The remaining high-risk work is real-device validation on Termux/Android.
+The aarch64 install, offline smoke test, and networked `nixpkgs#hello` path have
+been validated with the Termux 0.118.3 GitHub build on an Android 16 device.
 
 ## Development
 
@@ -42,9 +43,13 @@ Build local release artifacts with:
 ```sh
 nix build .#installer
 nix build .#runtime-archive
-nix build .#bootstrap
-nix build .#release
+nix build .#bootstrap-aarch64
+nix build .#release-aarch64
 ```
+
+`release-aarch64` can be built on x86_64 Linux and is the release artifact for
+physical Android devices. `release` remains the native output for the current
+host system, including x86_64 Android emulators.
 
 The release result is a hostable directory containing:
 
@@ -61,7 +66,7 @@ SHA256SUMS
 ```
 
 Tagged GitHub releases build and attach those artifacts through
-`.github/workflows/ci.yml`.
+`.github/workflows/release.yml`.
 
 Real Android support should be accepted with the on-device smoke test documented
 in `docs/device-validation.md`:
@@ -86,6 +91,9 @@ Device plus a stock Termux APK:
 nix build .#release
 tools/emulator-validate.sh --avd nix-termux-api-35 --termux-apk ~/Downloads/termux.apk --network
 ```
+
+The release architecture must match the Termux APK and emulator architecture.
+Use `.#release-aarch64` for an aarch64 emulator.
 
 The helper serves the release to the emulator through `10.0.2.2`, stages the
 Termux-side smoke script with `adb`, and keeps the local server running while

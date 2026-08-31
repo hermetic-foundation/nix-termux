@@ -53,6 +53,12 @@ grep -q 'bootstrap .*registration.* sidecar' docs/release.md || {
 	printf '%s\n' "docs/release.md missing bootstrap registration sidecar validation" >&2
 	exit 1
 }
+for file in README.md docs/release.md docs/device-validation.md; do
+	grep -q 'release-aarch64' "$file" || {
+		printf '%s\n' "$file missing the physical-device release output" >&2
+		exit 1
+	}
+done
 grep -q 'nix-termux-runtime.tar.gz.sha256' docs/device-validation.md || {
 	printf '%s\n' "docs/device-validation.md missing runtime sidecar validation" >&2
 	exit 1

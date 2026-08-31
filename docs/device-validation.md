@@ -53,10 +53,14 @@ nix-termux smoke-test
 For a local release bundle, build and serve it from the host machine:
 
 ```sh
-nix build .#release
+nix build .#release-aarch64
 tools/serve-release.sh --check result
 tools/serve-release.sh result 192.0.2.10 8000
 ```
+
+`release-aarch64` is assembled with host tools and can be built on x86_64
+Linux. Use the native `release` output only when testing a Termux installation
+whose architecture matches the host, such as an x86_64 emulator.
 
 Use a host address that the Android device can reach over the local network.
 The helper validates the release directory, prints the Termux install commands,
@@ -88,7 +92,7 @@ Prerequisites:
 - Android SDK `emulator` and platform tools on `PATH`.
 - An existing AVD, for example one created by Android Studio.
 - A Termux APK from F-Droid or the Termux GitHub releases.
-- A local release build from `nix build .#release`.
+- A local release build matching the emulator architecture.
 
 Run:
 
@@ -121,3 +125,6 @@ The command runs the installed script at
 `$HOME/.nix-termux/share/tests/device-smoke.sh`. The first supported target is
 `aarch64` Termux. Other architectures can use the same smoke test once matching
 channel and bootstrap artifacts exist.
+
+The aarch64 flow has been validated with the Termux 0.118.3 GitHub build on an
+Android 16 physical device, including a networked `nix run nixpkgs#hello`.

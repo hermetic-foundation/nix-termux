@@ -31,7 +31,7 @@ jobs:
 
       - name: Build release bundle
         run: |
-          nix build .#release
+          nix build .#release-aarch64
           mkdir -p dist
           cp -L result/* dist/
 

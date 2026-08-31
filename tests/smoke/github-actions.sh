@@ -20,6 +20,11 @@ grep -q 'hermetic-foundation/.github/.github/workflows/release.yml@main' "$workf
 	exit 1
 }
 
+grep -q 'nix build [.][#]release-aarch64' "$workflow" || {
+	printf '%s\n' "release workflow does not build the aarch64 release output" >&2
+	exit 1
+}
+
 grep -q 'sha256sum -c SHA256SUMS' "$workflow" || {
 	printf '%s\n' "release workflow does not verify aggregate checksums" >&2
 	exit 1
@@ -34,3 +39,10 @@ grep -q 'tools/serve-release.sh --check dist' "$workflow" || {
 	printf '%s\n' "release workflow does not run release directory validation" >&2
 	exit 1
 }
+
+for tool in tools/adb-validate.sh tools/serve-release.sh; do
+	[ -x "$tool" ] || {
+		printf '%s\n' "$tool must be executable in source checkouts" >&2
+		exit 1
+	}
+done

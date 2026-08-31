@@ -11,7 +11,8 @@ Serve a nix-termux release directory for local device validation and print the
 Termux commands needed to install and smoke-test it.
 
 Arguments:
-  release-dir  Directory produced by `nix build .#release`.
+  release-dir  Directory produced by `nix build .#release` or
+               `nix build .#release-aarch64`.
   host         Hostname or LAN IP address reachable from the Android device.
   port         HTTP port to serve. Defaults to 8000.
 

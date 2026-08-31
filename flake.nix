@@ -20,6 +20,23 @@
       packages = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          aarch64System = "aarch64-linux";
+          aarch64Bootstrap =
+            if system == aarch64System then
+              self.packages.${system}.bootstrap
+            else
+              pkgs.pkgsCross.aarch64-multiplatform.callPackage ./bootstrap/make-bootstrap.nix {
+                system = aarch64System;
+              };
+          aarch64Channel =
+            if system == aarch64System then
+              self.packages.${system}.channel
+            else
+              pkgs.callPackage ./channel/make-channel.nix {
+                system = aarch64System;
+                runtimeArchive = self.packages.${system}.runtime-archive;
+                bootstrap = aarch64Bootstrap;
+              };
         in
         {
           default = pkgs.stdenvNoCC.mkDerivation {
@@ -74,30 +91,29 @@
             bootstrap = self.packages.${system}.bootstrap;
           };
 
-          release = pkgs.runCommand "nix-termux-release-${system}" {
-            nativeBuildInputs = [ pkgs.coreutils ];
+          bootstrap-aarch64 = aarch64Bootstrap;
+
+          channel-aarch64 = aarch64Channel;
+
+          release = pkgs.callPackage ./release/make-release.nix {
+            targetSystem = system;
             installer = self.packages.${system}.installer;
             runtimeArchive = self.packages.${system}.runtime-archive;
             channel = self.packages.${system}.channel;
             bootstrap = self.packages.${system}.bootstrap;
-          } ''
-            mkdir -p "$out"
-            cp --no-preserve=mode "$installer"/* "$out"/
-            cp --no-preserve=mode "$runtimeArchive"/* "$out"/
-            cp --no-preserve=mode "$channel"/* "$out"/
-            cp --no-preserve=mode "$bootstrap"/* "$out"/
-            chmod 755 "$out"/install.sh
-            (cd "$out" && sha256sum \
-              install.sh \
-              install.sh.sha256 \
-              nix-termux-runtime.tar.gz \
-              nix-termux-runtime.tar.gz.sha256 \
-              nix-termux-channel-*.json \
-              nix-termux-bootstrap-*.tar.gz \
-              nix-termux-bootstrap-*.json \
-              nix-termux-bootstrap-*.registration \
-              > SHA256SUMS)
-          '';
+          };
+
+          release-aarch64 =
+            if system == aarch64System then
+              self.packages.${system}.release
+            else
+              pkgs.callPackage ./release/make-release.nix {
+                targetSystem = aarch64System;
+                installer = self.packages.${system}.installer;
+                runtimeArchive = self.packages.${system}.runtime-archive;
+                channel = aarch64Channel;
+                bootstrap = aarch64Bootstrap;
+              };
         });
 
       apps = forAllSystems (system: {
@@ -411,6 +427,34 @@
             grep -q 'install.sh' "$artifact"/SHA256SUMS
             (cd "$artifact" && sha256sum -c install.sh.sha256)
             (cd "$artifact" && sha256sum -c SHA256SUMS)
+            sh "$src"/tools/serve-release.sh --check "$artifact"
+            touch "$out"
+          '';
+
+          release-aarch64-artifact = pkgs.runCommand "nix-termux-release-aarch64-artifact-smoke" {
+            nativeBuildInputs = [
+              pkgs.file
+              pkgs.findutils
+              pkgs.gnugrep
+              pkgs.gnutar
+              pkgs.gzip
+            ];
+            src = self;
+            artifact = self.packages.${system}.release-aarch64;
+          } ''
+            test -r "$artifact"/nix-termux-channel-aarch64.json
+            test -r "$artifact"/nix-termux-bootstrap-aarch64.json
+            test -r "$artifact"/nix-termux-bootstrap-aarch64.tar.gz
+            test -r "$artifact"/nix-termux-bootstrap-aarch64.registration
+            grep -q '"nixSystem": "aarch64-linux"' "$artifact"/nix-termux-channel-aarch64.json
+            grep -q '"nixSystem": "aarch64-linux"' "$artifact"/nix-termux-bootstrap-aarch64.json
+
+            mkdir bootstrap
+            tar -xzf "$artifact"/nix-termux-bootstrap-aarch64.tar.gz -C bootstrap
+            nix_binary=$(find bootstrap/nix/store -path '*/bin/nix' -type f -print -quit)
+            test -n "$nix_binary"
+            file "$nix_binary" | grep -q 'ARM aarch64'
+
             sh "$src"/tools/serve-release.sh --check "$artifact"
             touch "$out"
           '';

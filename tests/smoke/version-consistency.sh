@@ -77,6 +77,7 @@ for file in \
 	bootstrap/make-bootstrap.nix \
 	channel/make-channel.nix \
 	installer/make-installer.nix \
+	release/make-release.nix \
 	runtime/make-runtime-archive.nix; do
 	check_spdx "$file"
 done

@@ -9,13 +9,14 @@ project-specific deployment service.
 nix flake check
 nix build .#installer
 nix build .#runtime-archive
-nix build .#bootstrap
-nix build .#channel
-nix build .#release
+nix build .#bootstrap-aarch64
+nix build .#channel-aarch64
+nix build .#release-aarch64
 ```
 
-The release result is a complete hostable directory for the current system's
-Termux architecture:
+The `release-aarch64` result is a complete hostable directory for physical
+Android devices. It is assembled with host tools and can be built on x86_64
+Linux:
 
 ```text
 install.sh
@@ -29,9 +30,10 @@ nix-termux-bootstrap-<arch>.registration
 SHA256SUMS
 ```
 
-The individual `.#installer`, `.#runtime-archive`, `.#bootstrap`, and
-`.#channel` packages remain available when a release pipeline wants separate
-artifacts.
+The native `.#release`, `.#bootstrap`, and `.#channel` outputs remain available
+for the current host architecture. The additive `.#bootstrap-aarch64` and
+`.#channel-aarch64` outputs expose the cross-built pieces separately when a
+release pipeline does not want the complete bundle.
 
 Release validation checks the standalone `install.sh.sha256` file used by the
 install snippets, the standalone `nix-termux-runtime.tar.gz.sha256` file used by
@@ -50,10 +52,9 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The `ci` workflow builds `.#release` on native x86_64 and aarch64 Linux
-runners, merges the bundles, rejects conflicting duplicate common artifacts,
-recomputes `SHA256SUMS`, and attaches the result files to the GitHub release
-for the tag.
+The release workflow builds `.#release-aarch64`, validates all checksum files
+and manifest relationships, and attaches the result files to the GitHub
+release for the tag. The build does not require an aarch64 runner.
 
 ## Artifact URL Shape
 
