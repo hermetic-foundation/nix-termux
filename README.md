@@ -6,10 +6,6 @@ Android plugin is required.
 `nix-termux` keeps its Nix store in Termux home and uses PRoot to expose it as
 `/nix`. Existing Termux add-ons continue to use the normal `com.termux` app.
 
-> [!NOTE]
-> If the quick-install URL returns `404`, a public release has not been
-> published yet. Developers can build and serve a release from the source tree.
-
 ## Install
 
 The current Android target is `aarch64`. It has been tested with the Termux

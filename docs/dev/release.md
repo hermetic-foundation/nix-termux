@@ -93,6 +93,9 @@ The tag starts `.github/workflows/release.yml`. The workflow:
 3. Verifies all checksum and manifest relationships.
 4. Attaches every file to the GitHub release.
 
+The caller delegates these jobs to the reusable release workflow in
+`hermetic-foundation/meta`.
+
 The workflow does not require an ARM64 runner.
 
 ## Verify Published URLs

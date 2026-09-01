@@ -10,11 +10,6 @@
 Use the same distribution source for Termux and all Termux add-ons. Android
 rejects add-ons signed by a different source.
 
-> [!NOTE]
-> If the release URL returns `404`, a public release has not been published yet.
-> Developers can build and serve a release by following the
-> [device validation guide](../dev/device-validation.md).
-
 ## Quick Install
 
 Install the required Termux packages:

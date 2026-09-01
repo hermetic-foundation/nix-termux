@@ -10,38 +10,16 @@ permissions:
   contents: write
 
 jobs:
-  release-preflight:
-    uses: hermetic-foundation/.github/.github/workflows/release.yml@main
+  release:
+    uses: hermetic-foundation/meta/.github/workflows/release.yml@main
     with:
       default_branch: main
-
-  build-release:
-    name: Build release
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS) }}
-    needs: release-preflight
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-
-      - name: Build release bundle
-        run: |
-          nix build .#release-aarch64
-          mkdir -p dist
-          cp -L result/* dist/
-
-      - name: Verify release bundle
-        run: |
-          (cd dist && sha256sum -c SHA256SUMS)
-          (cd dist && sha256sum -c install.sh.sha256)
-          tools/serve-release.sh --check dist
-
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v3
-        with:
-          files: dist/*
+      install_nix: true
+      artifact_command: |
+        nix build .#release-aarch64
+        mkdir -p dist
+        cp -L result/* dist/
+        (cd dist && sha256sum -c SHA256SUMS)
+        (cd dist && sha256sum -c install.sh.sha256)
+        tools/serve-release.sh --check dist
+      release_files: dist/*
