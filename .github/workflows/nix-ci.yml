@@ -14,7 +14,3 @@ permissions:
 jobs:
   nix-ci:
     uses: hermetic-foundation/.github/.github/workflows/nix-ci.yml@main
-    with:
-      publish_cache: ${{ github.ref == 'refs/heads/main' }}
-    secrets:
-      MONARCHIC_GITHUB_PAT: ${{ secrets.MONARCHIC_GITHUB_PAT }}
