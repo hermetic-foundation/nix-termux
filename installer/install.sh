@@ -77,6 +77,7 @@ bootstrap_manifest_url=${NIX_TERMUX_BOOTSTRAP_MANIFEST_URL:-}
 bootstrap_url=${NIX_TERMUX_BOOTSTRAP_URL:-}
 bootstrap_sha256=${NIX_TERMUX_BOOTSTRAP_SHA256:-}
 bootstrap_archive_ready=no
+canonical_channel_base_url=https://github.com/hermetic-foundation/nix-termux/releases/latest/download
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
 runtime_archive=$state_dir/tmp/runtime.tar.gz
@@ -410,6 +411,19 @@ load_channel() {
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 source_root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
+source_checkout=no
+if [ -f "$source_root/bin/nix-termux" ]; then
+	source_checkout=yes
+fi
+
+if [ "$source_checkout" = no ] &&
+	[ -z "$channel_url" ] &&
+	[ -z "$channel_base_url" ] &&
+	[ -z "$runtime_archive_url" ] &&
+	[ -z "$bootstrap_manifest_url" ] &&
+	[ -z "$bootstrap_url" ]; then
+	channel_base_url=$canonical_channel_base_url
+fi
 
 mkdir -p "$state_dir/tmp"
 
@@ -428,7 +442,7 @@ if [ -n "$channel_url" ]; then
 	load_channel "$channel"
 fi
 
-if [ -f "$source_root/bin/nix-termux" ]; then
+if [ "$source_checkout" = yes ]; then
 	source_bin=$source_root/bin/nix-termux
 	source_install=$source_root/installer/install.sh
 	source_runtime=$source_root/runtime/nix-termux.sh

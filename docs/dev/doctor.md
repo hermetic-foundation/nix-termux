@@ -1,20 +1,18 @@
-# Doctor
+# Doctor JSON Contract
 
-`nix-termux doctor` checks whether the Termux runtime, `proot`, bootstrap store,
-Nix default profile, Termux user profile layout, home profile path, CA bundle,
-resolver config, wrapper commands, and activation metadata are present.
+## Command
 
-```sh
-nix-termux doctor
-```
-
-For scripts, use JSON output:
+`nix-termux doctor --json` exposes runtime readiness for scripts, add-ons, and
+test automation:
 
 ```sh
 nix-termux doctor --json
 ```
 
-The JSON shape is stable for schema version 1 of the runtime:
+The command exits nonzero when any required component fails, even when it
+successfully prints JSON.
+
+## Schema Version 1
 
 ```json
 {
@@ -78,5 +76,18 @@ The JSON shape is stable for schema version 1 of the runtime:
 }
 ```
 
-`ok` is `false` if any required check fails. The command exits non-zero in that
-case, even for JSON output.
+## Top-Level Fields
+
+| Field | Meaning |
+| --- | --- |
+| `schemaVersion` | Version of this JSON contract |
+| `runtimeVersion` | Version implemented by the running script |
+| `installedRuntimeVersion` | Version recorded during installation |
+| `ok` | Conjunction of all required readiness checks |
+| `config` | Saved channel and artifact metadata |
+
+Each component object contains an `ok` field and the paths or command values
+needed to diagnose that component.
+
+Adding fields within schema version `1` must remain backward compatible.
+Removing or changing existing field types requires a new schema version.

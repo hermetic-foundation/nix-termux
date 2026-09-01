@@ -54,12 +54,8 @@
               install -Dm755 tools/serve-release.sh "$out/share/nix-termux/tools/serve-release.sh"
               install -Dm644 LICENSE "$out/share/licenses/nix-termux/LICENSE"
               install -Dm644 README.md "$out/share/doc/nix-termux/README.md"
-              install -Dm644 docs/architecture.md "$out/share/doc/nix-termux/architecture.md"
-              install -Dm644 docs/bootstrap.md "$out/share/doc/nix-termux/bootstrap.md"
-              install -Dm644 docs/channel.md "$out/share/doc/nix-termux/channel.md"
-              install -Dm644 docs/device-validation.md "$out/share/doc/nix-termux/device-validation.md"
-              install -Dm644 docs/doctor.md "$out/share/doc/nix-termux/doctor.md"
-              install -Dm644 docs/release.md "$out/share/doc/nix-termux/release.md"
+              install -Dm644 CONTRIBUTING.md "$out/share/doc/nix-termux/CONTRIBUTING.md"
+              cp -R docs "$out/share/doc/nix-termux/docs"
               install -Dm755 tests/termux/device-smoke.sh "$out/share/nix-termux/tests/device-smoke.sh"
               install -Dm644 bootstrap/manifest.schema.json "$out/share/nix-termux/bootstrap/manifest.schema.json"
               install -Dm644 bootstrap/example-manifest.json "$out/share/nix-termux/bootstrap/example-manifest.json"
@@ -70,7 +66,7 @@
 
             meta = {
               description = "Installer and runtime wrappers for Nix in stock Termux";
-              homepage = "https://github.com/midischwarz12/nix-termux";
+              homepage = "https://github.com/hermetic-foundation/nix-termux";
               license = pkgs.lib.licenses.agpl3Plus;
               mainProgram = "nix-termux";
               platforms = supportedSystems;
@@ -232,6 +228,7 @@
           docs-install = pkgs.runCommand "nix-termux-docs-install-smoke" {
             nativeBuildInputs = [
               pkgs.gnugrep
+              pkgs.python3
               pkgs.ripgrep
             ];
             src = self;
@@ -393,7 +390,9 @@
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/emulator-validate.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/serve-release.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tests/device-smoke.sh
-            test -r "$artifact"/share/doc/nix-termux/device-validation.md
+            test -r "$artifact"/share/doc/nix-termux/CONTRIBUTING.md
+            test -r "$artifact"/share/doc/nix-termux/docs/user/install.md
+            test -r "$artifact"/share/doc/nix-termux/docs/dev/device-validation.md
             test -r "$artifact"/share/licenses/nix-termux/LICENSE
             grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$artifact"/share/licenses/nix-termux/LICENSE
             test -r "$artifact"/share/nix-termux/bootstrap/manifest.schema.json

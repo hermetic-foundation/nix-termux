@@ -29,6 +29,7 @@ stdenvNoCC.mkDerivation {
     install -Dm755 tools/serve-release.sh archive/tools/serve-release.sh
     install -Dm644 LICENSE archive/LICENSE
     install -Dm644 README.md archive/README.md
+    install -Dm644 CONTRIBUTING.md archive/CONTRIBUTING.md
     cp -R docs/. archive/docs/
     cp -R bootstrap/*.json archive/bootstrap/
     install -Dm644 channel/schema.json archive/channel/schema.json

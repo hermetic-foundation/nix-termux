@@ -5,6 +5,7 @@ set -eu
 
 repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 tmp=${TMPDIR:-/tmp}/nix-termux-smoke.$$
+canonical_channel_base_url=https://github.com/hermetic-foundation/nix-termux/releases/latest/download
 
 cleanup() {
 	rm -rf "$tmp"
@@ -514,17 +515,42 @@ EOF
 chmod 755 "$tmp/fake-bin/dpkg"
 cat >"$tmp/fake-bin/curl" <<EOF
 #!$host_sh
-case " \$* " in
-*" https://example.invalid/missing-channel.json "*)
+url=
+output=
+while [ "\$#" -gt 0 ]; do
+	case \$1 in
+	-o)
+		output=\$2
+		shift 2
+		;;
+	-*)
+		shift
+		;;
+	*)
+		url=\$1
+		shift
+		;;
+	esac
+done
+case \$url in
+$canonical_channel_base_url/nix-termux-channel-x86_64.json)
+	cp "$tmp/channel.json" "\$output"
+	;;
+$canonical_channel_base_url/runtime.tar.gz)
+	cp "$tmp/runtime.tar.gz" "\$output"
+	;;
+$canonical_channel_base_url/bootstrap-manifest.json)
+	cp "$tmp/bootstrap-manifest.json" "\$output"
+	;;
+$canonical_channel_base_url/bootstrap.tar.gz)
+	cp "$tmp/bootstrap.tar.gz" "\$output"
+	;;
+https://example.invalid/missing-channel.json)
 	printf '%s\n' "curl: (22) The requested URL returned error: 404" >&2
 	exit 22
 	;;
 *)
-	printf 'unexpected curl invocation:' >&2
-	for arg in "\$@"; do
-		printf ' %s' "\$arg" >&2
-	done
-	printf '\n' >&2
+	printf 'unexpected curl URL: %s\n' "\$url" >&2
 	exit 2
 	;;
 esac
@@ -780,15 +806,31 @@ grep -qx "channel_base_url=file://$tmp/" "$tmp/trailing-base-home/.nix-termux/et
 grep -qx "channel_url=file://$tmp/nix-termux-channel-x86_64.json" "$tmp/trailing-base-home/.nix-termux/etc/nix-termux.conf"
 grep -qx "bootstrap_manifest_url=file://$tmp/bootstrap-manifest.json" "$tmp/trailing-base-home/.nix-termux/etc/nix-termux.conf"
 
-if PATH="$tmp/fake-bin:$PATH" \
-	HOME="$tmp/no-channel-home" \
-	PREFIX="$tmp/prefix" \
-	NIX_TERMUX_STATE_DIR="$tmp/no-channel-home/.nix-termux" \
-	sh "$tmp/standalone/install.sh" 2>"$tmp/no-channel.err"; then
-	printf '%s\n' "standalone install without channel unexpectedly succeeded" >&2
-	exit 1
-fi
-grep -q 'runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL' "$tmp/no-channel.err"
+mkdir -p "$tmp/default-prefix/bin" "$tmp/default-prefix/etc"
+cp "$host_sh" "$tmp/default-prefix/bin/sh"
+printf '%s\n' "nameserver 192.0.2.54" >"$tmp/default-prefix/etc/resolv.conf"
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/default-home" \
+	PREFIX="$tmp/default-prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/default-home/.nix-termux" \
+	sh "$tmp/standalone/install.sh" >"$tmp/default-install.out"
+grep -q '^loaded db$' "$tmp/default-install.out"
+grep -qx "channel_base_url=$canonical_channel_base_url" "$tmp/default-home/.nix-termux/etc/nix-termux.conf"
+grep -qx "channel_url=$canonical_channel_base_url/nix-termux-channel-x86_64.json" "$tmp/default-home/.nix-termux/etc/nix-termux.conf"
+grep -qx "bootstrap_manifest_url=$canonical_channel_base_url/bootstrap-manifest.json" "$tmp/default-home/.nix-termux/etc/nix-termux.conf"
+test -x "$tmp/default-prefix/bin/nix"
+
+mkdir -p "$tmp/source-prefix/bin" "$tmp/source-prefix/etc"
+cp "$host_sh" "$tmp/source-prefix/bin/sh"
+printf '%s\n' "nameserver 192.0.2.54" >"$tmp/source-prefix/etc/resolv.conf"
+PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/source-home" \
+	PREFIX="$tmp/source-prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/source-home/.nix-termux" \
+	sh "$repo_root/installer/install.sh" >"$tmp/source-install.out"
+grep -qx 'channel_base_url=' "$tmp/source-home/.nix-termux/etc/nix-termux.conf"
+grep -qx 'channel_url=' "$tmp/source-home/.nix-termux/etc/nix-termux.conf"
+test -x "$tmp/source-prefix/bin/nix"
 
 if PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/fetch-fail-home" \

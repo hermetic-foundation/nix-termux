@@ -1,188 +1,99 @@
 # nix-termux
 
-`nix-termux` is an installer and runtime layer for running Nix inside stock
-Termux. It is designed to keep Termux itself unchanged so existing Termux
-add-ons keep using the real `com.termux` app and normal Termux scripts.
+Run the Nix package manager inside stock Termux. No custom APK, Termux fork, or
+Android plugin is required.
 
-The runtime uses `proot` to present a virtual `/nix` while storing data under
-Termux home. Bootstrap artifacts are configured by URL so users can mirror or
-replace them without depending on project-specific deployment infrastructure.
+`nix-termux` keeps its Nix store in Termux home and uses PRoot to expose it as
+`/nix`. Existing Termux add-ons continue to use the normal `com.termux` app.
 
-## Status
+> [!NOTE]
+> If the quick-install URL returns `404`, a public release has not been
+> published yet. Developers can build and serve a release from the source tree.
 
-This repository provides:
+## Install
 
-- AGPLv3-or-later licensing from the first commit.
-- A Nix flake and `direnv` entry with `use flake`.
-- A stock-Termux installer/runtime that keeps the normal Termux app in place.
-- `nix-termux` runtime commands for `doctor`, `enter`, `run`, `env`,
-  `smoke-test`, `upgrade`, `upgrade-bootstrap`, `version`, and `uninstall`.
-- A versioned bootstrap manifest contract and host smoke test for the
-  installer/wrapper path.
-- Nix-built native artifacts plus a host-buildable aarch64 bootstrap and
-  release output for physical Android devices.
-- A packaged real-device smoke test for validating releases inside Termux.
+The current Android target is `aarch64`. It has been tested with the Termux
+`0.118.3` GitHub build on Android 16.
 
-The aarch64 install, offline smoke test, and networked `nixpkgs#hello` path have
-been validated with the Termux 0.118.3 GitHub build on an Android 16 device.
-
-## Development
+Run these commands in Termux:
 
 ```sh
-direnv allow
-nix flake check
-shellcheck bin/nix-termux installer/*.sh runtime/*.sh
-shfmt -w bin/nix-termux installer/*.sh runtime/*.sh
+pkg update
+pkg install -y proot curl tar xz-utils coreutils
+installer="$TMPDIR/nix-termux-install.sh"
+curl -fL https://github.com/hermetic-foundation/nix-termux/releases/latest/download/install.sh -o "$installer"
+sh "$installer"
+rm -f "$installer"
 ```
 
-`nix flake check` runs shell formatting, ShellCheck, and a host smoke test that
-installs a fake bootstrap archive into a temporary Termux-like prefix.
+The installer selects the channel for the device architecture and verifies the
+runtime and bootstrap archives before unpacking them.
 
-Build local release artifacts with:
+Check the installation:
 
 ```sh
-nix build .#installer
-nix build .#runtime-archive
-nix build .#bootstrap-aarch64
-nix build .#release-aarch64
-```
-
-`release-aarch64` can be built on x86_64 Linux and is the release artifact for
-physical Android devices. `release` remains the native output for the current
-host system, including x86_64 Android emulators.
-
-The release result is a hostable directory containing:
-
-```text
-install.sh
-install.sh.sha256
-nix-termux-runtime.tar.gz
-nix-termux-runtime.tar.gz.sha256
-nix-termux-channel-<arch>.json
-nix-termux-bootstrap-<arch>.tar.gz
-nix-termux-bootstrap-<arch>.json
-nix-termux-bootstrap-<arch>.registration
-SHA256SUMS
-```
-
-Tagged GitHub releases build and attach those artifacts through
-`.github/workflows/release.yml`.
-
-Real Android support should be accepted with the on-device smoke test documented
-in `docs/device-validation.md`:
-
-```sh
-sh "$HOME/.nix-termux/share/tests/device-smoke.sh"
-```
-
-or through the installed runtime command:
-
-```sh
-nix-termux smoke-test
-```
-
-Host-side validation helpers are available in a source checkout and in the Nix
-package under `share/nix-termux/tools/`.
-
-For emulator validation, build a release and use an existing Android Virtual
-Device plus a stock Termux APK:
-
-```sh
-nix build .#release
-tools/emulator-validate.sh --avd nix-termux-api-35 --termux-apk ~/Downloads/termux.apk --network
-```
-
-The release architecture must match the Termux APK and emulator architecture.
-Use `.#release-aarch64` for an aarch64 emulator.
-
-The helper serves the release to the emulator through `10.0.2.2`, stages the
-Termux-side smoke script with `adb`, and keeps the local server running while
-you execute the printed command inside Termux.
-
-## Termux Install Shape
-
-The intended install flow is:
-
-```sh
-pkg install proot curl tar xz-utils coreutils
-export NIX_TERMUX_CHANNEL_BASE_URL=https://example.invalid/nix-termux
-tmp_dir=$(mktemp -d)
-trap 'rm -rf "$tmp_dir"' EXIT INT TERM
-curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh" -o "$tmp_dir/install.sh"
-curl -fL "$NIX_TERMUX_CHANNEL_BASE_URL/install.sh.sha256" -o "$tmp_dir/install.sh.sha256"
-(cd "$tmp_dir" && sha256sum -c install.sh.sha256)
-sh "$tmp_dir/install.sh"
 nix-termux doctor
+nix run nixpkgs#hello
 ```
 
-For scripts and Termux add-ons, `doctor` also has machine-readable output:
+See the [installation guide](docs/user/install.md) for checksum verification,
+pinned releases, mirrors, updates, and removal.
+
+## Use Nix
+
+Normal Nix commands are available through Termux wrappers:
 
 ```sh
-nix-termux doctor --json
+nix run nixpkgs#ripgrep -- --version
+nix shell nixpkgs#git -c git --version
+nix profile install nixpkgs#jq
+nix-termux exec jq --version
 ```
 
-The installer writes project files below:
-
-```text
-$HOME/.nix-termux
-```
-
-and exposes thin wrappers in:
-
-```text
-$PREFIX/bin
-```
-
-The wrapper set includes `nix`, `nix-shell`, `nix-env`, `nix-store`,
-`nix-build`, `nix-channel`, `nix-collect-garbage`, `nix-copy-closure`,
-`nix-hash`, `nix-instantiate`, and `nix-prefetch-url`.
-
-Those wrappers are what Termux add-ons should call. For example,
-`Termux:Widget` can run a script that executes:
+Enter the environment before working on a local project:
 
 ```sh
+nix-termux enter
+cd ~/src/my-project
+nix develop
+```
+
+Nix programs run inside the PRoot environment. A program installed with
+`nix profile` is available through `nix-termux enter` or `nix-termux exec`.
+
+## Termux Add-ons
+
+Termux:Widget and similar add-ons can call the wrappers from ordinary Termux
+scripts:
+
+```sh
+#!/data/data/com.termux/files/usr/bin/sh
 nix-termux run nixpkgs#hello
 ```
 
-Legacy scripts that use commands like `nix-shell '<nixpkgs>'` also go through
-the wrappers. By default the runtime sets `NIX_PATH=nixpkgs=flake:nixpkgs`;
-set `NIX_TERMUX_NIX_PATH` before calling a wrapper to use a local checkout or
-another nixpkgs source.
+Install Termux and its add-ons from the same source so their Android signatures
+remain compatible.
 
-For local development or mirrored artifacts, the installer also accepts
-`NIX_TERMUX_CHANNEL_URL`, `NIX_TERMUX_ARCH`, `NIX_TERMUX_BOOTSTRAP_URL`, and
-`NIX_TERMUX_BOOTSTRAP_SHA256` directly.
-When running a standalone `install.sh` outside a source checkout or existing
-installation, provide either
-`NIX_TERMUX_CHANNEL_BASE_URL`, `NIX_TERMUX_CHANNEL_URL`, or
-`NIX_TERMUX_RUNTIME_ARCHIVE_URL` so the installer can fetch the runtime files.
+## Current Boundaries
 
-After installation, the saved channel can be reused to upgrade the runtime and
-bootstrap:
+- Nix runs in single-user mode with a local store.
+- Build sandboxing and the Nix daemon are disabled.
+- NixOS activation and systemd services are not supported.
+- Nix-installed programs must run inside the PRoot environment.
+- Local source builds can encounter Android or PRoot kernel limitations.
 
-```sh
-nix-termux upgrade
-```
+See [current limitations](docs/user/limitations.md) for the tested surface and
+known workflow gaps.
 
-or replaced explicitly:
+## Documentation
 
-```sh
-nix-termux upgrade https://example.invalid/nix-termux/nix-termux-channel-aarch64.json
-```
-
-To refresh only the bootstrap, the saved bootstrap manifest can be reused with:
-
-```sh
-nix-termux upgrade-bootstrap
-```
-
-or replaced explicitly:
-
-```sh
-nix-termux upgrade-bootstrap https://example.invalid/nix-termux/bootstrap-aarch64.json
-```
+- [User guide](docs/user/README.md)
+- [Installation](docs/user/install.md)
+- [Usage](docs/user/usage.md)
+- [Troubleshooting](docs/user/troubleshooting.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## License
 
 `nix-termux` is licensed under the GNU Affero General Public License version 3
-or later. See `LICENSE`.
+or later. See [LICENSE](LICENSE).
