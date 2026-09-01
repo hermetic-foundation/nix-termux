@@ -159,6 +159,23 @@ exec "\$@"
 EOF
 chmod 755 "$tmp/fake-bin/proot"
 
+mkdir -p "$tmp/no-resolver-home" "$tmp/no-resolver-prefix/bin"
+cp "$host_sh" "$tmp/no-resolver-prefix/bin/sh"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/no-resolver-home" \
+	PREFIX="$tmp/no-resolver-prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/no-resolver-home/.nix-termux" \
+	NIX_TERMUX_ARCH=x86_64 \
+	NIX_TERMUX_CHANNEL_BASE_URL="file://$tmp/no-resolver-channel" \
+	sh "$tmp/standalone/install.sh" 2>"$tmp/no-resolver.err"; then
+	printf '%s\n' "install without Termux resolver unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -Fqx \
+	"install.sh: Termux resolver config missing at $tmp/no-resolver-prefix/etc/resolv.conf; install it with: pkg install resolv-conf" \
+	"$tmp/no-resolver.err"
+test ! -e "$tmp/no-resolver-home/.nix-termux/tmp"
+
 mkdir -p \
 	"$tmp/bootstrap/nix/store" \
 	"$tmp/bootstrap/nix/var/nix/profiles/default/bin" \
@@ -1425,6 +1442,20 @@ enter_output=$(
 	printf 'unexpected enter output: %s\n' "$enter_output" >&2
 	exit 1
 }
+
+printf '%s\n' "not a directory" >"$tmp/resolver-parent"
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_RESOLV_CONF="$tmp/resolver-parent/resolv.conf" \
+	"$tmp/prefix/bin/nix-termux" exec true 2>"$tmp/resolver-target.err"; then
+	printf '%s\n' "unwritable resolver target unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -Fq \
+	"nix-termux: could not prepare resolver config at $tmp/resolver-parent/resolv.conf; ensure $tmp/prefix/etc/resolv.conf is readable and the state directory is writable (install with: pkg install resolv-conf)" \
+	"$tmp/resolver-target.err"
 
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"

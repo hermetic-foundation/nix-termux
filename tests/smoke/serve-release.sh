@@ -444,6 +444,7 @@ fi
 grep -q 'serve-release.sh: host must be a hostname or IP address without whitespace, slashes, or leading dash' "$tmp/err"
 
 PATH="$tmp/bin:$PATH" sh "$repo_root/tools/serve-release.sh" "$tmp/release" 127.0.0.1 8765 >"$tmp/serve.out"
+grep -q '^pkg install proot curl tar xz-utils coreutils resolv-conf$' "$tmp/serve.out"
 grep -q "^export NIX_TERMUX_CHANNEL_BASE_URL='http://127.0.0.1:8765'$" "$tmp/serve.out"
 # shellcheck disable=SC2016
 grep -q '^tmp_dir=$(mktemp -d)$' "$tmp/serve.out"

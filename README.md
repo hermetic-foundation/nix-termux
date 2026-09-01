@@ -15,7 +15,7 @@ Run these commands in Termux:
 
 ```sh
 pkg update
-pkg install -y proot curl tar xz-utils coreutils
+pkg install -y proot curl tar xz-utils coreutils resolv-conf
 installer="$TMPDIR/nix-termux-install.sh"
 curl -fL https://github.com/hermetic-foundation/nix-termux/releases/latest/download/install.sh -o "$installer"
 sh "$installer"

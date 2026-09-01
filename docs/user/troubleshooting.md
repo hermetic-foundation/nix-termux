@@ -79,6 +79,12 @@ readlink -f result
 
 ## DNS Fails
 
+Install Termux's resolver configuration package:
+
+```sh
+pkg install -y resolv-conf
+```
+
 Check the generated resolver file:
 
 ```sh
@@ -86,7 +92,7 @@ nix-termux exec cat /etc/resolv.conf
 ```
 
 Rerun the wrapper after the Android network changes. The runtime refreshes the
-resolver configuration on every entry.
+resolver configuration from `$PREFIX/etc/resolv.conf` on every entry.
 
 ## The `/proc/stat` GC Warning Appears
 

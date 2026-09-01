@@ -16,7 +16,7 @@ Install the required Termux packages:
 
 ```sh
 pkg update
-pkg install -y proot curl tar xz-utils coreutils
+pkg install -y proot curl tar xz-utils coreutils resolv-conf
 ```
 
 Download and run the latest installer:

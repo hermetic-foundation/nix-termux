@@ -104,6 +104,11 @@ if ! have proot; then
 	die "proot is required; install it with: pkg install proot"
 fi
 
+termux_resolv_conf=$prefix/etc/resolv.conf
+if [ ! -r "$termux_resolv_conf" ] || [ ! -s "$termux_resolv_conf" ]; then
+	die "Termux resolver config missing at $termux_resolv_conf; install it with: pkg install resolv-conf"
+fi
+
 remove_tree() {
 	tree=$1
 

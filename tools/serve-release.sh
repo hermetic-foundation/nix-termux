@@ -252,7 +252,7 @@ base_url_quoted=$(shell_quote "$base_url")
 cat <<EOF
 Run this inside stock Termux on the Android device:
 
-pkg install proot curl tar xz-utils coreutils
+pkg install proot curl tar xz-utils coreutils resolv-conf
 export NIX_TERMUX_CHANNEL_BASE_URL=$base_url_quoted
 tmp_dir=\$(mktemp -d)
 trap 'rm -rf "\$tmp_dir"' EXIT INT TERM

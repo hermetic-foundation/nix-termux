@@ -558,7 +558,8 @@ enter() {
 	if [ "$manage_home_profile" = yes ] && [ ! -e "$termux_home/.nix-profile" ] && [ ! -L "$termux_home/.nix-profile" ]; then
 		ln -s /nix/var/nix/profiles/per-user/termux/profile "$termux_home/.nix-profile"
 	fi
-	write_resolv_conf "$resolv_conf_file" || die "could not create $resolv_conf_file; set NIX_TERMUX_RESOLV_CONF to a readable resolver config"
+	write_resolv_conf "$resolv_conf_file" ||
+		die "could not prepare resolver config at $resolv_conf_file; ensure $termux_prefix/etc/resolv.conf is readable and the state directory is writable (install with: pkg install resolv-conf)"
 
 	shell=${NIX_TERMUX_SHELL:-$proot_default_shell}
 	if [ "$shell" = "$proot_default_shell" ] && ! path_or_symlink_exists "$profile_dir/bin/bash"; then

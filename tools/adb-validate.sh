@@ -134,7 +134,7 @@ cat >"$tmp" <<EOF
 set -eu
 
 apt update
-apt -o Dpkg::Options::=--force-confold install -y proot curl tar xz-utils coreutils
+apt -o Dpkg::Options::=--force-confold install -y proot curl tar xz-utils coreutils resolv-conf
 export NIX_TERMUX_CHANNEL_BASE_URL=$base_url_quoted
 tmp_dir=\$(mktemp -d)
 trap 'rm -rf "\$tmp_dir"' EXIT INT TERM
