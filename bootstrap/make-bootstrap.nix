@@ -43,7 +43,7 @@ let
 in
 stdenvNoCC.mkDerivation {
   pname = "nix-termux-bootstrap";
-  version = "0.1.0";
+  version = "0.1.1";
 
   nativeBuildInputs = [
     coreutils

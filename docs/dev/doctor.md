@@ -17,8 +17,8 @@ successfully prints JSON.
 ```json
 {
   "schemaVersion": 1,
-  "runtimeVersion": "0.1.0",
-  "installedRuntimeVersion": "0.1.0",
+  "runtimeVersion": "0.1.1",
+  "installedRuntimeVersion": "0.1.1",
   "ok": true,
   "config": {
     "path": "/data/data/com.termux/files/home/.nix-termux/etc/nix-termux.conf",

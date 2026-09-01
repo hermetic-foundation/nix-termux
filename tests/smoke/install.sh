@@ -71,7 +71,7 @@ cp -R "$tmp/runtime-source" "$tmp/runtime-unsafe"
 runtime_unsafe_sha=$(sha256sum "$tmp/runtime-unsafe.tar.gz" | awk '{print $1}')
 cp -R "$tmp/runtime-source" "$tmp/runtime-source-v2"
 # shellcheck disable=SC2016
-sed 's/version=${NIX_TERMUX_VERSION:-0.1.0}/version=${NIX_TERMUX_VERSION:-0.1.1}/' \
+sed 's/version=${NIX_TERMUX_VERSION:-0.1.1}/version=${NIX_TERMUX_VERSION:-0.1.2}/' \
 	"$tmp/runtime-source/runtime/nix-termux.sh" >"$tmp/runtime-source-v2/runtime/nix-termux.sh"
 (cd "$tmp/runtime-source-v2" && tar -czf "$tmp/runtime-v2.tar.gz" .)
 runtime_v2_sha=$(sha256sum "$tmp/runtime-v2.tar.gz" | awk '{print $1}')
@@ -850,7 +850,7 @@ PATH="$tmp/no-jq-bin" \
 	NIX_TERMUX_CHANNEL_URL="file://$tmp/channel-no-jq.json" \
 	sh "$tmp/standalone/install.sh" >"$tmp/no-jq-install.out"
 grep -q '^loaded db$' "$tmp/no-jq-install.out"
-grep -q '^runtime_version=0.1.0$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
+grep -q '^runtime_version=0.1.1$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/channel-no-jq.json$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
 grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest-no-jq.json$' "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/no-jq-home/.nix-termux/etc/nix-termux.conf"
@@ -1248,7 +1248,7 @@ grep -q '^registration_loaded=yes$' "$tmp/home/.nix-termux/etc/bootstrap-activat
 grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q "^bootstrap_sha256=$sha$" "$tmp/home/.nix-termux/etc/bootstrap-activation.conf"
 grep -q '^termux_arch=x86_64$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
-grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^runtime_version=0.1.1$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
@@ -1328,7 +1328,7 @@ quote_version=$(
 		NIX_TERMUX_STATE_DIR="$quote_home/.nix-termux" \
 		"$quote_prefix/bin/nix-termux" version
 )
-[ "$quote_version" = "0.1.0" ] || {
+[ "$quote_version" = "0.1.1" ] || {
 	printf 'unexpected quoted path version output: %s\n' "$quote_version" >&2
 	exit 1
 }
@@ -1395,7 +1395,7 @@ version_output=$(
 		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 		"$tmp/prefix/bin/nix-termux" version
 )
-[ "$version_output" = "0.1.0" ] || {
+[ "$version_output" = "0.1.1" ] || {
 	printf 'unexpected version output: %s\n' "$version_output" >&2
 	exit 1
 }
@@ -1479,14 +1479,14 @@ doctor_json=$(
 		"$tmp/prefix/bin/nix-termux" doctor --json
 )
 
-printf '%s\n' "$doctor_json" | grep -Eq '"runtimeVersion"[[:space:]]*:[[:space:]]*"0.1.0"'
-printf '%s\n' "$doctor_json" | grep -Eq '"installedRuntimeVersion"[[:space:]]*:[[:space:]]*"0.1.0"'
+printf '%s\n' "$doctor_json" | grep -Eq '"runtimeVersion"[[:space:]]*:[[:space:]]*"0.1.1"'
+printf '%s\n' "$doctor_json" | grep -Eq '"installedRuntimeVersion"[[:space:]]*:[[:space:]]*"0.1.1"'
 printf '%s\n' "$doctor_json" | jq -e \
 	--arg sha "$sha" \
 	--arg runtime_sha "$runtime_sha" \
 	'.schemaVersion == 1
-	and .runtimeVersion == "0.1.0"
-	and .installedRuntimeVersion == "0.1.0"
+	and .runtimeVersion == "0.1.1"
+	and .installedRuntimeVersion == "0.1.1"
 	and (.config.path | endswith("/etc/nix-termux.conf"))
 	and (.config.channelUrl | test("^file://.*/nix-termux-channel-x86_64.json$"))
 	and .config.runtimeArchiveSha256 == $runtime_sha
@@ -1580,11 +1580,11 @@ upgraded_version_output=$(
 		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 		"$tmp/prefix/bin/nix-termux" version
 )
-[ "$upgraded_version_output" = "0.1.1" ] || {
+[ "$upgraded_version_output" = "0.1.2" ] || {
 	printf 'unexpected upgraded version output: %s\n' "$upgraded_version_output" >&2
 	exit 1
 }
-grep -q '^runtime_version=0.1.1$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^runtime_version=0.1.2$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_v2_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/channel-v2.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^# user customization$' "$tmp/home/.config/nix-termux/flake.nix"
@@ -1849,7 +1849,7 @@ env_output=$(
 		GC_NPROCS='' \
 		"$tmp/prefix/bin/nix-termux" env
 )
-printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.1$'
+printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.2$'
 printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_ANDROID_BIND_DIRS=/sdcard /storage$'
 printf '%s\n' "$env_output" | grep -q "^NIX_TERMUX_CONFIG_ACTIVATION=$tmp/home/.nix-termux/runtime/activate-config.sh$"
 printf '%s\n' "$env_output" | grep -q "^NIX_TERMUX_USER_CONFIG_DIR=$tmp/home/.config/nix-termux$"

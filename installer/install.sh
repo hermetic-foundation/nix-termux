@@ -513,7 +513,7 @@ validate_runtime_sources() {
 validate_runtime_sources
 # shellcheck disable=SC2016
 runtime_version=$(sed -n 's/^version=${NIX_TERMUX_VERSION:-\([^}]*\)}$/\1/p' "$source_runtime" | head -n 1)
-runtime_version=${runtime_version:-${NIX_TERMUX_VERSION:-0.1.0}}
+runtime_version=${runtime_version:-${NIX_TERMUX_VERSION:-0.1.1}}
 
 install_file() {
 	source=$1

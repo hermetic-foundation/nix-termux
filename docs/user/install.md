@@ -74,20 +74,20 @@ The final command downloads from `nixpkgs` and `cache.nixos.org`.
 Set the release directory before running its installer:
 
 ```sh
-base=https://github.com/hermetic-foundation/nix-termux/releases/download/v0.1.0
+base=https://github.com/hermetic-foundation/nix-termux/releases/download/v0.1.1
 curl -fL "$base/install.sh" -o "$TMPDIR/nix-termux-install.sh"
 NIX_TERMUX_CHANNEL_BASE_URL="$base" sh "$TMPDIR/nix-termux-install.sh"
 rm -f "$TMPDIR/nix-termux-install.sh"
 ```
 
-Replace `v0.1.0` with the required release tag.
+Replace `v0.1.1` with the required release tag.
 
 ## Install from a Mirror
 
 A mirror can host the files from a release directory without modification:
 
 ```sh
-base=https://mirror.example/nix-termux/v0.1.0
+base=https://mirror.example/nix-termux/v0.1.1
 curl -fL "$base/install.sh" -o "$TMPDIR/nix-termux-install.sh"
 NIX_TERMUX_CHANNEL_BASE_URL="$base" sh "$TMPDIR/nix-termux-install.sh"
 rm -f "$TMPDIR/nix-termux-install.sh"

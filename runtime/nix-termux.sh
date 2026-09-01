@@ -3,7 +3,7 @@
 
 set -eu
 
-version=${NIX_TERMUX_VERSION:-0.1.0}
+version=${NIX_TERMUX_VERSION:-0.1.1}
 
 die() {
 	printf 'nix-termux: %s\n' "$*" >&2

@@ -66,7 +66,7 @@ Release validation requires:
 Update the version in every component covered by
 `tests/smoke/version-consistency.sh`. Run the full flake check after the change.
 
-Use a semantic version tag prefixed with `v`, such as `v0.1.0`.
+Use a semantic version tag prefixed with `v`, such as `v0.1.1`.
 
 ## Publish
 
@@ -82,8 +82,8 @@ jj git push --bookmark main --remote origin
 Create and push the release tag:
 
 ```sh
-jj tag set v0.1.0 -r main
-jj git push --tag v0.1.0 --remote origin
+jj tag set v0.1.1 -r main
+jj git push --tag v0.1.1 --remote origin
 ```
 
 The tag starts `.github/workflows/release.yml`. The workflow:
@@ -100,7 +100,7 @@ The workflow does not require an ARM64 runner.
 After the workflow completes, check both pinned and latest entry points:
 
 ```sh
-curl -fIL https://github.com/hermetic-foundation/nix-termux/releases/download/v0.1.0/install.sh
+curl -fIL https://github.com/hermetic-foundation/nix-termux/releases/download/v0.1.1/install.sh
 curl -fIL https://github.com/hermetic-foundation/nix-termux/releases/latest/download/install.sh
 ```
 
