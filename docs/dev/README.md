@@ -8,6 +8,7 @@ Start with [CONTRIBUTING.md](../../CONTRIBUTING.md) for repository setup.
 | Document | Scope |
 | --- | --- |
 | [Architecture](architecture.md) | Runtime, PRoot, wrappers, and state |
+| [Configuration contract](configuration.md) | Flake output and activation rules |
 | [Testing](testing.md) | Host checks and test ownership |
 | [Bootstrap contract](bootstrap.md) | Seed closure layout and manifest |
 | [Channel contract](channel.md) | Installer discovery and URL resolution |

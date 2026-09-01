@@ -35,6 +35,7 @@ The physical-device acceptance test currently verifies:
 - Bootstrap activation and local store access
 - Every installed Nix wrapper starting successfully
 - DNS and certificate configuration
+- Locked configuration activation and `nixpkgs` registry resolution
 - `nix run nixpkgs#hello` through the public binary cache
 
 The following workflows still need dedicated hardware coverage:

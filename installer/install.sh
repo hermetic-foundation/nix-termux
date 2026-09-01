@@ -66,6 +66,7 @@ validate_home() {
 
 install_home=${HOME:-}
 state_dir=${NIX_TERMUX_STATE_DIR:-"$install_home/.nix-termux"}
+user_config_dir=$install_home/.config/nix-termux
 runtime_version=${NIX_TERMUX_VERSION:-}
 prefix=${PREFIX:-}
 termux_arch=${NIX_TERMUX_ARCH:-}
@@ -446,12 +447,18 @@ if [ "$source_checkout" = yes ]; then
 	source_bin=$source_root/bin/nix-termux
 	source_install=$source_root/installer/install.sh
 	source_runtime=$source_root/runtime/nix-termux.sh
+	source_config_activation=$source_root/runtime/activate-config.sh
+	source_config_flake=$source_root/config/flake.nix
+	source_config_lock=$source_root/config/flake.lock
 	source_uninstall=$source_root/installer/uninstall.sh
 	source_device_smoke=$source_root/tests/termux/device-smoke.sh
 else
 	source_bin=$state_dir/bin/nix-termux
 	source_install=$state_dir/share/installer/install.sh
 	source_runtime=$state_dir/runtime/nix-termux.sh
+	source_config_activation=$state_dir/runtime/activate-config.sh
+	source_config_flake=$state_dir/share/config/flake.nix
+	source_config_lock=$state_dir/share/config/flake.lock
 	source_uninstall=$state_dir/share/installer/uninstall.sh
 	source_device_smoke=$state_dir/share/tests/device-smoke.sh
 
@@ -478,6 +485,9 @@ else
 		source_bin=$runtime_source/bin/nix-termux
 		source_install=$runtime_source/installer/install.sh
 		source_runtime=$runtime_source/runtime/nix-termux.sh
+		source_config_activation=$runtime_source/runtime/activate-config.sh
+		source_config_flake=$runtime_source/config/flake.nix
+		source_config_lock=$runtime_source/config/flake.lock
 		source_uninstall=$runtime_source/installer/uninstall.sh
 		source_device_smoke=$runtime_source/tests/termux/device-smoke.sh
 	fi
@@ -488,6 +498,9 @@ validate_runtime_sources() {
 		die "runtime files not found; set NIX_TERMUX_CHANNEL_BASE_URL, NIX_TERMUX_CHANNEL_URL, or NIX_TERMUX_RUNTIME_ARCHIVE_URL"
 	[ -r "$source_install" ] || die "runtime archive missing installer/install.sh"
 	[ -r "$source_runtime" ] || die "runtime archive missing runtime/nix-termux.sh"
+	[ -r "$source_config_activation" ] || die "runtime archive missing runtime/activate-config.sh"
+	[ -r "$source_config_flake" ] || die "runtime archive missing config/flake.nix"
+	[ -r "$source_config_lock" ] || die "runtime archive missing config/flake.lock"
 	[ -r "$source_uninstall" ] || die "runtime archive missing installer/uninstall.sh"
 	[ -r "$source_device_smoke" ] || die "runtime archive missing tests/termux/device-smoke.sh"
 }
@@ -540,7 +553,7 @@ backup_prefix_command() {
 	cp -p "$target" "$backup"
 }
 
-mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/installer" "$state_dir/share/prefix-backup" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/root/home" "$state_dir/root/tmp" "$state_dir/tmp" "$state_dir/nix"
+mkdir -p "$state_dir/bin" "$state_dir/etc" "$state_dir/runtime" "$state_dir/share/config" "$state_dir/share/installer" "$state_dir/share/prefix-backup" "$state_dir/share/tests" "$state_dir/root/usr/bin" "$state_dir/root/home" "$state_dir/root/tmp" "$state_dir/tmp" "$state_dir/nix"
 mkdir -p \
 	"$state_dir/nix/store" \
 	"$state_dir/nix/var/log/nix/drvs" \
@@ -581,9 +594,13 @@ fi
 install_file "$source_bin" "$state_dir/bin/nix-termux"
 install_file "$source_install" "$state_dir/share/installer/install.sh"
 install_file "$source_runtime" "$state_dir/runtime/nix-termux.sh"
+install_file "$source_config_activation" "$state_dir/runtime/activate-config.sh"
+install_file "$source_config_flake" "$state_dir/share/config/flake.nix"
+install_file "$source_config_lock" "$state_dir/share/config/flake.lock"
 install_file "$source_uninstall" "$state_dir/share/installer/uninstall.sh"
 install_file "$source_device_smoke" "$state_dir/share/tests/device-smoke.sh"
-chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/share/installer/uninstall.sh" "$state_dir/share/tests/device-smoke.sh"
+chmod 755 "$state_dir/bin/nix-termux" "$state_dir/share/installer/install.sh" "$state_dir/runtime/nix-termux.sh" "$state_dir/runtime/activate-config.sh" "$state_dir/share/installer/uninstall.sh" "$state_dir/share/tests/device-smoke.sh"
+chmod 644 "$state_dir/share/config/flake.nix" "$state_dir/share/config/flake.lock"
 
 if [ -n "$bootstrap_url" ]; then
 	registration_loaded=no
@@ -598,6 +615,7 @@ if [ -n "$bootstrap_url" ]; then
 		NIX_TERMUX_NIX_CONF=$bootstrap_stage/root/etc/nix/nix.conf \
 		NIX_TERMUX_RESOLV_CONF=$bootstrap_stage/root/etc/resolv.conf \
 		NIX_TERMUX_MANAGE_HOME_PROFILE=no \
+		NIX_TERMUX_CONFIG_FLAKE=none \
 		sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
 
 	remove_tree "$state_dir/nix/var/nix/profiles/default"
@@ -607,7 +625,9 @@ if [ -n "$bootstrap_url" ]; then
 	remove_tree "$state_dir/nix-termux"
 	(cd "$bootstrap_stage" && tar -cf - .) | tar --skip-old-files -xf - -C "$state_dir"
 	registration=$state_dir/nix-termux/bootstrap.registration
-	NIX_TERMUX_MANAGE_HOME_PROFILE=no sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
+	NIX_TERMUX_MANAGE_HOME_PROFILE=no \
+		NIX_TERMUX_CONFIG_FLAKE=none \
+		sh "$state_dir/bin/nix-termux" exec nix-store --load-db <"$registration"
 	registration_loaded=yes
 
 	{
@@ -617,6 +637,18 @@ if [ -n "$bootstrap_url" ]; then
 		printf 'registration=%s\n' "$registration"
 		printf 'registration_loaded=%s\n' "$registration_loaded"
 	} | write_file "$state_dir/etc/bootstrap-activation.conf"
+fi
+
+config_scaffolded=no
+if [ ! -e "$user_config_dir/flake.nix" ] && [ ! -L "$user_config_dir/flake.nix" ] &&
+	[ ! -e "$user_config_dir/flake.lock" ] && [ ! -L "$user_config_dir/flake.lock" ]; then
+	mkdir -p "$user_config_dir"
+	install_file "$state_dir/share/config/flake.nix" "$user_config_dir/flake.nix"
+	install_file "$state_dir/share/config/flake.lock" "$user_config_dir/flake.lock"
+	chmod 644 "$user_config_dir/flake.nix" "$user_config_dir/flake.lock"
+	config_scaffolded=yes
+elif [ ! -r "$user_config_dir/flake.nix" ] || [ ! -r "$user_config_dir/flake.lock" ]; then
+	printf '%s\n' "Warning: preserving incomplete configuration at $user_config_dir" >&2
 fi
 
 if [ ! -e "$HOME/.nix-profile" ] && [ ! -L "$HOME/.nix-profile" ]; then
@@ -662,4 +694,9 @@ done
 } | write_file "$state_dir/etc/nix-termux.conf"
 
 printf '%s\n' "Installed nix-termux to $state_dir"
+if [ "$config_scaffolded" = yes ]; then
+	printf '%s\n' "Created configuration at $user_config_dir/flake.nix"
+else
+	printf '%s\n' "Preserved configuration at $user_config_dir/flake.nix"
+fi
 printf '%s\n' "Run: nix-termux doctor"

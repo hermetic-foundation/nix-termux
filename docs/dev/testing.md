@@ -32,6 +32,7 @@ shorten the edit loop.
 - Manifest validation and architecture matching
 - Archive hashes and safe extraction paths
 - Bootstrap store registration
+- Configuration scaffold, activation, overrides, and preservation
 - Wrapper backup, replacement, upgrade, and removal
 - PRoot arguments and guest environment
 - Failure behavior for missing or malformed inputs

@@ -31,6 +31,9 @@ tar -tzf "$archive" >"$listing"
 grep -qx './bin/nix-termux' "$listing"
 grep -qx './installer/install.sh' "$listing"
 grep -qx './installer/uninstall.sh' "$listing"
+grep -qx './config/flake.nix' "$listing"
+grep -qx './config/flake.lock' "$listing"
+grep -qx './runtime/activate-config.sh' "$listing"
 grep -qx './runtime/nix-termux.sh' "$listing"
 grep -qx './tools/adb-validate.sh' "$listing"
 grep -qx './tools/serve-release.sh' "$listing"
@@ -39,12 +42,14 @@ grep -qx './LICENSE' "$listing"
 grep -qx './README.md' "$listing"
 grep -qx './CONTRIBUTING.md' "$listing"
 grep -qx './docs/user/README.md' "$listing"
+grep -qx './docs/user/configuration.md' "$listing"
 grep -qx './docs/user/install.md' "$listing"
 grep -qx './docs/user/usage.md' "$listing"
 grep -qx './docs/user/limitations.md' "$listing"
 grep -qx './docs/user/troubleshooting.md' "$listing"
 grep -qx './docs/dev/README.md' "$listing"
 grep -qx './docs/dev/architecture.md' "$listing"
+grep -qx './docs/dev/configuration.md' "$listing"
 grep -qx './docs/dev/bootstrap.md' "$listing"
 grep -qx './docs/dev/channel.md' "$listing"
 grep -qx './docs/dev/doctor.md' "$listing"
@@ -60,6 +65,7 @@ for executable in \
 	./bin/nix-termux \
 	./installer/install.sh \
 	./installer/uninstall.sh \
+	./runtime/activate-config.sh \
 	./runtime/nix-termux.sh \
 	./tools/adb-validate.sh \
 	./tools/serve-release.sh \
@@ -72,6 +78,9 @@ tar -xzf "$archive" -C "$extract_dir" \
 	./bin/nix-termux \
 	./installer/install.sh \
 	./installer/uninstall.sh \
+	./config/flake.nix \
+	./config/flake.lock \
+	./runtime/activate-config.sh \
 	./runtime/nix-termux.sh \
 	./tools/adb-validate.sh \
 	./tools/serve-release.sh \
@@ -81,6 +90,8 @@ for script in \
 	bin/nix-termux \
 	installer/install.sh \
 	installer/uninstall.sh \
+	config/flake.nix \
+	runtime/activate-config.sh \
 	runtime/nix-termux.sh \
 	tools/adb-validate.sh \
 	tools/serve-release.sh \

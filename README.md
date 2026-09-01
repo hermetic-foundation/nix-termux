@@ -27,7 +27,8 @@ rm -f "$installer"
 ```
 
 The installer selects the channel for the device architecture and verifies the
-runtime and bootstrap archives before unpacking them.
+runtime and bootstrap archives before unpacking them. It also creates a locked
+configuration flake at `~/.config/nix-termux`.
 
 Check the installation:
 
@@ -49,6 +50,10 @@ nix shell nixpkgs#git -c git --version
 nix profile install nixpkgs#jq
 nix-termux exec jq --version
 ```
+
+Registry and binary-cache settings are declared in
+`~/.config/nix-termux/flake.nix`. Changes apply to the next command without
+generating files in `~/.config/nix`.
 
 Enter the environment before working on a local project:
 
@@ -90,6 +95,7 @@ known workflow gaps.
 - [User guide](docs/user/README.md)
 - [Installation](docs/user/install.md)
 - [Usage](docs/user/usage.md)
+- [Configuration](docs/user/configuration.md)
 - [Troubleshooting](docs/user/troubleshooting.md)
 - [Contributing](CONTRIBUTING.md)
 

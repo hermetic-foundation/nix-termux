@@ -44,11 +44,14 @@ if grep -q 'awk' "$tmp/standalone/install.sh"; then
 	printf '%s\n' "standalone installer must not require awk" >&2
 	exit 1
 fi
-mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime" "$tmp/runtime-source/tests/termux"
+mkdir -p "$tmp/runtime-source/bin" "$tmp/runtime-source/config" "$tmp/runtime-source/installer" "$tmp/runtime-source/runtime" "$tmp/runtime-source/tests/termux"
 cp "$repo_root/bin/nix-termux" "$tmp/runtime-source/bin/nix-termux"
 cp "$repo_root/installer/install.sh" "$tmp/runtime-source/installer/install.sh"
 cp "$repo_root/installer/uninstall.sh" "$tmp/runtime-source/installer/uninstall.sh"
 cp "$repo_root/runtime/nix-termux.sh" "$tmp/runtime-source/runtime/nix-termux.sh"
+cp "$repo_root/runtime/activate-config.sh" "$tmp/runtime-source/runtime/activate-config.sh"
+cp "$repo_root/config/flake.nix" "$tmp/runtime-source/config/flake.nix"
+cp "$repo_root/config/flake.lock" "$tmp/runtime-source/config/flake.lock"
 cp "$repo_root/tests/termux/device-smoke.sh" "$tmp/runtime-source/tests/termux/device-smoke.sh"
 if grep -Eq '(^|[^[:alnum:]_])awk([^[:alnum:]_]|$)' "$tmp/runtime-source/tests/termux/device-smoke.sh"; then
 	printf '%s\n' "device smoke must not require awk" >&2
@@ -75,6 +78,7 @@ runtime_v2_sha=$(sha256sum "$tmp/runtime-v2.tar.gz" | awk '{print $1}')
 
 cat >"$tmp/fake-bin/proot" <<EOF
 #!$host_sh
+termux_home=\$HOME
 if [ "\${NIX_TERMUX_TEST_REQUIRE_CLEAN_LD_PRELOAD:-}" = 1 ] && [ "\${LD_PRELOAD+x}" = x ]; then
 	printf '%s\n' "LD_PRELOAD reached proot" >&2
 	exit 97
@@ -108,6 +112,35 @@ while [ "\$#" -gt 0 ]; do
 	esac
 done
 profile_bin=\${NIX_TERMUX_PROFILE_DIR:-"\$NIX_TERMUX_STATE_DIR/nix/var/nix/profiles/default"}/bin
+if [ "\$1" = "/nix-termux-runtime/activate-config.sh" ]; then
+	shift
+	case \${NIX_TERMUX_CONFIG_FLAKE:-} in
+	/home/termux)
+		NIX_TERMUX_CONFIG_FLAKE=\$termux_home
+		;;
+	/home/termux/*)
+		NIX_TERMUX_CONFIG_FLAKE=\$termux_home/\${NIX_TERMUX_CONFIG_FLAKE#/home/termux/}
+		;;
+	esac
+	export NIX_TERMUX_CONFIG_FLAKE
+	export NIX_TERMUX_REAL_NIX=\$profile_bin/nix
+	if [ -x "\$profile_bin/\$1" ]; then
+		command=\$1
+		shift
+		set -- "\$profile_bin/\$command" "\$@"
+	else
+		case \$1 in
+		/nix/var/nix/profiles/default/bin/*)
+			command=\${1##*/}
+			if [ -x "\$profile_bin/\$command" ]; then
+				shift
+				set -- "\$profile_bin/\$command" "\$@"
+			fi
+			;;
+		esac
+	fi
+	exec "$host_sh" "\$NIX_TERMUX_STATE_DIR/runtime/activate-config.sh" "\$@"
+fi
 if [ -x "\$profile_bin/\$1" ]; then
 	command=\$1
 	shift
@@ -137,6 +170,20 @@ mkdir -p "$tmp/android-storage/sdcard" "$tmp/android-storage/storage"
 
 cat >"$tmp/bootstrap/nix/var/nix/profiles/default/bin/nix" <<EOF
 #!$host_sh
+case " \$* " in
+*"#nixTermux.nixConfig"*)
+	if [ "\${NIX_TERMUX_TEST_CONFIG_EVAL_FAIL:-}" = 1 ]; then
+		printf '%s\n' "configuration evaluation failed" >&2
+		exit 1
+	fi
+	printf '%s\n' \
+		"experimental-features = nix-command flakes" \
+		"flake-registry = /nix/store/test-nix-termux-registry.json" \
+		"substituters = https://cache.nixos.org/" \
+		"trusted-public-keys = cache.nixos.org-1:test"
+	exit 0
+	;;
+esac
 printf 'fake nix'
 for arg in "\$@"; do
 	printf ' %s' "\$arg"
@@ -1188,6 +1235,12 @@ grep -q '^runtime_version=0.1.0$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/nix-termux-channel-x86_64.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 test -x "$tmp/home/.nix-termux/share/tests/device-smoke.sh"
+test -x "$tmp/home/.nix-termux/runtime/activate-config.sh"
+cmp "$repo_root/config/flake.nix" "$tmp/home/.nix-termux/share/config/flake.nix"
+cmp "$repo_root/config/flake.lock" "$tmp/home/.nix-termux/share/config/flake.lock"
+cmp "$repo_root/config/flake.nix" "$tmp/home/.config/nix-termux/flake.nix"
+cmp "$repo_root/config/flake.lock" "$tmp/home/.config/nix-termux/flake.lock"
+test ! -e "$tmp/home/.config/nix"
 test -L "$tmp/home/.nix-profile"
 [ "$(readlink "$tmp/home/.nix-profile")" = "/nix/var/nix/profiles/per-user/termux/profile" ]
 if find "$tmp/home/.nix-termux" -name '.install.*' | grep -q .; then
@@ -1198,6 +1251,8 @@ test ! -e "$tmp/home/.nix-termux/tmp/runtime.tar.gz"
 test ! -e "$tmp/home/.nix-termux/tmp/runtime-source"
 test ! -e "$tmp/home/.nix-termux/tmp/bootstrap.tar.gz"
 test ! -e "$tmp/home/.nix-termux/tmp/bootstrap-stage"
+
+printf '%s\n' '# user customization' >>"$tmp/home/.config/nix-termux/flake.nix"
 
 PATH="$tmp/fake-bin:$PATH" \
 	HOME="$tmp/home" \
@@ -1212,6 +1267,7 @@ test -x "$tmp/home/.nix-termux/nix/var/nix/profiles/default/bin/nix"
 test -x "$tmp/home/.nix-termux/root/bin/sh"
 test -r "$tmp/home/.nix-termux/root/etc/nix/nix.conf"
 test -x "$tmp/home/.nix-termux/root/usr/bin/env"
+grep -q '^# user customization$' "$tmp/home/.config/nix-termux/flake.nix"
 
 cat >"$tmp/home/.nix-termux/share/tests/device-smoke.sh" <<'EOF'
 #!/usr/bin/env sh
@@ -1372,6 +1428,7 @@ enter_output=$(
 
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
+grep -qx -- "$tmp/home/.nix-termux/runtime:/nix-termux-runtime" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "SHELL=/nix/var/nix/profiles/default/bin/bash" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "GC_NPROCS=6" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "/nix/var/nix/profiles/default/bin/bash" "$tmp/home/.nix-termux/proot.args"
@@ -1416,7 +1473,12 @@ printf '%s\n' "$doctor_json" | jq -e \
 	and .wrappers.ok == true
 	and .wrappers.missing == ""
 	and .activation.ok == true
-	and .activation.bootstrapSha256 == $sha' >/dev/null
+	and .activation.bootstrapSha256 == $sha
+	and .configurationActivation.ok == true
+	and (.configurationActivation.path | endswith("/runtime/activate-config.sh"))
+	and .configurationFlake.ok == true
+	and (.configurationFlake.path | endswith("/.config/nix-termux"))
+	and .configurationFlake.reference == "/home/termux/.config/nix-termux"' >/dev/null
 
 grep -q '^bootstrap_manifest_url=file://.*/bootstrap-manifest.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 
@@ -1494,6 +1556,7 @@ upgraded_version_output=$(
 grep -q '^runtime_version=0.1.1$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q "^runtime_archive_sha256=$runtime_v2_sha$" "$tmp/home/.nix-termux/etc/nix-termux.conf"
 grep -q '^channel_url=file://.*/channel-v2.json$' "$tmp/home/.nix-termux/etc/nix-termux.conf"
+grep -q '^# user customization$' "$tmp/home/.config/nix-termux/flake.nix"
 cp "$tmp/home/.nix-termux/etc/nix-termux.conf" "$tmp/nix-termux.conf.good"
 sed 's|^channel_url=.*$|channel_url=file://bad channel.json|' \
 	"$tmp/nix-termux.conf.good" >"$tmp/home/.nix-termux/etc/nix-termux.conf"
@@ -1541,6 +1604,41 @@ output=$(
 	printf 'unexpected output: %s\n' "$output" >&2
 	exit 1
 }
+
+# shellcheck disable=SC2016
+nix_config_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		NIX_CONFIG='substituters = https://caller.example.invalid/' \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_CONFIG"'
+)
+printf '%s\n' "$nix_config_output" | grep -q '^flake-registry = /nix/store/test-nix-termux-registry.json$'
+[ "$(printf '%s\n' "$nix_config_output" | tail -n 1)" = 'substituters = https://caller.example.invalid/' ]
+
+# shellcheck disable=SC2016
+disabled_config_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		NIX_TERMUX_CONFIG_FLAKE=none \
+		NIX_CONFIG='substituters = https://caller.example.invalid/' \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$NIX_CONFIG"'
+)
+[ "$disabled_config_output" = 'substituters = https://caller.example.invalid/' ]
+
+if PATH="$tmp/fake-bin:$PATH" \
+	HOME="$tmp/home" \
+	PREFIX="$tmp/prefix" \
+	NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+	NIX_TERMUX_TEST_CONFIG_EVAL_FAIL=1 \
+	"$tmp/prefix/bin/nix" --version >"$tmp/config-eval-fail.out" 2>"$tmp/config-eval-fail.err"; then
+	printf '%s\n' "configuration evaluation failure unexpectedly succeeded" >&2
+	exit 1
+fi
+grep -q 'failed to evaluate .*/.config/nix-termux#nixTermux.nixConfig' "$tmp/config-eval-fail.err"
 
 # shellcheck disable=SC2016
 xdg_output=$(
@@ -1722,6 +1820,9 @@ env_output=$(
 )
 printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.1$'
 printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_ANDROID_BIND_DIRS=/sdcard /storage$'
+printf '%s\n' "$env_output" | grep -q "^NIX_TERMUX_CONFIG_ACTIVATION=$tmp/home/.nix-termux/runtime/activate-config.sh$"
+printf '%s\n' "$env_output" | grep -q "^NIX_TERMUX_USER_CONFIG_DIR=$tmp/home/.config/nix-termux$"
+printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_CONFIG_FLAKE=/home/termux/.config/nix-termux$'
 printf '%s\n' "$env_output" | grep -q "^XDG_CONFIG_HOME=$tmp/home/.config$"
 printf '%s\n' "$env_output" | grep -q "^XDG_CACHE_HOME=$tmp/home/.cache$"
 printf '%s\n' "$env_output" | grep -q "^XDG_DATA_HOME=$tmp/home/.local/share$"
@@ -1839,3 +1940,6 @@ grep -qx 'printf '\''%s\\n'\'' original nix-hash' "$tmp/prefix/bin/nix-hash"
 grep -Fqx "printf '%s\\n' user modified nix-env" "$tmp/prefix/bin/nix-env"
 [ ! -e "$tmp/home/.nix-profile" ]
 [ ! -d "$tmp/home/.nix-termux" ]
+test -r "$tmp/home/.config/nix-termux/flake.nix"
+test -r "$tmp/home/.config/nix-termux/flake.lock"
+grep -q '^# user customization$' "$tmp/home/.config/nix-termux/flake.nix"

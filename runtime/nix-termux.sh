@@ -27,6 +27,9 @@ cert_file=${NIX_TERMUX_SSL_CERT_FILE:-"$profile_dir/etc/ssl/certs/ca-bundle.crt"
 nix_conf_file=${NIX_TERMUX_NIX_CONF:-"$root_dir/etc/nix/nix.conf"}
 config_file=${NIX_TERMUX_CONFIG:-"$state_dir/etc/nix-termux.conf"}
 activation_file=${NIX_TERMUX_ACTIVATION:-"$state_dir/etc/bootstrap-activation.conf"}
+config_activation=${NIX_TERMUX_CONFIG_ACTIVATION:-"$state_dir/runtime/activate-config.sh"}
+user_config_dir=${NIX_TERMUX_USER_CONFIG_DIR:-"$termux_home/.config/nix-termux"}
+config_flake=${NIX_TERMUX_CONFIG_FLAKE:-/home/termux/.config/nix-termux}
 proot=${NIX_TERMUX_PROOT:-proot}
 resolv_conf_file=${NIX_TERMUX_RESOLV_CONF:-"$root_dir/etc/resolv.conf"}
 android_bind_dirs=${NIX_TERMUX_ANDROID_BIND_DIRS:-"/sdcard /storage"}
@@ -38,6 +41,8 @@ nix_path=${NIX_TERMUX_NIX_PATH:-${NIX_PATH:-nixpkgs=flake:nixpkgs}}
 proot_path=/home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/bin:/bin
 proot_default_shell=/nix/var/nix/profiles/default/bin/bash
 proot_cert_file=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
+proot_real_nix=/nix/var/nix/profiles/default/bin/nix
+guest_config_activation=/nix-termux-runtime/activate-config.sh
 
 usage() {
 	cat <<'EOF'
@@ -171,6 +176,8 @@ doctor_status() {
 	doctor_nix_conf=false
 	doctor_certs=false
 	doctor_activation=false
+	doctor_config_activation=false
+	doctor_config_flake=false
 	doctor_dns=false
 	doctor_wrappers=false
 	doctor_installed_runtime_version=
@@ -253,6 +260,16 @@ doctor_status() {
 	else
 		doctor_status=1
 	fi
+	if [ -x "$config_activation" ]; then
+		doctor_config_activation=true
+	else
+		doctor_status=1
+	fi
+	if [ -r "$user_config_dir/flake.nix" ] && [ -r "$user_config_dir/flake.lock" ]; then
+		doctor_config_flake=true
+	else
+		doctor_status=1
+	fi
 	doctor_installed_runtime_version=$(config_value runtime_version "$config_file")
 	doctor_channel_url=$(config_value channel_url "$config_file")
 	doctor_runtime_archive_sha256=$(config_value runtime_archive_sha256 "$config_file")
@@ -329,6 +346,16 @@ doctor_text() {
 	else
 		info "activation: missing ($activation_file)"
 	fi
+	if [ "$doctor_config_activation" = true ]; then
+		info "config-activation: ok ($config_activation)"
+	else
+		info "config-activation: missing ($config_activation)"
+	fi
+	if [ "$doctor_config_flake" = true ]; then
+		info "configuration-flake: ok ($user_config_dir)"
+	else
+		info "configuration-flake: missing or unlocked ($user_config_dir)"
+	fi
 }
 
 doctor_json() {
@@ -390,6 +417,15 @@ doctor_json() {
     "ok": $doctor_activation,
     "path": "$(json_escape "$activation_file")",
     "bootstrapSha256": "$(json_escape "$doctor_activation_sha")"
+  },
+  "configurationActivation": {
+    "ok": $doctor_config_activation,
+    "path": "$(json_escape "$config_activation")"
+  },
+  "configurationFlake": {
+    "ok": $doctor_config_flake,
+    "path": "$(json_escape "$user_config_dir")",
+    "reference": "$(json_escape "$config_flake")"
   }
 }
 EOF
@@ -429,6 +465,9 @@ NIX_TERMUX_SSL_CERT_FILE=$cert_file
 NIX_TERMUX_NIX_CONF=$nix_conf_file
 NIX_TERMUX_CONFIG=$config_file
 NIX_TERMUX_ACTIVATION=$activation_file
+NIX_TERMUX_CONFIG_ACTIVATION=$config_activation
+NIX_TERMUX_USER_CONFIG_DIR=$user_config_dir
+NIX_TERMUX_CONFIG_FLAKE=$config_flake
 NIX_TERMUX_PROOT=$proot
 NIX_TERMUX_RESOLV_CONF=$resolv_conf_file
 NIX_TERMUX_ANDROID_BIND_DIRS=$android_bind_dirs
@@ -511,9 +550,10 @@ optional_android_binds() {
 
 enter() {
 	[ -d "$store_dir" ] || die "state not initialized at $state_dir; run installer first"
+	[ -x "$config_activation" ] || die "configuration activation not found at $config_activation; run installer first"
 	have "$proot" || die "proot is required; install it with: pkg install proot"
 	validate_manage_home_profile
-	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/root" "$root_dir/tmp" "$store_dir/var/nix/profiles/per-user/root" "$store_dir/var/nix/profiles/per-user/termux"
+	mkdir -p "$tmp_dir" "$root_dir/home" "$root_dir/root" "$root_dir/tmp" "$root_dir/nix-termux-runtime" "$store_dir/var/nix/profiles/per-user/root" "$store_dir/var/nix/profiles/per-user/termux"
 	mkdir -p "$termux_home/.cache" "$termux_home/.config" "$termux_home/.local/share" "$termux_home/.local/state"
 	if [ "$manage_home_profile" = yes ] && [ ! -e "$termux_home/.nix-profile" ] && [ ! -L "$termux_home/.nix-profile" ]; then
 		ln -s /nix/var/nix/profiles/per-user/termux/profile "$termux_home/.nix-profile"
@@ -546,6 +586,7 @@ enter() {
 		-b "$tmp_dir:/tmp" \
 		-b "$termux_home:/home/termux" \
 		-b "$termux_prefix:/termux" \
+		-b "$state_dir/runtime:/nix-termux-runtime" \
 		-b /dev \
 		-b /proc \
 		-b /sys \
@@ -566,11 +607,13 @@ enter() {
 		NIX_CONF_DIR=/etc/nix \
 		NIX_REMOTE=local \
 		NIX_PATH="$nix_path" \
+		NIX_TERMUX_CONFIG_FLAKE="$config_flake" \
+		NIX_TERMUX_REAL_NIX="$proot_real_nix" \
 		GC_NPROCS="$gc_nprocs" \
 		NIX_PROFILES="/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" \
 		NIX_SSL_CERT_FILE="$proot_cert_file" \
 		SSL_CERT_FILE="$proot_cert_file" \
-		"$@"
+		"$guest_config_activation" "$@"
 }
 
 run_nix() {

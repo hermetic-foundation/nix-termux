@@ -42,6 +42,7 @@ validate_home() {
 
 uninstall_home=${HOME:-}
 state_dir=${NIX_TERMUX_STATE_DIR:-"$uninstall_home/.nix-termux"}
+user_config_dir=$uninstall_home/.config/nix-termux
 prefix=${PREFIX:-}
 wrapper_names="nix-termux nix nix-shell nix-env nix-store nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url"
 managed_profile_target=/nix/var/nix/profiles/per-user/termux/profile
@@ -86,3 +87,6 @@ if [ -d "$state_dir" ]; then
 fi
 
 printf '%s\n' "Removed nix-termux"
+if [ -e "$user_config_dir/flake.nix" ] || [ -L "$user_config_dir/flake.nix" ]; then
+	printf '%s\n' "Preserved configuration at $user_config_dir"
+fi

@@ -36,6 +36,16 @@ rm -f "$installer"
 The standalone installer defaults to the latest Hermetic Foundation release.
 It verifies the runtime and bootstrap hashes from their manifests.
 
+Installation also creates:
+
+```text
+~/.config/nix-termux/flake.nix
+~/.config/nix-termux/flake.lock
+```
+
+These files control the Nix registry and binary caches. See the
+[configuration guide](configuration.md).
+
 ## Verify the Installer
 
 Use the checksum sidecar before running the installer when transport integrity
@@ -113,4 +123,4 @@ nix-termux uninstall
 ```
 
 The uninstaller removes managed files and restores Termux commands backed up
-during installation.
+during installation. It preserves `~/.config/nix-termux` for later installs.

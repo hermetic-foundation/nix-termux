@@ -16,6 +16,10 @@
 The installer also creates wrappers for the modern `nix` command and common
 legacy commands such as `nix-shell`, `nix-build`, and `nix-store`.
 
+Each wrapper activates the locked settings from
+`~/.config/nix-termux/flake.nix`. See the
+[configuration guide](configuration.md) for registries and binary caches.
+
 The examples below use standard single-user Nix interfaces. The current Android
 acceptance test covers `nix run`; other workflows are listed separately in the
 [validation gaps](limitations.md#validation-coverage).

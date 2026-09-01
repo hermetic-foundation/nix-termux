@@ -11,7 +11,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$tmp/bin" "$tmp/core-bin" "$tmp/prefix/bin"
+mkdir -p "$tmp/bin" "$tmp/core-bin" "$tmp/home/.config/nix-termux" "$tmp/prefix/bin"
+touch "$tmp/home/.config/nix-termux/flake.nix" "$tmp/home/.config/nix-termux/flake.lock"
 host_sh=$(command -v sh)
 host_cat=$(command -v cat)
 host_grep=$(command -v grep)
@@ -59,7 +60,9 @@ doctor)
   "certs": { "ok": true },
   "dns": { "ok": true },
   "wrappers": { "ok": true },
-  "activation": { "ok": true }
+  "activation": { "ok": true },
+  "configurationActivation": { "ok": true },
+  "configurationFlake": { "ok": true }
 }
 JSON
 	;;

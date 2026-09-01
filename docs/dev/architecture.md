@@ -27,6 +27,8 @@ single-user Nix from nixpkgs
 | --- | --- |
 | `installer/install.sh` | Fetch, validate, activate, and write wrappers |
 | `runtime/nix-termux.sh` | Build the PRoot environment and dispatch commands |
+| `runtime/activate-config.sh` | Evaluate user settings before command execution |
+| `config/` | Provide the default locked user configuration flake |
 | `bootstrap/` | Produce the initial Nix closure and local store database |
 | `channel/` | Connect one runtime archive to one platform bootstrap |
 | `release/` | Assemble a directory suitable for ordinary HTTP hosting |
@@ -39,14 +41,20 @@ The default state directory is `$HOME/.nix-termux`:
 $HOME/.nix-termux/
   bin/nix-termux
   etc/nix-termux.conf
+  runtime/activate-config.sh
   runtime/nix-termux.sh
   root/
   nix/
+  share/config/flake.nix
+  share/config/flake.lock
   share/installer/install.sh
   share/installer/uninstall.sh
 ```
 
 The physical store is `$HOME/.nix-termux/nix/store`.
+
+User-managed configuration lives separately at
+`$HOME/.config/nix-termux`. Upgrade and uninstall operations preserve it.
 
 ## PRoot View
 
@@ -58,6 +66,7 @@ The runtime creates these primary bindings:
 | `$HOME/.nix-termux/tmp` | `/tmp` |
 | `$HOME` | `/home/termux` |
 | `$PREFIX` | `/termux` |
+| `$HOME/.nix-termux/runtime` | `/nix-termux-runtime` |
 | `/dev`, `/proc`, `/sys` | Same path |
 
 `/sdcard` and `/storage` are bound when present. Set
@@ -74,6 +83,7 @@ currently translated or preserved.
 | `NIX_CONF_DIR` | `/etc/nix` |
 | `NIX_REMOTE` | `local` |
 | `NIX_PATH` | `nixpkgs=flake:nixpkgs` by default |
+| `NIX_CONFIG` | Locked configuration output, then caller overrides |
 | `NIX_PROFILES` | Default and Termux user profiles |
 | `NIX_SSL_CERT_FILE` | Bootstrap CA bundle |
 | `SHELL` | Bootstrap Bash by default |
@@ -98,7 +108,8 @@ The guest `PATH` is:
 4. Resolve `GC_NPROCS` without reading Android's restricted `/proc/stat`.
 5. Remove Termux's inherited `LD_PRELOAD`.
 6. Execute PRoot with the bindings and guest environment.
-7. Run the requested command or an interactive login shell.
+7. Evaluate the locked user configuration into process-local `NIX_CONFIG`.
+8. Run the requested command or an interactive login shell.
 
 Removing `LD_PRELOAD` prevents `termux-exec` from rewriting guest paths such as
 `/usr/bin/env` before PRoot receives them.
@@ -142,6 +153,10 @@ direct artifact URLs remain available as explicit overrides.
 `nix-termux upgrade` reruns the saved installer with the saved or supplied
 channel URL. Bootstrap registration is loaded into the local Nix store before
 the staged files become active.
+
+Fresh installs scaffold the default configuration flake. Existing user files
+are preserved across install, upgrade, and uninstall operations. See the
+[configuration contract](configuration.md).
 
 ## Runtime Boundaries
 

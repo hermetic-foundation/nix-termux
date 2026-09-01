@@ -207,6 +207,11 @@ check "doctor reports certs" check_json_bool ".certs.ok" "$doctor_json"
 check "doctor reports dns" check_json_bool ".dns.ok" "$doctor_json"
 check "doctor reports wrappers" check_json_bool ".wrappers.ok" "$doctor_json"
 check "doctor reports activation" check_json_bool ".activation.ok" "$doctor_json"
+check "doctor reports config activation" check_json_bool ".configurationActivation.ok" "$doctor_json"
+check "doctor reports configuration flake" check_json_bool ".configurationFlake.ok" "$doctor_json"
+
+check "configuration flake exists" test -r "$HOME/.config/nix-termux/flake.nix"
+check "configuration flake is locked" test -r "$HOME/.config/nix-termux/flake.lock"
 
 check "nix wrapper runs without GC proc warning" check_nix_version_without_gc_warning
 check "nix-store wrapper runs" nix-store --version
@@ -231,6 +236,10 @@ check "proot provides GC processor count" nix-termux exec sh -c 'case $GC_NPROCS
 # shellcheck disable=SC2016
 check "proot provides shell and Nix config env" nix-termux exec sh -c 'test "$SHELL" = /nix/var/nix/profiles/default/bin/bash && test "$NIX_CONF_DIR" = /etc/nix'
 # shellcheck disable=SC2016
+check "configuration flake provides Nix settings" nix-termux exec sh -c 'printf "%s\n" "$NIX_CONFIG" | grep -q "^flake-registry = /nix/store/" && printf "%s\n" "$NIX_CONFIG" | grep -q "^substituters = https://cache.nixos.org/"'
+# shellcheck disable=SC2016
+check "configuration registry declares nixpkgs" nix-termux exec sh -c 'nix registry list | grep -q "^global flake:nixpkgs "'
+# shellcheck disable=SC2016
 check "proot provides certificate bundle env" nix-termux exec sh -c 'test "$NIX_SSL_CERT_FILE" = /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt && test "$SSL_CERT_FILE" = "$NIX_SSL_CERT_FILE" && test -r "$SSL_CERT_FILE"'
 # shellcheck disable=SC2016
 check "proot provides Nix profile env" nix-termux exec sh -c 'test "$NIX_PROFILES" = "/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" && test -L "$HOME/.nix-profile"'
@@ -238,6 +247,7 @@ check "proot provides Nix profile env" nix-termux exec sh -c 'test "$NIX_PROFILE
 check "proot puts user profile on PATH" nix-termux exec sh -c 'case $PATH in /home/termux/.nix-profile/bin:/nix/var/nix/profiles/default/bin:*) exit 0 ;; *) exit 1 ;; esac'
 
 if [ "$network" = "1" ]; then
+	check "configuration registry resolves nixpkgs" nix-termux exec nix flake metadata --json nixpkgs
 	check "nix run can fetch and execute hello" nix-termux run nixpkgs#hello
 else
 	say "skip - nix run nixpkgs#hello (pass --network or set NIX_TERMUX_DEVICE_SMOKE_NETWORK=1)"

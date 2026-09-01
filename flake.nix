@@ -49,6 +49,8 @@
               install -Dm755 bin/nix-termux "$out/bin/nix-termux"
               install -Dm755 installer/install.sh "$out/share/nix-termux/installer/install.sh"
               install -Dm755 installer/uninstall.sh "$out/share/nix-termux/installer/uninstall.sh"
+              install -Dm644 config/flake.nix "$out/share/nix-termux/config/flake.nix"
+              install -Dm644 config/flake.lock "$out/share/nix-termux/config/flake.lock"
               install -Dm755 tools/adb-validate.sh "$out/share/nix-termux/tools/adb-validate.sh"
               install -Dm755 tools/emulator-validate.sh "$out/share/nix-termux/tools/emulator-validate.sh"
               install -Dm755 tools/serve-release.sh "$out/share/nix-termux/tools/serve-release.sh"
@@ -123,11 +125,13 @@
       checks = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          configuration = (import ./config/flake.nix).outputs { };
           scripts = [
             "bin/nix-termux"
             "installer/install.sh"
             "installer/uninstall.sh"
             "runtime/nix-termux.sh"
+            "runtime/activate-config.sh"
             "tools/adb-validate.sh"
             "tools/emulator-validate.sh"
             "tools/serve-release.sh"
@@ -163,6 +167,30 @@
             cp -R "$src" source
             cd source
             shellcheck ${builtins.concatStringsSep " " scripts}
+            touch "$out"
+          '';
+
+          configuration-flake = pkgs.runCommand "nix-termux-configuration-flake" {
+            nativeBuildInputs = [ pkgs.jq ];
+            src = self;
+            configText = configuration.nixTermux.nixConfig;
+            registryFile = configuration.nixTermux.registryFile;
+            lockedNixpkgs = builtins.toJSON configuration.nixTermux.lockedNixpkgs;
+          } ''
+            cmp "$src/flake.lock" "$src/config/flake.lock"
+            printf '%s' "$configText" > nix.conf
+            grep -qx 'experimental-features = nix-command flakes' nix.conf
+            grep -qx 'flake-registry = '"$registryFile" nix.conf
+            grep -qx 'substituters = https://cache.nixos.org/' nix.conf
+            grep -qx 'trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=' nix.conf
+            jq -e \
+              --argjson lockedNixpkgs "$lockedNixpkgs" \
+              '.version == 2
+                and (.flakes | length) == 1
+                and .flakes[0].from == { type: "indirect", id: "nixpkgs" }
+                and .flakes[0].to == $lockedNixpkgs
+                and .flakes[0].exact == true' \
+              "$registryFile" >/dev/null
             touch "$out"
           '';
 
@@ -379,6 +407,9 @@
             test -x "$artifact"/bin/nix-termux
             test -x "$artifact"/share/nix-termux/installer/install.sh
             test -x "$artifact"/share/nix-termux/installer/uninstall.sh
+            test -x "$artifact"/share/nix-termux/runtime/activate-config.sh
+            test -r "$artifact"/share/nix-termux/config/flake.nix
+            test -r "$artifact"/share/nix-termux/config/flake.lock
             test -x "$artifact"/share/nix-termux/tools/adb-validate.sh
             test -x "$artifact"/share/nix-termux/tools/emulator-validate.sh
             test -x "$artifact"/share/nix-termux/tools/serve-release.sh
@@ -386,13 +417,17 @@
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/bin/nix-termux
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/installer/install.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/installer/uninstall.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/runtime/activate-config.sh
+            grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/config/flake.nix
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/adb-validate.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/emulator-validate.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tools/serve-release.sh
             grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' "$artifact"/share/nix-termux/tests/device-smoke.sh
             test -r "$artifact"/share/doc/nix-termux/CONTRIBUTING.md
             test -r "$artifact"/share/doc/nix-termux/docs/user/install.md
+            test -r "$artifact"/share/doc/nix-termux/docs/user/configuration.md
             test -r "$artifact"/share/doc/nix-termux/docs/dev/device-validation.md
+            test -r "$artifact"/share/doc/nix-termux/docs/dev/configuration.md
             test -r "$artifact"/share/licenses/nix-termux/LICENSE
             grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' "$artifact"/share/licenses/nix-termux/LICENSE
             test -r "$artifact"/share/nix-termux/bootstrap/manifest.schema.json

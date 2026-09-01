@@ -46,6 +46,7 @@ nix flake check -L
 | --- | --- |
 | `installer/` | Installation, upgrade, and bootstrap activation |
 | `runtime/` | PRoot environment and command dispatch |
+| `config/` | Default locked user configuration flake |
 | `bootstrap/` | Seed Nix closure and manifest schema |
 | `channel/` | Release channel manifest |
 | `release/` | Hostable release assembly |
@@ -59,6 +60,7 @@ nix flake check -L
 Read the documents relevant to the change before editing:
 
 - [Architecture](docs/dev/architecture.md)
+- [Configuration contract](docs/dev/configuration.md)
 - [Testing](docs/dev/testing.md)
 - [Bootstrap contract](docs/dev/bootstrap.md)
 - [Channel contract](docs/dev/channel.md)

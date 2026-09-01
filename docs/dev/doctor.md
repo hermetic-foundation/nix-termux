@@ -72,6 +72,15 @@ successfully prints JSON.
     "ok": true,
     "path": "/data/data/com.termux/files/home/.nix-termux/etc/bootstrap-activation.conf",
     "bootstrapSha256": "<sha256>"
+  },
+  "configurationActivation": {
+    "ok": true,
+    "path": "/data/data/com.termux/files/home/.nix-termux/runtime/activate-config.sh"
+  },
+  "configurationFlake": {
+    "ok": true,
+    "path": "/data/data/com.termux/files/home/.config/nix-termux",
+    "reference": "/home/termux/.config/nix-termux"
   }
 }
 ```
@@ -88,6 +97,9 @@ successfully prints JSON.
 
 Each component object contains an `ok` field and the paths or command values
 needed to diagnose that component.
+
+`configurationActivation` checks the managed runtime helper.
+`configurationFlake` requires readable `flake.nix` and `flake.lock` files.
 
 Adding fields within schema version `1` must remain backward compatible.
 Removing or changing existing field types requires a new schema version.

@@ -18,7 +18,8 @@ nix-termux doctor --json
 ```
 
 The JSON document uses schema version `1`. It reports runtime, Termux, PRoot,
-store, profile, certificate, DNS, wrapper, and bootstrap activation status.
+store, profile, certificate, DNS, wrapper, bootstrap activation, and
+configuration flake status.
 See the [doctor JSON contract](../dev/doctor.md) for the complete shape.
 
 ## PRoot Is Missing
@@ -30,6 +31,30 @@ pkg install -y proot
 ```
 
 Then rerun `nix-termux doctor`.
+
+## Configuration Evaluation Fails
+
+The runtime stops before the requested command when the configuration flake is
+invalid or unlocked.
+
+Evaluate it with activation disabled:
+
+```sh
+NIX_TERMUX_CONFIG_FLAKE=none \
+  nix-termux exec nix flake check \
+  path:/home/termux/.config/nix-termux
+```
+
+Compare it with the installed template when recovery is required:
+
+```sh
+diff -u \
+  ~/.nix-termux/share/config/flake.nix \
+  ~/.config/nix-termux/flake.nix
+```
+
+See [configuration](configuration.md) for the output contract and escape
+hatches.
 
 ## Nix Uses the Wrong Project
 

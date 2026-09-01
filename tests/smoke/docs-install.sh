@@ -24,12 +24,14 @@ for file in \
 	README.md \
 	CONTRIBUTING.md \
 	docs/user/README.md \
+	docs/user/configuration.md \
 	docs/user/install.md \
 	docs/user/usage.md \
 	docs/user/limitations.md \
 	docs/user/troubleshooting.md \
 	docs/dev/README.md \
 	docs/dev/architecture.md \
+	docs/dev/configuration.md \
 	docs/dev/bootstrap.md \
 	docs/dev/channel.md \
 	docs/dev/doctor.md \
