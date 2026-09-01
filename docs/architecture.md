@@ -55,6 +55,10 @@ values so Nix can resolve substituter and flake hosts.
 It also removes Termux's inherited `LD_PRELOAD` before starting `proot` so
 `termux-exec` does not rewrite guest paths such as `/usr/bin/env` back into the
 Termux prefix.
+Android restricts `/proc/stat`, which prevents BDWGC from detecting the CPU
+count and otherwise produces a warning on every Nix invocation. The runtime
+sets `GC_NPROCS` from Termux's `nproc` result, falls back to `1`, and preserves
+an explicit `GC_NPROCS` override.
 
 ## Wrapper Model
 

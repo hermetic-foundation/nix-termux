@@ -77,6 +77,17 @@ check() {
 	fi
 }
 
+check_nix_version_without_gc_warning() {
+	if output=$(nix --version 2>&1); then
+		status=0
+	else
+		status=$?
+	fi
+	printf '%s\n' "$output"
+	[ "$status" -eq 0 ] || return "$status"
+	! printf '%s\n' "$output" | grep -F 'GC Warning: Could not open /proc/stat' >/dev/null
+}
+
 check_json_bool() {
 	key=$1
 	file=$2
@@ -197,7 +208,7 @@ check "doctor reports dns" check_json_bool ".dns.ok" "$doctor_json"
 check "doctor reports wrappers" check_json_bool ".wrappers.ok" "$doctor_json"
 check "doctor reports activation" check_json_bool ".activation.ok" "$doctor_json"
 
-check "nix wrapper runs" nix --version
+check "nix wrapper runs without GC proc warning" check_nix_version_without_gc_warning
 check "nix-store wrapper runs" nix-store --version
 for name in nix-shell nix-env nix-build nix-channel nix-collect-garbage nix-copy-closure nix-hash nix-instantiate nix-prefetch-url; do
 	check "$name wrapper runs" "$name" --version
@@ -215,6 +226,8 @@ check "proot provides XDG dirs" nix-termux exec sh -c 'test "$XDG_CONFIG_HOME" =
 check "proot uses local Nix store" sh -c 'NIX_REMOTE=daemon nix-termux exec sh -c '\''test "$NIX_REMOTE" = local'\'''
 # shellcheck disable=SC2016
 check "proot provides legacy NIX_PATH" nix-termux exec sh -c 'test "$NIX_PATH" = nixpkgs=flake:nixpkgs'
+# shellcheck disable=SC2016
+check "proot provides GC processor count" nix-termux exec sh -c 'case $GC_NPROCS in "" | *[!0-9]* | 0) exit 1 ;; esac'
 # shellcheck disable=SC2016
 check "proot provides shell and Nix config env" nix-termux exec sh -c 'test "$SHELL" = /nix/var/nix/profiles/default/bin/bash && test "$NIX_CONF_DIR" = /etc/nix'
 # shellcheck disable=SC2016

@@ -69,6 +69,24 @@ have() {
 	command -v "$1" >/dev/null 2>&1
 }
 
+resolve_gc_nprocs() {
+	if [ -n "${GC_NPROCS:-}" ]; then
+		printf '%s\n' "$GC_NPROCS"
+		return
+	fi
+
+	detected=
+	if [ -x "$termux_prefix/bin/nproc" ]; then
+		detected=$("$termux_prefix/bin/nproc" 2>/dev/null || true)
+	fi
+	case $detected in
+	"" | *[!0-9]* | 0)
+		detected=1
+		;;
+	esac
+	printf '%s\n' "$detected"
+}
+
 validate_manage_home_profile() {
 	case $manage_home_profile in
 	yes | no)
@@ -397,6 +415,7 @@ doctor() {
 
 print_env() {
 	[ "$#" -eq 0 ] || die "env accepts no arguments"
+	gc_nprocs=$(resolve_gc_nprocs)
 
 	cat <<EOF
 NIX_TERMUX_STATE_DIR=$state_dir
@@ -423,6 +442,7 @@ PATH=$proot_path
 NIX_CONF_DIR=/etc/nix
 NIX_REMOTE=local
 NIX_PATH=$nix_path
+GC_NPROCS=$gc_nprocs
 NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile
 SHELL=$proot_default_shell
 NIX_SSL_CERT_FILE=$proot_cert_file
@@ -513,6 +533,8 @@ enter() {
 		set -- "$shell" -l
 	fi
 
+	gc_nprocs=$(resolve_gc_nprocs)
+
 	# termux-exec rewrites guest paths such as /usr/bin/env before proot sees them.
 	unset LD_PRELOAD
 
@@ -544,6 +566,7 @@ enter() {
 		NIX_CONF_DIR=/etc/nix \
 		NIX_REMOTE=local \
 		NIX_PATH="$nix_path" \
+		GC_NPROCS="$gc_nprocs" \
 		NIX_PROFILES="/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile" \
 		NIX_SSL_CERT_FILE="$proot_cert_file" \
 		SSL_CERT_FILE="$proot_cert_file" \

@@ -21,6 +21,11 @@ for command in sh basename chmod cp dirname grep head ln mkdir mv rm sed uname; 
 	ln -s "$(command -v "$command")" "$tmp/missing-cat-bin/$command"
 done
 cp "$host_sh" "$tmp/prefix/bin/sh"
+cat >"$tmp/prefix/bin/nproc" <<EOF
+#!$host_sh
+printf '%s\n' 6
+EOF
+chmod 755 "$tmp/prefix/bin/nproc"
 cat >"$tmp/prefix/bin/nix-hash" <<EOF
 #!$host_sh
 printf '%s\n' original nix-hash
@@ -1326,6 +1331,7 @@ enter_output=$(
 grep -qx -- "-b" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "$tmp/home/.nix-termux/tmp:/tmp" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "SHELL=/nix/var/nix/profiles/default/bin/bash" "$tmp/home/.nix-termux/proot.args"
+grep -qx -- "GC_NPROCS=6" "$tmp/home/.nix-termux/proot.args"
 grep -qx -- "/nix/var/nix/profiles/default/bin/bash" "$tmp/home/.nix-termux/proot.args"
 grep -qx 'nameserver 192.0.2.53' "$tmp/home/.nix-termux/root/etc/resolv.conf"
 test -d "$tmp/home/.cache"
@@ -1522,6 +1528,33 @@ remote_output=$(
 }
 
 # shellcheck disable=SC2016
+gc_nprocs_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$GC_NPROCS"'
+)
+[ "$gc_nprocs_output" = "6" ] || {
+	printf 'unexpected GC_NPROCS output: %s\n' "$gc_nprocs_output" >&2
+	exit 1
+}
+
+# shellcheck disable=SC2016
+gc_nprocs_override_output=$(
+	PATH="$tmp/fake-bin:$PATH" \
+		HOME="$tmp/home" \
+		PREFIX="$tmp/prefix" \
+		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
+		GC_NPROCS=3 \
+		"$tmp/prefix/bin/nix-termux" exec sh -c 'printf "%s\n" "$GC_NPROCS"'
+)
+[ "$gc_nprocs_override_output" = "3" ] || {
+	printf 'unexpected GC_NPROCS override output: %s\n' "$gc_nprocs_override_output" >&2
+	exit 1
+}
+
+# shellcheck disable=SC2016
 nix_path_output=$(
 	PATH="$tmp/fake-bin:$PATH" \
 		HOME="$tmp/home" \
@@ -1642,6 +1675,7 @@ env_output=$(
 		PREFIX="$tmp/prefix" \
 		NIX_TERMUX_STATE_DIR="$tmp/home/.nix-termux" \
 		NIX_PATH='' \
+		GC_NPROCS='' \
 		"$tmp/prefix/bin/nix-termux" env
 )
 printf '%s\n' "$env_output" | grep -q '^NIX_TERMUX_VERSION=0.1.1$'
@@ -1654,6 +1688,7 @@ printf '%s\n' "$env_output" | grep -q '^PATH=/home/termux/.nix-profile/bin:/nix/
 printf '%s\n' "$env_output" | grep -q '^NIX_CONF_DIR=/etc/nix$'
 printf '%s\n' "$env_output" | grep -q '^NIX_REMOTE=local$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PATH=nixpkgs=flake:nixpkgs$'
+printf '%s\n' "$env_output" | grep -q '^GC_NPROCS=6$'
 printf '%s\n' "$env_output" | grep -q '^NIX_PROFILES=/nix/var/nix/profiles/default /nix/var/nix/profiles/per-user/termux/profile$'
 printf '%s\n' "$env_output" | grep -q '^SHELL=/nix/var/nix/profiles/default/bin/bash$'
 printf '%s\n' "$env_output" | grep -q '^NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt$'
